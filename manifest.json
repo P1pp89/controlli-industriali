@@ -1,0 +1,28 @@
+{
+  "name": "Controlli Locali Tecnici",
+  "short_name": "ControlliTecnici",
+  "description": "App per controlli notturni con NFC e GPS",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#2196F3",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "permissions": [
+    "geolocation"
+  ],
+  "features": [
+    "nfc"
+  ]
+}

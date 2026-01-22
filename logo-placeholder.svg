@@ -1,0 +1,6 @@
+<svg width="300" height="100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="100" fill="#2196F3" rx="10"/>
+  <text x="150" y="35" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="white">LA TUA AZIENDA</text>
+  <text x="150" y="55" font-family="Arial, sans-serif" font-size="12" text-anchor="middle" fill="#E3F2FD">Controlli Tecnici</text>
+  <text x="150" y="75" font-family="Arial, sans-serif" font-size="10" text-anchor="middle" fill="#BBDEFB">Sostituisci con il tuo logo</text>
+</svg>

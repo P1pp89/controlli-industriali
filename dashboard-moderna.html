@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Dashboard Controlli Industriali</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0 2rem;
+        }
+        
+        .nav-tab {
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .nav-tab:hover {
+            background: #f1f5f9;
+        }
+        
+        .nav-tab.active {
+            border-bottom-color: #3b82f6;
+            color: #3b82f6;
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-approved {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 Dashboard Controlli Industriali</h1>
+        <p>Sistema di gestione controlli impianti tecnici</p>
+    </div>
+
+    <div class="nav-tabs">
+        <div class="nav-tab active" onclick="showTab('overview')">📊 Panoramica</div>
+        <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
+        <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
+        <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
+        <div class="nav-tab" onclick="showTab('reports')">📋 Report</div>
+    </div>
+
+    <div class="main-content">
+        <!-- TAB PANORAMICA -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalOperators">-</div>
+                    <div class="stat-label">Operatori Attivi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalRooms">-</div>
+                    <div class="stat-label">Impianti Configurati</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="todayControls">-</div>
+                    <div class="stat-label">Controlli Oggi</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="pendingTags">-</div>
+                    <div class="stat-label">Tag in Attesa</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Controlli Recenti</h3>
+                    <button class="btn btn-primary" onclick="refreshData()">🔄 Aggiorna</button>
+                </div>
+                <div id="recentControls" class="loading">Caricamento...</div>
+            </div>
+        </div>
+
+        <!-- TAB OPERATORI -->
+        <div id="operators" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Gestione Operatori</h3>
+                    <button class="btn btn-success" onclick="showAddOperatorModal()">➕ Nuovo Operatore</button>
+                </div>
+                <div id="operatorsList" class="loading">Caricamento operatori...</div>
+            </div>
+        </div>
+
+        <!-- TAB IMPIANTI -->
+        <div id="rooms" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Impianti Tecnici</h3>
+                    <button class="btn btn-success" onclick="showAddRoomModal()">➕ Nuovo Impianto</button>
+                </div>
+                <div id="roomsList" class="loading">Caricamento impianti...</div>
+            </div>
+        </div>
+
+        <!-- TAB TAG SCONOSCIUTI -->
+        <div id="unknown-tags" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Tag Sconosciuti</h3>
+                    <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
+                </div>
+                <div id="unknownTagsList" class="loading">Caricamento tag sconosciuti...</div>
+            </div>
+        </div>
+
+        <!-- TAB REPORT -->
+        <div id="reports" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Generazione Report</h3>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <p>Funzionalità report in sviluppo...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configurazione Supabase - INSERISCI LE TUE CREDENZIALI
+        const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
+        
+        // Inizializzazione
+        let api;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inizializza API client
+            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+            
+            // Carica dati iniziali
+            refreshData();
+        });
+        
+        function showTab(tabName) {
+            // Nascondi tutti i tab
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Mostra tab selezionato
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            // Carica dati specifici del tab
+            if (tabName === 'operators') loadOperators();
+            if (tabName === 'rooms') loadRooms();
+            if (tabName === 'unknown-tags') loadUnknownTags();
+        }
+        
+        async function refreshData() {
+            try {
+                // Carica statistiche
+                const stats = await api.getStats();
+                
+                document.getElementById('totalOperators').textContent = stats.totalOperators;
+                document.getElementById('totalRooms').textContent = stats.totalRooms;
+                document.getElementById('todayControls').textContent = stats.todayControls;
+                document.getElementById('pendingTags').textContent = stats.pendingTags;
+                
+                // Carica controlli recenti
+                await loadRecentControls();
+                
+            } catch (error) {
+                console.error('Errore caricamento dati:', error);
+                showError('Errore connessione database');
+            }
+        }
+        
+        async function loadRecentControls() {
+            try {
+                const controls = await api.getRecentControls(5);
+                const container = document.getElementById('recentControls');
+                
+                if (controls.length === 0) {
+                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #64748b;">Nessun controllo registrato oggi</p>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Data/Ora</th>
+                                <th>Operatore</th>
+                                <th>Impianto</th>
+                                <th>Tag</th>
+                                <th>Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${controls.map(control => `
+                                <tr>
+                                    <td>${new Date(control.timestamp).toLocaleString('it-IT')}</td>
+                                    <td>${control.operators?.name || 'N/A'}</td>
+                                    <td>${control.technical_rooms?.name || 'N/A'}</td>
+                                    <td><code>${control.tag_id}</code></td>
+                                    <td>
+                                        <span class="status-badge ${control.location_valid ? 'status-approved' : 'status-pending'}">
+                                            ${control.location_valid ? '✅ Valido' : '⚠️ GPS Invalido'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('Errore caricamento controlli:', error);
+                document.getElementById('recentControls').innerHTML = '<p style="padding: 1.5rem; color: #ef4444;">Errore caricamento controlli</p>';
+            }
+        }
+        
+        async function loadOperators() {
+            try {
+                const operators = await api.getOperators();
+                const container = document.getElementById('operatorsList');
+                
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Codice</th>
+                                <th>ID</th>
+                                <th>Stato</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${operators.map(op => `
+                                <tr>
+                                    <td><strong>${op.name}</strong></td>
+                                    <td><code>${op.code}</code></td>
+                                    <td><code>${op.operator_id}</code></td>
+                                    <td>
+                                        <span class="status-badge status-approved">
+                                            ✅ Attivo
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="editOperator('${op.id}')">✏️ Modifica</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('Errore caricamento operatori:', error);
+                showError('Errore caricamento operatori');
+            }
+        }
+        
+        async function loadRooms() {
+            try {
+                const rooms = await api.getTechnicalRooms();
+                const container = document.getElementById('roomsList');
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #64748b;">Nessun impianto configurato. Aggiungi il primo impianto!</p>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tag ID</th>
+                                <th>Nome</th>
+                                <th>Categoria</th>
+                                <th>Descrizione</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rooms.map(room => `
+                                <tr>
+                                    <td><code>${room.tag_id}</code></td>
+                                    <td><strong>${room.name}</strong></td>
+                                    <td>${room.categories?.name || 'N/A'}</td>
+                                    <td>${room.description || 'N/A'}</td>
+                                    <td>
+                                        <button class="btn btn-primary" onclick="editRoom('${room.id}')">✏️ Modifica</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('Errore caricamento impianti:', error);
+                showError('Errore caricamento impianti');
+            }
+        }
+        
+        async function loadUnknownTags() {
+            try {
+                const unknownTags = await api.getUnknownTags();
+                const container = document.getElementById('unknownTagsList');
+                
+                if (unknownTags.length === 0) {
+                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #10b981;">✅ Nessun tag sconosciuto in attesa di approvazione</p>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tag ID</th>
+                                <th>Rilevato da</th>
+                                <th>Data</th>
+                                <th>Nome Suggerito</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${unknownTags.map(tag => `
+                                <tr>
+                                    <td><code>${tag.tag_id}</code></td>
+                                    <td>${tag.operators?.name || 'N/A'}</td>
+                                    <td>${new Date(tag.detected_at).toLocaleString('it-IT')}</td>
+                                    <td>${tag.suggested_name}</td>
+                                    <td>
+                                        <button class="btn btn-success" onclick="quickApproveTag('${tag.tag_id}', '${tag.suggested_name}', '${tag.suggested_category}')">✅ Approva</button>
+                                        <button class="btn btn-primary" onclick="customApproveTag('${tag.tag_id}')">✏️ Personalizza</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('Errore caricamento tag sconosciuti:', error);
+                showError('Errore caricamento tag sconosciuti');
+            }
+        }
+        
+        function showError(message) {
+            // Implementazione notifica errore
+            alert('❌ ' + message);
+        }
+        
+        function showSuccess(message) {
+            // Implementazione notifica successo
+            alert('✅ ' + message);
+        }
+        
+        // Funzioni placeholder per azioni
+        function editOperator(id) {
+            alert('Modifica operatore: ' + id + '\n(Funzionalità in sviluppo)');
+        }
+        
+        function editRoom(id) {
+            alert('Modifica impianto: ' + id + '\n(Funzionalità in sviluppo)');
+        }
+        
+        async function quickApproveTag(tagId, suggestedName, suggestedCategory) {
+            try {
+                // Trova categoria ID
+                const categories = await api.getCategories();
+                const category = categories.find(c => c.name === suggestedCategory);
+                
+                await api.approveUnknownTag(tagId, {
+                    name: suggestedName,
+                    description: `Impianto ${tagId} - Configurato automaticamente`,
+                    category_id: category?.id
+                });
+                
+                showSuccess(`Tag ${tagId} approvato e configurato!`);
+                loadUnknownTags(); // Ricarica lista
+                refreshData(); // Aggiorna statistiche
+                
+            } catch (error) {
+                console.error('Errore approvazione tag:', error);
+                showError('Errore durante l\'approvazione del tag');
+            }
+        }
+        
+        function customApproveTag(tagId) {
+            alert('Personalizzazione tag: ' + tagId + '\n(Funzionalità in sviluppo)');
+        }
+        
+        function showAddOperatorModal() {
+            alert('Modal aggiunta operatore in sviluppo...');
+        }
+        
+        function showAddRoomModal() {
+            alert('Modal aggiunta impianto in sviluppo...');
+        }
+    </script>
+    
+    <script src="api-client.js"></script>
+</body>
+</html>

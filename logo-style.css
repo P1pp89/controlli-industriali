@@ -1,0 +1,65 @@
+/* Stili per il logo aziendale */
+.company-logo {
+    max-height: 60px;
+    max-width: 200px;
+    object-fit: contain;
+}
+
+.header-with-logo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-with-logo h1 {
+    flex: 1;
+    min-width: 200px;
+}
+
+.logo-container {
+    flex-shrink: 0;
+}
+
+/* Per i registri stampabili */
+@media print {
+    .company-logo {
+        max-height: 50px;
+        max-width: 150px;
+    }
+    
+    .print-logo {
+        text-align: right;
+        margin-bottom: 10px;
+    }
+    
+    .register-header-with-logo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .register-header-with-logo .logo-container {
+        flex-shrink: 0;
+    }
+    
+    .register-header-with-logo .header-text {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+/* Responsive per mobile */
+@media (max-width: 768px) {
+    .header-with-logo {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .company-logo {
+        max-height: 50px;
+        max-width: 150px;
+    }
+}

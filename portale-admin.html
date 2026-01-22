@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Portale Amministrazione Controlli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .login-header {
+            background: linear-gradient(135deg, #FF5722 0%, #E91E63 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .login-form {
+            padding: 40px 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #FF5722;
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FF5722 0%, #E91E63 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .admin-container {
+            display: none;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .admin-header {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-title {
+            color: #333;
+        }
+        
+        .logout-btn {
+            padding: 10px 20px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .module-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .module-header {
+            padding: 25px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .module-content {
+            padding: 25px;
+        }
+        
+        .module-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        
+        .module-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1976D2;
+        }
+        
+        .btn-success {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #45a049;
+        }
+        
+        .btn-warning {
+            background: #FF9800;
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background: #F57C00;
+        }
+        
+        .content-frame {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-top: 30px;
+            overflow: hidden;
+        }
+        
+        .frame-header {
+            background: #2196F3;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .close-frame {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .frame-content {
+            height: 80vh;
+            overflow: auto;
+        }
+        
+        .stats-overview {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #2196F3;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        @media (max-width: 768px) {
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Schermata di Login -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-header">
+            <h1>🏭 Portale Amministrazione</h1>
+            <p>Sistema Controlli Impianti Tecnici</p>
+        </div>
+        <div class="login-form">
+            <div class="form-group">
+                <label for="username">👤 Username</label>
+                <input type="text" id="username" placeholder="Inserisci username">
+            </div>
+            <div class="form-group">
+                <label for="password">🔒 Password</label>
+                <input type="password" id="password" placeholder="Inserisci password">
+            </div>
+            <button class="login-btn" onclick="login()">🚀 Accedi al Portale</button>
+            <div style="margin-top: 20px; text-align: center; color: #666; font-size: 12px;">
+                <strong>Credenziali Demo:</strong><br>
+                Username: admin | Password: controlli2024
+            </div>
+        </div>
+    </div>
+
+    <!-- Portale Amministrazione -->
+    <div class="admin-container" id="adminContainer">
+        <div class="admin-header">
+            <div class="admin-title">
+                <h1>🏭 Portale Amministrazione Controlli</h1>
+                <p>Benvenuto, <span id="welcomeUser">Amministratore</span></p>
+            </div>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+
+        <!-- Statistiche Overview -->
+        <div class="stats-overview">
+            <h3 style="margin-bottom: 20px;">📊 Panoramica Sistema</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalRooms">19</div>
+                    <div class="stat-label">Impianti Configurati</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalOperators">8</div>
+                    <div class="stat-label">Operatori Attivi</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="totalCategories">6</div>
+                    <div class="stat-label">Categorie Impianti</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="todayControls">0</div>
+                    <div class="stat-label">Controlli Oggi</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Moduli Principali -->
+        <div class="modules-grid">
+            <!-- Dashboard Controlli -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #2196F3 0%, #21CBF3 100%);">
+                    📊 Dashboard Controlli
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Monitoraggio real-time dei controlli, statistiche avanzate, filtri per operatore e data. 
+                        Visualizzazione stato sincronizzazione e validità GPS.
+                        <br><small style="color: #666;">💡 I moduli si aprono in nuove finestre</small>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="openModule('dashboard-fixed', 'Dashboard Controlli')">
+                            📈 Apri Dashboard 🔗
+                        </button>
+                        <button class="action-btn btn-success" onclick="exportData()">
+                            📊 Esporta Dati
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Generatore Registri -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%);">
+                    📋 Generatore Registri
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Crea registri stampabili per turni, categorie specifiche o periodi personalizzati. 
+                        Include firme digitali e istruzioni operative.
+                        <br><small style="color: #666;">💡 I moduli si aprono in nuove finestre</small>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="openModule('registro-controlli-turni', 'Registri per Turni')">
+                            📅 Registri Turni 🔗
+                        </button>
+                        <button class="action-btn btn-primary" onclick="openModule('registro-impianti-elettrici', 'Registri Elettrici')">
+                            ⚡ Registri Elettrici 🔗
+                        </button>
+                        <button class="action-btn btn-primary" onclick="openModule('registri-controllo', 'Registri Generali')">
+                            📋 Registri Generali 🔗
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report con Firme -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #FF9800 0%, #FFC107 100%);">
+                    🖊️ Report con Firme Digitali
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Genera report professionali con firme digitali certificate degli operatori. 
+                        Formati dettagliati, riepiloghi e report giornalieri.
+                        <br><small style="color: #666;">💡 I moduli si aprono in nuove finestre</small>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="openModule('report-controlli-firmati', 'Report con Firme')">
+                            📄 Genera Report 🔗
+                        </button>
+                        <button class="action-btn btn-warning" onclick="viewSignatures()">
+                            ✍️ Gestisci Firme
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configurazione Sistema -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #9C27B0 0%, #E91E63 100%);">
+                    ⚙️ Configurazione Sistema
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Gestisci operatori, impianti, categorie e coordinate GPS dinamicamente. 
+                        Aggiungi/modifica tag NFC senza rifare il deploy. Backup e ripristino configurazione.
+                        <br><small style="color: #666;">💡 I moduli si aprono in nuove finestre</small>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="openModule('configuratore-sistema', 'Configuratore Sistema')">
+                            ⚙️ Configuratore Avanzato 🔗
+                        </button>
+                        <button class="action-btn btn-primary" onclick="showConfig()">
+                            📊 Vista Configurazione
+                        </button>
+                        <button class="action-btn btn-warning" onclick="openModule('tag-configurator', 'Configuratore Tag')">
+                            🏷️ Config Tag NFC 🔗
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test e Diagnostica -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #607D8B 0%, #455A64 100%);">
+                    🧪 Test e Diagnostica
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Strumenti per testare NFC, GPS, connessioni e validare la configurazione del sistema. 
+                        Diagnostica problemi e verifica funzionamento.
+                        <br><small style="color: #666;">💡 I moduli si aprono in nuove finestre</small>
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="openModule('test', 'Test Sistema')">
+                            🔍 Test Sistema 🔗
+                        </button>
+                        <button class="action-btn btn-primary" onclick="openModule('test-tag', 'Test Tag NFC')">
+                            📱 Test Tag NFC 🔗
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Guide e Documentazione -->
+            <div class="module-card">
+                <div class="module-header" style="background: linear-gradient(135deg, #795548 0%, #8D6E63 100%);">
+                    📚 Guide e Documentazione
+                </div>
+                <div class="module-content">
+                    <div class="module-description">
+                        Documentazione completa, guide operative, risoluzione problemi e 
+                        istruzioni per configurazione e manutenzione del sistema.
+                    </div>
+                    <div class="module-actions">
+                        <button class="action-btn btn-primary" onclick="showDocumentation()">
+                            📖 Documentazione
+                        </button>
+                        <button class="action-btn btn-warning" onclick="showTroubleshooting()">
+                            🔧 Risoluzione Problemi
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sezione rimossa: ora i moduli si aprono in nuove finestre -->
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        // Credenziali di accesso (in produzione usare sistema più sicuro)
+        const ADMIN_CREDENTIALS = {
+            'admin': 'controlli2024',
+            'supervisore': 'impianti2024',
+            'responsabile': 'tecnici2024'
+        };
+
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            // Carica configurazione dinamica se disponibile
+            loadDynamicConfig();
+            
+            checkLogin();
+            updateStats();
+        });
+
+        function loadDynamicConfig() {
+            const dynamicConfig = localStorage.getItem('dynamicConfig');
+            if (dynamicConfig) {
+                try {
+                    const config = JSON.parse(dynamicConfig);
+                    
+                    // Aggiorna CONFIG con i dati dinamici
+                    if (config.operators && config.operators.length > 0) {
+                        CONFIG.OPERATORS = config.operators;
+                    }
+                    
+                    if (config.technicalRooms && Object.keys(config.technicalRooms).length > 0) {
+                        CONFIG.TECHNICAL_ROOMS = config.technicalRooms;
+                    }
+                    
+                    if (config.categories && Object.keys(config.categories).length > 0) {
+                        CONFIG.CATEGORIES = config.categories;
+                    }
+                } catch (error) {
+                    console.error('Errore caricamento configurazione dinamica:', error);
+                }
+            }
+        }
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (ADMIN_CREDENTIALS[username] && ADMIN_CREDENTIALS[username] === password) {
+                localStorage.setItem('adminLoggedIn', 'true');
+                localStorage.setItem('adminUsername', username);
+                showAdminPanel();
+            } else {
+                alert('❌ Credenziali non valide!\n\nCredenziali demo:\nUsername: admin\nPassword: controlli2024');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            localStorage.removeItem('adminUsername');
+            showLoginPanel();
+        }
+
+        function checkLogin() {
+            if (localStorage.getItem('adminLoggedIn') === 'true') {
+                showAdminPanel();
+            } else {
+                showLoginPanel();
+            }
+        }
+
+        function showLoginPanel() {
+            document.getElementById('loginContainer').style.display = 'block';
+            document.getElementById('adminContainer').style.display = 'none';
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('adminContainer').style.display = 'block';
+            
+            const username = localStorage.getItem('adminUsername') || 'Amministratore';
+            document.getElementById('welcomeUser').textContent = username.charAt(0).toUpperCase() + username.slice(1);
+        }
+
+        function updateStats() {
+            if (typeof CONFIG !== 'undefined') {
+                document.getElementById('totalRooms').textContent = Object.keys(CONFIG.TECHNICAL_ROOMS).length;
+                document.getElementById('totalOperators').textContent = CONFIG.OPERATORS.length;
+                document.getElementById('totalCategories').textContent = Object.keys(CONFIG.CATEGORIES).length;
+                
+                // Controlli oggi dal localStorage
+                const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+                const today = new Date().toDateString();
+                const todayControls = history.filter(item => 
+                    new Date(item.timestamp).toDateString() === today
+                ).length;
+                document.getElementById('todayControls').textContent = todayControls;
+            }
+        }
+
+        function openModule(filename, title) {
+            // Apri in una nuova finestra invece che in iframe
+            const url = filename + '.html';
+            const windowFeatures = 'width=1200,height=800,scrollbars=yes,resizable=yes,toolbar=no,menubar=no';
+            
+            const newWindow = window.open(url, title.replace(/\s+/g, '_'), windowFeatures);
+            
+            if (newWindow) {
+                newWindow.focus();
+            } else {
+                // Fallback se il popup è bloccato
+                alert('⚠️ Popup bloccato!\n\nPer aprire i moduli:\n1. Consenti popup per questo sito\n2. Oppure apri manualmente: ' + url);
+            }
+        }
+
+        function exportData() {
+            const history = JSON.parse(localStorage.getItem('scanHistory') || '[]');
+            
+            if (history.length === 0) {
+                alert('Nessun dato da esportare');
+                return;
+            }
+
+            const headers = ['Data/Ora', 'Operatore', 'Locale', 'Tag NFC', 'Latitudine', 'Longitudine', 'Precisione GPS', 'Posizione Valida', 'Stato Sync'];
+            const csvContent = [
+                headers.join(','),
+                ...history.map(item => [
+                    `"${new Date(item.timestamp).toLocaleString('it-IT')}"`,
+                    `"${item.operator || 'N/A'}"`,
+                    `"${item.roomName || 'N/A'}"`,
+                    `"${item.tagId}"`,
+                    item.location ? item.location.latitude : 'N/A',
+                    item.location ? item.location.longitude : 'N/A',
+                    item.location ? `"±${Math.round(item.location.accuracy)}m"` : 'N/A',
+                    item.locationValid ? 'Valida' : 'Non Valida',
+                    item.synced ? 'Sincronizzato' : 'In Attesa'
+                ].join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `controlli_export_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function viewSignatures() {
+            let signaturesHtml = '<h3>👤 Firme Digitali Operatori</h3><div style="padding: 20px;">';
+            
+            CONFIG.OPERATORS.forEach(operator => {
+                signaturesHtml += `
+                    <div style="border: 1px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px;">
+                        <strong>${operator.name}</strong> (${operator.code})<br>
+                        <small>ID: ${operator.id}</small><br>
+                        <div style="font-style: italic; color: #0066cc; margin-top: 10px; font-size: 16px;">
+                            ${operator.signature}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            signaturesHtml += '</div>';
+            
+            const newWindow = window.open('', '_blank', 'width=600,height=800');
+            newWindow.document.write(`
+                <html>
+                <head><title>Firme Digitali</title></head>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    ${signaturesHtml}
+                </body>
+                </html>
+            `);
+        }
+
+        function showConfig() {
+            let configHtml = `
+                <h3>⚙️ Configurazione Sistema</h3>
+                <div style="padding: 20px;">
+                    <h4>📊 Statistiche Configurazione</h4>
+                    <ul>
+                        <li><strong>Impianti configurati:</strong> ${Object.keys(CONFIG.TECHNICAL_ROOMS).length}</li>
+                        <li><strong>Operatori attivi:</strong> ${CONFIG.OPERATORS.length}</li>
+                        <li><strong>Categorie:</strong> ${Object.keys(CONFIG.CATEGORIES).length}</li>
+                        <li><strong>URL Google Script:</strong> ${CONFIG.GOOGLE_SHEET_URL ? 'Configurato' : 'Non configurato'}</li>
+                    </ul>
+                    
+                    <h4>👥 Operatori</h4>
+                    <table border="1" style="width: 100%; border-collapse: collapse;">
+                        <tr><th>Nome</th><th>Codice</th><th>ID</th></tr>
+                        ${CONFIG.OPERATORS.map(op => `<tr><td>${op.name}</td><td>${op.code}</td><td>${op.id}</td></tr>`).join('')}
+                    </table>
+                    
+                    <h4>🏭 Categorie Impianti</h4>
+                    <table border="1" style="width: 100%; border-collapse: collapse;">
+                        <tr><th>Categoria</th><th>Icona</th><th>Descrizione</th></tr>
+                        ${Object.entries(CONFIG.CATEGORIES).map(([name, info]) => 
+                            `<tr><td>${name}</td><td>${info.icon}</td><td>${info.description}</td></tr>`
+                        ).join('')}
+                    </table>
+                </div>
+            `;
+            
+            const newWindow = window.open('', '_blank', 'width=800,height=600');
+            newWindow.document.write(`
+                <html>
+                <head><title>Configurazione Sistema</title></head>
+                <body style="font-family: Arial, sans-serif;">
+                    ${configHtml}
+                </body>
+                </html>
+            `);
+        }
+
+        function showDocumentation() {
+            const docContent = `
+                <h3>📚 Documentazione Sistema</h3>
+                <div style="padding: 20px;">
+                    <h4>🚀 Guida Rapida</h4>
+                    <ol>
+                        <li><strong>Dashboard:</strong> Monitora controlli in tempo reale</li>
+                        <li><strong>Registri:</strong> Genera moduli stampabili per turni</li>
+                        <li><strong>Report:</strong> Crea report con firme digitali</li>
+                        <li><strong>Test:</strong> Verifica funzionamento NFC e GPS</li>
+                    </ol>
+                    
+                    <h4>📱 App Operatori</h4>
+                    <p>Gli operatori usano <strong>app-moderna.html</strong> per:</p>
+                    <ul>
+                        <li>Selezionare il proprio profilo</li>
+                        <li>Scansionare tag NFC degli impianti</li>
+                        <li>Registrare controlli con GPS</li>
+                        <li>Sincronizzare dati automaticamente</li>
+                    </ul>
+                    
+                    <h4>🏷️ Tag NFC</h4>
+                    <p>Programmare con "NFC Tools":</p>
+                    <ul>
+                        <li>GE001-GE003: Gruppi Elettrogeni</li>
+                        <li>MT001-MT003: Cabine Media Tensione</li>
+                        <li>UPS001-UPS004: Locali UPS</li>
+                        <li>QE001-QE003: Quadri Elettrici</li>
+                        <li>AI001-AI003: Impianti Antincendio</li>
+                        <li>HVAC001-HVAC003: Sistemi HVAC</li>
+                    </ul>
+                    
+                    <h4>📊 Google Sheets</h4>
+                    <p>I dati vengono sincronizzati automaticamente su Google Sheets con:</p>
+                    <ul>
+                        <li>Informazioni complete del controllo</li>
+                        <li>Firme digitali degli operatori</li>
+                        <li>Coordinate GPS e validazione posizione</li>
+                        <li>Codici colore per categoria impianto</li>
+                    </ul>
+                </div>
+            `;
+            
+            const newWindow = window.open('', '_blank', 'width=800,height=600');
+            newWindow.document.write(`
+                <html>
+                <head><title>Documentazione</title></head>
+                <body style="font-family: Arial, sans-serif;">
+                    ${docContent}
+                </body>
+                </html>
+            `);
+        }
+
+        function showTroubleshooting() {
+            const troubleContent = `
+                <h3>🔧 Risoluzione Problemi</h3>
+                <div style="padding: 20px;">
+                    <h4>📱 Problemi NFC</h4>
+                    <ul>
+                        <li><strong>NFC non funziona:</strong> Usa Chrome/Edge, abilita NFC in Android</li>
+                        <li><strong>Tag non riconosciuto:</strong> Verifica ID tag in configurazione</li>
+                        <li><strong>Permessi negati:</strong> Clicca icona lucchetto → Impostazioni sito → NFC → Consenti</li>
+                    </ul>
+                    
+                    <h4>📍 Problemi GPS</h4>
+                    <ul>
+                        <li><strong>GPS impreciso:</strong> Vai all'aperto, attendi stabilizzazione</li>
+                        <li><strong>Posizione non valida:</strong> Verifica coordinate in config.js</li>
+                        <li><strong>GPS non disponibile:</strong> Abilita geolocalizzazione nel browser</li>
+                    </ul>
+                    
+                    <h4>🔄 Problemi Sincronizzazione</h4>
+                    <ul>
+                        <li><strong>Dati non sincronizzati:</strong> Verifica connessione internet</li>
+                        <li><strong>Google Script errore:</strong> Controlla URL e permessi script</li>
+                        <li><strong>Controlli pendenti:</strong> Usa pulsante "Sincronizza Dati"</li>
+                    </ul>
+                    
+                    <h4>🖨️ Problemi Stampa</h4>
+                    <ul>
+                        <li><strong>Layout non corretto:</strong> Usa orientamento Verticale</li>
+                        <li><strong>Testo tagliato:</strong> Riduci margini di stampa</li>
+                        <li><strong>Firme non visibili:</strong> Abilita grafica di sfondo</li>
+                    </ul>
+                    
+                    <h4>📞 Supporto</h4>
+                    <p>Per problemi non risolti:</p>
+                    <ol>
+                        <li>Usa "Test Sistema" per diagnostica</li>
+                        <li>Controlla console browser (F12)</li>
+                        <li>Verifica configurazione in config.js</li>
+                        <li>Contatta amministratore sistema</li>
+                    </ol>
+                </div>
+            `;
+            
+            const newWindow = window.open('', '_blank', 'width=800,height=600');
+            newWindow.document.write(`
+                <html>
+                <head><title>Risoluzione Problemi</title></head>
+                <body style="font-family: Arial, sans-serif;">
+                    ${troubleContent}
+                </body>
+                </html>
+            `);
+        }
+
+        // Gestione Enter per login
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && document.getElementById('loginContainer').style.display !== 'none') {
+                login();
+            }
+        });
+
+        // Auto-refresh stats ogni 30 secondi
+        setInterval(updateStats, 30000);
+    </script>
+</body>
+</html>
