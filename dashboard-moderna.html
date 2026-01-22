@@ -261,10 +261,99 @@
         <div id="reports" class="tab-content">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">Generazione Report</h3>
+                    <h3 class="card-title">📅 Registri per Turni</h3>
                 </div>
                 <div style="padding: 1.5rem;">
-                    <p>Funzionalità report in sviluppo...</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label>Data Inizio:</label>
+                            <input type="date" id="reportStartDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div>
+                            <label>Data Fine:</label>
+                            <input type="date" id="reportEndDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label>Operatore:</label>
+                            <select id="reportOperator" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Tutti gli operatori</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Turno:</label>
+                            <select id="reportShift" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Tutti i turni</option>
+                                <option value="morning">Mattino (06-14)</option>
+                                <option value="afternoon">Pomeriggio (14-22)</option>
+                                <option value="night">Notte (22-06)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                        <button onclick="generateShiftRegister()" style="background: #2196F3; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            📅 Registro Turni
+                        </button>
+                        <button onclick="generateElectricalRegister()" style="background: #FF9800; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            ⚡ Registro Elettrico
+                        </button>
+                        <button onclick="generateSignedReport()" style="background: #4CAF50; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            🖊️ Report con Firme
+                        </button>
+                        <button onclick="generateFullReport()" style="background: #9C27B0; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            📊 Report Completo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📈 Statistiche Avanzate</h3>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #2196F3;" id="totalControlsMonth">-</div>
+                            <div style="color: #666;">Controlli Mese</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #4CAF50;" id="avgControlsDay">-</div>
+                            <div style="color: #666;">Media Giornaliera</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #FF9800;" id="mostActiveOperator">-</div>
+                            <div style="color: #666;">Operatore Top</div>
+                        </div>
+                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #9C27B0;" id="mostControlledRoom">-</div>
+                            <div style="color: #666;">Impianto Top</div>
+                        </div>
+                    </div>
+                    <button onclick="loadAdvancedStats()" style="background: #607D8B; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                        🔄 Aggiorna Statistiche
+                    </button>
+                </div>
+            </div>
+
+            <!-- Area Preview Report -->
+            <div id="reportPreview" style="display: none;">
+                <div class="card">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 class="card-title">👁️ Anteprima Report</h3>
+                        <div>
+                            <button onclick="printReport()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem;">
+                                🖨️ Stampa
+                            </button>
+                            <button onclick="closeReportPreview()" style="background: #f44336; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                                ✖️ Chiudi
+                            </button>
+                        </div>
+                    </div>
+                    <div id="reportContent" style="padding: 1.5rem; background: white; max-height: 600px; overflow-y: auto;">
+                        <!-- Contenuto report generato dinamicamente -->
+                    </div>
                 </div>
             </div>
         </div>
@@ -506,6 +595,525 @@
         function showSuccess(message) {
             // Implementazione notifica successo
             alert('✅ ' + message);
+        }
+        
+        // ===== FUNZIONI REPORT E REGISTRI =====
+        
+        async function generateShiftRegister() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            const operatorId = document.getElementById('reportOperator').value;
+            const shift = document.getElementById('reportShift').value;
+            
+            if (!startDate || !endDate) {
+                alert('Seleziona periodo per il report');
+                return;
+            }
+            
+            try {
+                const filters = {
+                    startDate: startDate + 'T00:00:00',
+                    endDate: endDate + 'T23:59:59'
+                };
+                
+                if (operatorId) filters.operatorId = operatorId;
+                
+                const controls = await api.getControls(filters);
+                
+                // Filtra per turno se specificato
+                let filteredControls = controls;
+                if (shift) {
+                    filteredControls = controls.filter(control => {
+                        const hour = new Date(control.timestamp).getHours();
+                        switch(shift) {
+                            case 'morning': return hour >= 6 && hour < 14;
+                            case 'afternoon': return hour >= 14 && hour < 22;
+                            case 'night': return hour >= 22 || hour < 6;
+                            default: return true;
+                        }
+                    });
+                }
+                
+                const html = generateShiftRegisterHTML(filteredControls, startDate, endDate, shift);
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro turni:', error);
+                showError('Errore generazione registro turni');
+            }
+        }
+        
+        async function generateElectricalRegister() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Seleziona periodo per il report');
+                return;
+            }
+            
+            try {
+                const filters = {
+                    startDate: startDate + 'T00:00:00',
+                    endDate: endDate + 'T23:59:59'
+                };
+                
+                const controls = await api.getControls(filters);
+                
+                // Filtra solo impianti elettrici
+                const electricalControls = controls.filter(control => 
+                    control.technical_rooms?.categories?.name?.includes('Elettr') ||
+                    control.technical_rooms?.categories?.name?.includes('UPS') ||
+                    control.technical_rooms?.categories?.name?.includes('Quadr') ||
+                    control.technical_rooms?.categories?.name?.includes('Gener')
+                );
+                
+                const html = generateElectricalRegisterHTML(electricalControls, startDate, endDate);
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro elettrico:', error);
+                showError('Errore generazione registro elettrico');
+            }
+        }
+        
+        async function generateSignedReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Seleziona periodo per il report');
+                return;
+            }
+            
+            try {
+                const filters = {
+                    startDate: startDate + 'T00:00:00',
+                    endDate: endDate + 'T23:59:59'
+                };
+                
+                const controls = await api.getControls(filters);
+                const html = generateSignedReportHTML(controls, startDate, endDate);
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione report firmato:', error);
+                showError('Errore generazione report firmato');
+            }
+        }
+        
+        async function generateFullReport() {
+            const startDate = document.getElementById('reportStartDate').value;
+            const endDate = document.getElementById('reportEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Seleziona periodo per il report');
+                return;
+            }
+            
+            try {
+                const filters = {
+                    startDate: startDate + 'T00:00:00',
+                    endDate: endDate + 'T23:59:59'
+                };
+                
+                const controls = await api.getControls(filters);
+                const stats = await calculateReportStats(controls);
+                const html = generateFullReportHTML(controls, stats, startDate, endDate);
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione report completo:', error);
+                showError('Errore generazione report completo');
+            }
+        }
+        
+        function generateShiftRegisterHTML(controls, startDate, endDate, shift) {
+            const shiftName = {
+                'morning': 'Mattino (06:00-14:00)',
+                'afternoon': 'Pomeriggio (14:00-22:00)', 
+                'night': 'Notte (22:00-06:00)',
+                '': 'Tutti i turni'
+            }[shift || ''];
+            
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #333; padding-bottom: 1rem;">
+                        <h1 style="color: #333; margin: 0;">📅 REGISTRO CONTROLLI TURNI</h1>
+                        <h2 style="color: #666; margin: 0.5rem 0;">${shiftName}</h2>
+                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Turno</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">GPS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${controls.map(control => {
+                                const date = new Date(control.timestamp);
+                                const hour = date.getHours();
+                                const shiftType = hour >= 6 && hour < 14 ? 'Mattino' : 
+                                                hour >= 14 && hour < 22 ? 'Pomeriggio' : 'Notte';
+                                const gpsStatus = control.location_valid ? '✅ Valido' : '⚠️ Fuori zona';
+                                
+                                return `
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${date.toLocaleString('it-IT')}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${shiftType}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${gpsStatus}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">
+                        <h3>📊 Riepilogo</h3>
+                        <p><strong>Totale controlli:</strong> ${controls.length}</p>
+                        <p><strong>Controlli validi GPS:</strong> ${controls.filter(c => c.location_valid).length}</p>
+                        <p><strong>Operatori coinvolti:</strong> ${new Set(controls.map(c => c.operators?.name)).size}</p>
+                        <p><strong>Impianti controllati:</strong> ${new Set(controls.map(c => c.technical_rooms?.name)).size}</p>
+                    </div>
+                    
+                    <div style="margin-top: 2rem; text-align: center; font-size: 0.8rem; color: #666;">
+                        <p>Sistema Controlli Industriali - Report generato automaticamente</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateElectricalRegisterHTML(controls, startDate, endDate) {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #FF9800; padding-bottom: 1rem;">
+                        <h1 style="color: #FF9800; margin: 0;">⚡ REGISTRO IMPIANTI ELETTRICI</h1>
+                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem; padding: 1rem; background: #fff3e0; border-left: 4px solid #FF9800;">
+                        <h3 style="color: #FF9800; margin-top: 0;">⚠️ Controlli Impianti Elettrici</h3>
+                        <p>Questo registro documenta tutti i controlli effettuati su impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici.</p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                        <thead>
+                            <tr style="background: #fff3e0;">
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Categoria</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${controls.map(control => {
+                                const date = new Date(control.timestamp);
+                                const status = control.location_valid ? '✅ OK' : '⚠️ Anomalia GPS';
+                                
+                                return `
+                                    <tr>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${date.toLocaleString('it-IT')}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;"><strong>${control.technical_rooms?.name || control.tag_id}</strong></td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.categories?.name || 'N/A'}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
+                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${status}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                    
+                    <div style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">
+                        <h3>📊 Riepilogo Impianti Elettrici</h3>
+                        <p><strong>Totale controlli elettrici:</strong> ${controls.length}</p>
+                        <p><strong>Controlli conformi:</strong> ${controls.filter(c => c.location_valid).length}</p>
+                        <p><strong>Anomalie rilevate:</strong> ${controls.filter(c => !c.location_valid).length}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateSignedReportHTML(controls, startDate, endDate) {
+            // Raggruppa per operatore
+            const byOperator = {};
+            controls.forEach(control => {
+                const operatorName = control.operators?.name || 'N/A';
+                if (!byOperator[operatorName]) {
+                    byOperator[operatorName] = [];
+                }
+                byOperator[operatorName].push(control);
+            });
+            
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #4CAF50; padding-bottom: 1rem;">
+                        <h1 style="color: #4CAF50; margin: 0;">🖊️ REPORT CON FIRME DIGITALI</h1>
+                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
+                    </div>
+                    
+                    ${Object.entries(byOperator).map(([operatorName, operatorControls]) => `
+                        <div style="margin-bottom: 3rem; page-break-inside: avoid;">
+                            <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                                <h3 style="margin: 0; color: #2e7d32;">👤 ${operatorName}</h3>
+                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Controlli effettuati: ${operatorControls.length}</p>
+                            </div>
+                            
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Data/Ora</th>
+                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Impianto</th>
+                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Validazione</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${operatorControls.map(control => `
+                                        <tr>
+                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${new Date(control.timestamp).toLocaleString('it-IT')}</td>
+                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
+                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.location_valid ? '✅ Validato' : '⚠️ Da verificare'}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 1rem; padding: 1rem; border: 1px solid #ddd; background: #fafafa;">
+                                <p style="margin: 0 0 1rem 0;"><strong>Dichiarazione:</strong></p>
+                                <p style="margin: 0 0 1rem 0; font-size: 0.9rem;">
+                                    Il sottoscritto <strong>${operatorName}</strong> dichiara di aver effettuato tutti i controlli sopra elencati 
+                                    presso gli impianti indicati, nelle date e orari specificati, con validazione GPS automatica.
+                                </p>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+                                    <div>
+                                        <p style="margin: 0; font-size: 0.9rem;">Data: ${new Date().toLocaleDateString('it-IT')}</p>
+                                    </div>
+                                    <div style="text-align: center;">
+                                        <div style="border-bottom: 1px solid #333; width: 200px; margin-bottom: 0.5rem;"></div>
+                                        <p style="margin: 0; font-size: 0.8rem;">Firma ${operatorName}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                    
+                    <div style="margin-top: 2rem; text-align: center; font-size: 0.8rem; color: #666; border-top: 1px solid #ddd; padding-top: 1rem;">
+                        <p>Sistema Controlli Industriali - Report con validazione digitale</p>
+                        <p>Tutti i controlli sono tracciati con NFC e GPS per garantire l'autenticità</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateFullReportHTML(controls, stats, startDate, endDate) {
+            return `
+                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #9C27B0; padding-bottom: 1rem;">
+                        <h1 style="color: #9C27B0; margin: 0;">📊 REPORT COMPLETO CONTROLLI</h1>
+                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
+                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                        <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #1976d2;">${controls.length}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Controlli Totali</div>
+                        </div>
+                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #388e3c;">${stats.validControls}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Controlli Validi</div>
+                        </div>
+                        <div style="background: #fff3e0; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #f57c00;">${stats.uniqueOperators}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Operatori</div>
+                        </div>
+                        <div style="background: #fce4ec; padding: 1rem; border-radius: 8px; text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #c2185b;">${stats.uniqueRooms}</div>
+                            <div style="font-size: 0.9rem; color: #666;">Impianti</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3>📈 Distribuzione per Turno</h3>
+                        <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">
+                            <p><strong>Mattino (06-14):</strong> ${stats.shiftDistribution.morning} controlli</p>
+                            <p><strong>Pomeriggio (14-22):</strong> ${stats.shiftDistribution.afternoon} controlli</p>
+                            <p><strong>Notte (22-06):</strong> ${stats.shiftDistribution.night} controlli</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <h3>🏆 Top Performers</h3>
+                        <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">
+                            <p><strong>Operatore più attivo:</strong> ${stats.topOperator.name} (${stats.topOperator.count} controlli)</p>
+                            <p><strong>Impianto più controllato:</strong> ${stats.topRoom.name} (${stats.topRoom.count} controlli)</p>
+                        </div>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
+                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Stato</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${controls.slice(0, 50).map(control => `
+                                <tr>
+                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${new Date(control.timestamp).toLocaleString('it-IT')}</td>
+                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
+                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
+                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.location_valid ? '✅ OK' : '⚠️ Anomalia'}</td>
+                                </tr>
+                            `).join('')}
+                            ${controls.length > 50 ? `<tr><td colspan="4" style="text-align: center; padding: 1rem; font-style: italic;">... e altri ${controls.length - 50} controlli</td></tr>` : ''}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        async function calculateReportStats(controls) {
+            const validControls = controls.filter(c => c.location_valid).length;
+            const uniqueOperators = new Set(controls.map(c => c.operators?.name)).size;
+            const uniqueRooms = new Set(controls.map(c => c.technical_rooms?.name)).size;
+            
+            // Distribuzione turni
+            const shiftDistribution = {
+                morning: 0,
+                afternoon: 0,
+                night: 0
+            };
+            
+            controls.forEach(control => {
+                const hour = new Date(control.timestamp).getHours();
+                if (hour >= 6 && hour < 14) shiftDistribution.morning++;
+                else if (hour >= 14 && hour < 22) shiftDistribution.afternoon++;
+                else shiftDistribution.night++;
+            });
+            
+            // Top operatore
+            const operatorCounts = {};
+            controls.forEach(control => {
+                const name = control.operators?.name || 'N/A';
+                operatorCounts[name] = (operatorCounts[name] || 0) + 1;
+            });
+            const topOperator = Object.entries(operatorCounts).reduce((a, b) => 
+                operatorCounts[a[0]] > operatorCounts[b[0]] ? a : b, ['N/A', 0]);
+            
+            // Top impianto
+            const roomCounts = {};
+            controls.forEach(control => {
+                const name = control.technical_rooms?.name || control.tag_id;
+                roomCounts[name] = (roomCounts[name] || 0) + 1;
+            });
+            const topRoom = Object.entries(roomCounts).reduce((a, b) => 
+                roomCounts[a[0]] > roomCounts[b[0]] ? a : b, ['N/A', 0]);
+            
+            return {
+                validControls,
+                uniqueOperators,
+                uniqueRooms,
+                shiftDistribution,
+                topOperator: { name: topOperator[0], count: topOperator[1] },
+                topRoom: { name: topRoom[0], count: topRoom[1] }
+            };
+        }
+        
+        async function loadAdvancedStats() {
+            try {
+                const now = new Date();
+                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+                
+                const monthlyControls = await api.getControls({
+                    startDate: startOfMonth.toISOString(),
+                    endDate: now.toISOString()
+                });
+                
+                const stats = await calculateReportStats(monthlyControls);
+                
+                document.getElementById('totalControlsMonth').textContent = monthlyControls.length;
+                document.getElementById('avgControlsDay').textContent = Math.round(monthlyControls.length / now.getDate());
+                document.getElementById('mostActiveOperator').textContent = stats.topOperator.name;
+                document.getElementById('mostControlledRoom').textContent = stats.topRoom.name;
+                
+            } catch (error) {
+                console.error('Errore caricamento statistiche avanzate:', error);
+            }
+        }
+        
+        function showReportPreview(html) {
+            document.getElementById('reportContent').innerHTML = html;
+            document.getElementById('reportPreview').style.display = 'block';
+            document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function closeReportPreview() {
+            document.getElementById('reportPreview').style.display = 'none';
+        }
+        
+        function printReport() {
+            const content = document.getElementById('reportContent').innerHTML;
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>Report Controlli Industriali</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            @media print {
+                                body { margin: 0; }
+                                .no-print { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        ${content}
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.print();
+        }
+        
+        // Inizializza date di default per i report
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('reportStartDate').value = weekAgo.toISOString().split('T')[0];
+            document.getElementById('reportEndDate').value = today.toISOString().split('T')[0];
+            
+            // Carica operatori nel select
+            loadOperatorsForReport();
+        });
+        
+        async function loadOperatorsForReport() {
+            try {
+                const operators = await api.getOperators();
+                const select = document.getElementById('reportOperator');
+                
+                operators.forEach(operator => {
+                    const option = document.createElement('option');
+                    option.value = operator.id;
+                    option.textContent = operator.name;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Errore caricamento operatori per report:', error);
+            }
         }
         
         // Funzioni placeholder per azioni
