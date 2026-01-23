@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Registri Professionali</title>
+</head>
+<body>
+    <h1>Test Registri Professionali</h1>
+    <p>Apri la console del browser (F12) per vedere eventuali errori JavaScript.</p>
+    
+    <button onclick="testRegistri()">Test Registri</button>
+    
+    <div id="result"></div>
+    
+    <script src="config-azienda.js"></script>
+    <script>
+        // Test semplificato
+        function testRegistri() {
+            console.log('Test avviato...');
+            
+            try {
+                // Test configurazione azienda
+                const config = getCompanyConfig();
+                console.log('Configurazione azienda:', config);
+                
+                // Test funzioni di categorizzazione
+                console.log('Test elettrico:', isProfessionalElectricalPlant('GE001'));
+                console.log('Test antincendio:', isProfessionalFirePlant('AI001'));
+                
+                document.getElementById('result').innerHTML = '✅ Test completato - controlla console';
+            } catch (error) {
+                console.error('Errore nel test:', error);
+                document.getElementById('result').innerHTML = '❌ Errore: ' + error.message;
+            }
+        }
+        
+        // Funzioni di test semplificate
+        function isProfessionalElectricalPlant(name) {
+            const electrical = ['elettr', 'gener', 'ups', 'quadr', 'ge', 'mt', 'qe'];
+            return electrical.some(keyword => name.toLowerCase().includes(keyword));
+        }
+        
+        function isProfessionalFirePlant(name) {
+            const fire = ['antincendio', 'fire', 'ai', 'estintore', 'idrante'];
+            return fire.some(keyword => name.toLowerCase().includes(keyword));
+        }
+    </script>
+</body>
+</html>
