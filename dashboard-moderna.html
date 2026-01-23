@@ -190,6 +190,7 @@
         <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
         <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
         <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
+        <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
         <div class="nav-tab" onclick="showTab('reports')">📋 Report</div>
     </div>
 
@@ -254,6 +255,59 @@
                     <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
                 </div>
                 <div id="unknownTagsList" class="loading">Caricamento tag sconosciuti...</div>
+            </div>
+        </div>
+
+        <!-- TAB CONFIGURAZIONE -->
+        <div id="config" class="tab-content">
+            <h2>⚙️ Configurazione Sistema</h2>
+            
+            <!-- Gestione Tag/Impianti -->
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title">🏷️ Gestione Tag e Impianti</h3>
+                    <button onclick="showAddRoomModal()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                        ➕ Nuovo Impianto
+                    </button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <input type="text" id="searchRooms" placeholder="🔍 Cerca impianti..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterRooms()">
+                    </div>
+                    <div id="roomsConfigList" style="max-height: 400px; overflow-y: auto;">
+                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento impianti...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestione Categorie -->
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title">📂 Gestione Categorie</h3>
+                    <button onclick="showAddCategoryModal()" style="background: #2196F3; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                        ➕ Nuova Categoria
+                    </button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div id="categoriesList">
+                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento categorie...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestione Operatori -->
+            <div class="card">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 class="card-title">👥 Gestione Operatori</h3>
+                    <button onclick="showAddOperatorModal()" style="background: #FF9800; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                        ➕ Nuovo Operatore
+                    </button>
+                </div>
+                <div style="padding: 1.5rem;">
+                    <div id="operatorsConfigList">
+                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento operatori...</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -359,6 +413,262 @@
         </div>
     </div>
 
+    <!-- MODAL AGGIUNGI/MODIFICA IMPIANTO -->
+    <div id="roomModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 id="roomModalTitle">➕ Nuovo Impianto</h3>
+                <button onclick="closeRoomModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
+            </div>
+            <div class="modal-body">
+                <form id="roomForm">
+                    <input type="hidden" id="roomId">
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏷️ Tag ID:</label>
+                        <input type="text" id="roomTagId" placeholder="es. GE001, MT002, UPS003..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                        <small style="color: #666;">Formato consigliato: PREFISSO + NUMERO (es. GE001)</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📝 Nome Impianto:</label>
+                        <input type="text" id="roomName" placeholder="es. Gruppo Elettrogeno Principale" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📂 Categoria:</label>
+                        <select id="roomCategory" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                            <option value="">Seleziona categoria...</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📄 Descrizione:</label>
+                        <textarea id="roomDescription" placeholder="Descrizione dettagliata dell'impianto..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📍 Posizione GPS (opzionale):</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                            <input type="number" id="roomLat" placeholder="Latitudine" step="any" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="number" id="roomLng" placeholder="Longitudine" step="any" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                            <input type="number" id="roomRadius" placeholder="Raggio (m)" min="10" max="500" value="50" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <small style="color: #666;">Lascia vuoto per disabilitare validazione GPS</small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" onclick="closeRoomModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            Annulla
+                        </button>
+                        <button type="submit" style="background: #4CAF50; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            💾 Salva Impianto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGGIUNGI CATEGORIA -->
+    <div id="categoryModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>📂 Nuova Categoria</h3>
+                <button onclick="closeCategoryModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
+            </div>
+            <div class="modal-body">
+                <form id="categoryForm">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📝 Nome Categoria:</label>
+                        <input type="text" id="categoryName" placeholder="es. Gruppi Elettrogeni" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📄 Descrizione:</label>
+                        <textarea id="categoryDescription" placeholder="Descrizione della categoria..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 60px; resize: vertical;"></textarea>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" onclick="closeCategoryModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            Annulla
+                        </button>
+                        <button type="submit" style="background: #2196F3; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            💾 Salva Categoria
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL AGGIUNGI OPERATORE -->
+    <div id="operatorModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 id="operatorModalTitle">👤 Nuovo Operatore</h3>
+                <button onclick="closeOperatorModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
+            </div>
+            <div class="modal-body">
+                <form id="operatorForm">
+                    <input type="hidden" id="operatorId">
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">👤 Nome Completo:</label>
+                        <input type="text" id="operatorName" placeholder="es. Mario Rossi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏷️ Codice Operatore:</label>
+                        <input type="text" id="operatorCode" placeholder="es. MR001" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                        <small style="color: #666;">Formato consigliato: INIZIALI + NUMERO</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🆔 ID Operatore:</label>
+                        <input type="text" id="operatorOperatorId" placeholder="es. OP001" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">✍️ Firma Digitale:</label>
+                        <input type="text" id="operatorSignature" placeholder="es. Mario Rossi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
+                        <small style="color: #666;">Testo che apparirà come firma nei report</small>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                        <button type="button" onclick="closeOperatorModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            Annulla
+                        </button>
+                        <button type="submit" style="background: #FF9800; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                            💾 Salva Operatore
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .room-config-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            transition: all 0.2s;
+        }
+        
+        .room-config-item:hover {
+            background: #e9ecef;
+        }
+        
+        .room-config-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .room-config-title {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .room-config-tag {
+            background: #007bff;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-family: monospace;
+        }
+        
+        .room-config-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .btn-edit {
+            background: #ffc107;
+            color: #000;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .category-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .operator-config-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+
     <script>
         // Configurazione Supabase - INSERISCI LE TUE CREDENZIALI
         const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
@@ -392,6 +702,7 @@
             if (tabName === 'operators') loadOperators();
             if (tabName === 'rooms') loadRooms();
             if (tabName === 'unknown-tags') loadUnknownTags();
+            if (tabName === 'config') loadConfigTab();
         }
         
         async function refreshData() {
@@ -1115,6 +1426,439 @@
                 console.error('Errore caricamento operatori per report:', error);
             }
         }
+        
+        // ===== FUNZIONI CONFIGURAZIONE =====
+        
+        async function loadConfigTab() {
+            await Promise.all([
+                loadRoomsConfig(),
+                loadCategoriesConfig(),
+                loadOperatorsConfig()
+            ]);
+        }
+        
+        // === GESTIONE IMPIANTI ===
+        
+        async function loadRoomsConfig() {
+            try {
+                const rooms = await api.getTechnicalRooms();
+                const container = document.getElementById('roomsConfigList');
+                
+                if (rooms.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Nessun impianto configurato</p>';
+                    return;
+                }
+                
+                container.innerHTML = rooms.map(room => `
+                    <div class="room-config-item" data-tag="${room.tag_id.toLowerCase()}">
+                        <div class="room-config-header">
+                            <div>
+                                <span class="room-config-title">${room.name}</span>
+                                <span class="room-config-tag">${room.tag_id}</span>
+                            </div>
+                            <div class="room-config-actions">
+                                <button class="btn-sm btn-edit" onclick="editRoom('${room.id}')">✏️ Modifica</button>
+                                <button class="btn-sm btn-delete" onclick="deleteRoom('${room.id}', '${room.name}')">🗑️ Elimina</button>
+                            </div>
+                        </div>
+                        <div style="font-size: 0.9rem; color: #666;">
+                            <div><strong>Categoria:</strong> ${room.categories?.name || 'N/A'}</div>
+                            ${room.description ? `<div><strong>Descrizione:</strong> ${room.description}</div>` : ''}
+                            ${room.expected_lat ? `<div><strong>GPS:</strong> ${room.expected_lat}, ${room.expected_lng} (±${room.gps_radius}m)</div>` : '<div><strong>GPS:</strong> Non configurato</div>'}
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Errore caricamento impianti config:', error);
+                document.getElementById('roomsConfigList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">Errore caricamento impianti</p>';
+            }
+        }
+        
+        function filterRooms() {
+            const search = document.getElementById('searchRooms').value.toLowerCase();
+            const items = document.querySelectorAll('.room-config-item');
+            
+            items.forEach(item => {
+                const tag = item.dataset.tag;
+                const text = item.textContent.toLowerCase();
+                const visible = tag.includes(search) || text.includes(search);
+                item.style.display = visible ? 'block' : 'none';
+            });
+        }
+        
+        async function showAddRoomModal() {
+            document.getElementById('roomModalTitle').textContent = '➕ Nuovo Impianto';
+            document.getElementById('roomForm').reset();
+            document.getElementById('roomId').value = '';
+            
+            // Carica categorie nel select
+            await loadCategoriesInSelect();
+            
+            document.getElementById('roomModal').style.display = 'flex';
+        }
+        
+        async function editRoom(roomId) {
+            try {
+                const rooms = await api.getTechnicalRooms();
+                const room = rooms.find(r => r.id === roomId);
+                
+                if (!room) {
+                    showError('Impianto non trovato');
+                    return;
+                }
+                
+                document.getElementById('roomModalTitle').textContent = '✏️ Modifica Impianto';
+                document.getElementById('roomId').value = room.id;
+                document.getElementById('roomTagId').value = room.tag_id;
+                document.getElementById('roomName').value = room.name;
+                document.getElementById('roomDescription').value = room.description || '';
+                document.getElementById('roomLat').value = room.expected_lat || '';
+                document.getElementById('roomLng').value = room.expected_lng || '';
+                document.getElementById('roomRadius').value = room.gps_radius || 50;
+                
+                await loadCategoriesInSelect();
+                document.getElementById('roomCategory').value = room.category_id || '';
+                
+                document.getElementById('roomModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Errore caricamento impianto:', error);
+                showError('Errore caricamento dati impianto');
+            }
+        }
+        
+        async function deleteRoom(roomId, roomName) {
+            if (!confirm(`Sei sicuro di voler eliminare l'impianto "${roomName}"?\n\nQuesta azione non può essere annullata.`)) {
+                return;
+            }
+            
+            try {
+                // Nota: Supabase non ha un metodo delete diretto nell'API client
+                // Dovremmo implementarlo o usare una chiamata diretta
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/technical_rooms?id=eq.${roomId}`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore eliminazione impianto');
+                }
+                
+                showSuccess(`Impianto "${roomName}" eliminato con successo`);
+                await loadRoomsConfig();
+                
+            } catch (error) {
+                console.error('Errore eliminazione impianto:', error);
+                showError('Errore eliminazione impianto');
+            }
+        }
+        
+        function closeRoomModal() {
+            document.getElementById('roomModal').style.display = 'none';
+        }
+        
+        // === GESTIONE CATEGORIE ===
+        
+        async function loadCategoriesConfig() {
+            try {
+                const categories = await api.getCategories();
+                const container = document.getElementById('categoriesList');
+                
+                if (categories.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">Nessuna categoria configurata</p>';
+                    return;
+                }
+                
+                container.innerHTML = categories.map(category => `
+                    <div class="category-item">
+                        <div>
+                            <strong>${category.name}</strong>
+                            ${category.description ? `<br><small style="color: #666;">${category.description}</small>` : ''}
+                        </div>
+                        <div>
+                            <button class="btn-sm btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑️</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Errore caricamento categorie:', error);
+                document.getElementById('categoriesList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 1rem;">Errore caricamento categorie</p>';
+            }
+        }
+        
+        async function loadCategoriesInSelect() {
+            try {
+                const categories = await api.getCategories();
+                const select = document.getElementById('roomCategory');
+                
+                // Mantieni l'opzione vuota
+                select.innerHTML = '<option value="">Seleziona categoria...</option>';
+                
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Errore caricamento categorie per select:', error);
+            }
+        }
+        
+        function showAddCategoryModal() {
+            document.getElementById('categoryForm').reset();
+            document.getElementById('categoryModal').style.display = 'flex';
+        }
+        
+        async function deleteCategory(categoryId, categoryName) {
+            if (!confirm(`Sei sicuro di voler eliminare la categoria "${categoryName}"?\n\nGli impianti associati rimarranno senza categoria.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/categories?id=eq.${categoryId}`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore eliminazione categoria');
+                }
+                
+                showSuccess(`Categoria "${categoryName}" eliminata con successo`);
+                await loadCategoriesConfig();
+                
+            } catch (error) {
+                console.error('Errore eliminazione categoria:', error);
+                showError('Errore eliminazione categoria');
+            }
+        }
+        
+        function closeCategoryModal() {
+            document.getElementById('categoryModal').style.display = 'none';
+        }
+        
+        // === GESTIONE OPERATORI ===
+        
+        async function loadOperatorsConfig() {
+            try {
+                const operators = await api.getOperators();
+                const container = document.getElementById('operatorsConfigList');
+                
+                if (operators.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Nessun operatore configurato</p>';
+                    return;
+                }
+                
+                container.innerHTML = operators.map(operator => `
+                    <div class="operator-config-item">
+                        <div>
+                            <div style="font-weight: bold;">${operator.name}</div>
+                            <div style="font-size: 0.9rem; color: #666;">
+                                Codice: ${operator.code} | ID: ${operator.operator_id}
+                                ${operator.digital_signature ? ` | Firma: ${operator.digital_signature}` : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn-sm btn-edit" onclick="editOperator('${operator.id}')">✏️ Modifica</button>
+                            <button class="btn-sm btn-delete" onclick="deleteOperator('${operator.id}', '${operator.name}')">🗑️ Elimina</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Errore caricamento operatori config:', error);
+                document.getElementById('operatorsConfigList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">Errore caricamento operatori</p>';
+            }
+        }
+        
+        function showAddOperatorModal() {
+            document.getElementById('operatorModalTitle').textContent = '👤 Nuovo Operatore';
+            document.getElementById('operatorForm').reset();
+            document.getElementById('operatorId').value = '';
+            document.getElementById('operatorModal').style.display = 'flex';
+        }
+        
+        async function editOperator(operatorId) {
+            try {
+                const operators = await api.getOperators();
+                const operator = operators.find(o => o.id === operatorId);
+                
+                if (!operator) {
+                    showError('Operatore non trovato');
+                    return;
+                }
+                
+                document.getElementById('operatorModalTitle').textContent = '✏️ Modifica Operatore';
+                document.getElementById('operatorId').value = operator.id;
+                document.getElementById('operatorName').value = operator.name;
+                document.getElementById('operatorCode').value = operator.code;
+                document.getElementById('operatorOperatorId').value = operator.operator_id;
+                document.getElementById('operatorSignature').value = operator.digital_signature || '';
+                
+                document.getElementById('operatorModal').style.display = 'flex';
+                
+            } catch (error) {
+                console.error('Errore caricamento operatore:', error);
+                showError('Errore caricamento dati operatore');
+            }
+        }
+        
+        async function deleteOperator(operatorId, operatorName) {
+            if (!confirm(`Sei sicuro di voler eliminare l'operatore "${operatorName}"?\n\nI controlli esistenti rimarranno associati a questo operatore.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore eliminazione operatore');
+                }
+                
+                showSuccess(`Operatore "${operatorName}" eliminato con successo`);
+                await loadOperatorsConfig();
+                
+            } catch (error) {
+                console.error('Errore eliminazione operatore:', error);
+                showError('Errore eliminazione operatore');
+            }
+        }
+        
+        function closeOperatorModal() {
+            document.getElementById('operatorModal').style.display = 'none';
+        }
+        
+        // === FORM HANDLERS ===
+        
+        document.getElementById('roomForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const roomData = {
+                tag_id: document.getElementById('roomTagId').value.trim().toUpperCase(),
+                name: document.getElementById('roomName').value.trim(),
+                description: document.getElementById('roomDescription').value.trim() || null,
+                category_id: document.getElementById('roomCategory').value || null,
+                expected_lat: parseFloat(document.getElementById('roomLat').value) || null,
+                expected_lng: parseFloat(document.getElementById('roomLng').value) || null,
+                gps_radius: parseInt(document.getElementById('roomRadius').value) || 50,
+                active: true
+            };
+            
+            try {
+                const roomId = document.getElementById('roomId').value;
+                
+                if (roomId) {
+                    // Modifica esistente
+                    const response = await fetch(`${api.supabaseUrl}/rest/v1/technical_rooms?id=eq.${roomId}`, {
+                        method: 'PATCH',
+                        headers: api.headers,
+                        body: JSON.stringify(roomData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Errore aggiornamento impianto');
+                    }
+                    
+                    showSuccess('Impianto aggiornato con successo');
+                } else {
+                    // Nuovo impianto
+                    await api.addTechnicalRoom(roomData);
+                    showSuccess('Impianto creato con successo');
+                }
+                
+                closeRoomModal();
+                await loadRoomsConfig();
+                
+            } catch (error) {
+                console.error('Errore salvataggio impianto:', error);
+                showError('Errore salvataggio impianto: ' + error.message);
+            }
+        });
+        
+        document.getElementById('categoryForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const categoryData = {
+                name: document.getElementById('categoryName').value.trim(),
+                description: document.getElementById('categoryDescription').value.trim() || null
+            };
+            
+            try {
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/categories`, {
+                    method: 'POST',
+                    headers: { ...api.headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify(categoryData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore creazione categoria');
+                }
+                
+                showSuccess('Categoria creata con successo');
+                closeCategoryModal();
+                await loadCategoriesConfig();
+                
+            } catch (error) {
+                console.error('Errore salvataggio categoria:', error);
+                showError('Errore salvataggio categoria: ' + error.message);
+            }
+        });
+        
+        document.getElementById('operatorForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const operatorData = {
+                name: document.getElementById('operatorName').value.trim(),
+                code: document.getElementById('operatorCode').value.trim().toUpperCase(),
+                operator_id: document.getElementById('operatorOperatorId').value.trim().toUpperCase(),
+                digital_signature: document.getElementById('operatorSignature').value.trim() || null,
+                active: true
+            };
+            
+            try {
+                const operatorId = document.getElementById('operatorId').value;
+                
+                if (operatorId) {
+                    // Modifica esistente
+                    const response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
+                        method: 'PATCH',
+                        headers: api.headers,
+                        body: JSON.stringify(operatorData)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('Errore aggiornamento operatore');
+                    }
+                    
+                    showSuccess('Operatore aggiornato con successo');
+                } else {
+                    // Nuovo operatore
+                    await api.addOperator(operatorData);
+                    showSuccess('Operatore creato con successo');
+                }
+                
+                closeOperatorModal();
+                await loadOperatorsConfig();
+                
+            } catch (error) {
+                console.error('Errore salvataggio operatore:', error);
+                showError('Errore salvataggio operatore: ' + error.message);
+            }
+        });
+        
+        // Chiudi modal cliccando fuori
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.style.display = 'none';
+            }
+        });
         
         // Funzioni placeholder per azioni
         function editOperator(id) {
