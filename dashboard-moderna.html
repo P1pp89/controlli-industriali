@@ -1185,11 +1185,14 @@
                                 <th>Nome Suggerito</th>
                                 <th>Categoria</th>
                                 <th>Status</th>
+                                <th>UUID</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${unknownTags.map(tag => {
+                            ${unknownTags.map((tag, index) => {
+                                console.log(`🏷️ Tag ${index + 1}:`, tag);
+                                
                                 // Validazione dei dati per evitare undefined
                                 const tagId = tag.tag_id || 'N/A';
                                 const operatorName = tag.operators?.name || 'N/A';
@@ -1198,6 +1201,11 @@
                                 const suggestedCategory = tag.suggested_category || 'N/A';
                                 const tagStatus = tag.status || 'PENDING';
                                 const uuid = tag.id || '';
+                                
+                                console.log(`   - Tag ID: "${tagId}"`);
+                                console.log(`   - UUID: "${uuid}"`);
+                                console.log(`   - Status: "${tagStatus}"`);
+                                console.log(`   - Suggested Name: "${suggestedName}"`);
                                 
                                 // Escape delle stringhe per evitare problemi con apici
                                 const escapedTagId = tagId.replace(/'/g, "\\'");
@@ -1216,18 +1224,21 @@
                                 
                                 // Azioni diverse in base allo status
                                 let actions = '';
-                                if (tagStatus === 'PENDING' && tagId !== 'N/A') {
+                                if (tagStatus === 'PENDING') {
+                                    // Per tag PENDING, mostra sempre i pulsanti anche se tagId è N/A
                                     actions = `
                                         <button class="btn btn-success" onclick="quickApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✅ Approva</button>
                                         <button class="btn btn-primary" onclick="customApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✏️ Personalizza</button>
-                                        ${uuid ? `<button class="btn btn-danger" onclick="rejectTag('${uuid}')">❌ Rifiuta</button>` : ''}
+                                        ${uuid ? `<button class="btn btn-danger" onclick="rejectTag('${uuid}')">❌ Rifiuta</button>` : '<span style="color: #999;">❌ No UUID</span>'}
                                     `;
-                                } else if (tagStatus === 'REJECTED' && tagId !== 'N/A') {
+                                } else if (tagStatus === 'REJECTED') {
                                     actions = `
                                         <button class="btn btn-success" onclick="reactivateTag('${uuid}', '${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">🔄 Riattiva</button>
                                         <button class="btn btn-primary" onclick="customApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✏️ Approva Custom</button>
-                                        ${uuid ? `<button class="btn btn-danger" onclick="deleteRejectedTag('${uuid}')">🗑️ Elimina</button>` : ''}
+                                        ${uuid ? `<button class="btn btn-danger" onclick="deleteRejectedTag('${uuid}')">🗑️ Elimina</button>` : '<span style="color: #999;">🗑️ No UUID</span>'}
                                     `;
+                                } else {
+                                    actions = '<span style="color: #999;">Nessuna azione disponibile</span>';
                                 }
                                 
                                 return `
@@ -1238,6 +1249,7 @@
                                     <td>${suggestedName}</td>
                                     <td>${suggestedCategory}</td>
                                     <td>${statusBadge}</td>
+                                    <td><small><code>${uuid || 'MISSING'}</code></small></td>
                                     <td>${actions}</td>
                                 </tr>
                                 `;
