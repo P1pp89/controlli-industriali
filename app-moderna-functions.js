@@ -290,7 +290,61 @@ function generateLocationFeedback(room, locationValid, distance) {
 
 async function handleUnknownTag(tagId) {
     try {
-        // Registra tag sconosciuto per approvazione amministratore
+        // Prima controlla se il tag esiste già nel sistema (anche se rifiutato)
+        const existingTagResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}&select=*&order=created_at.desc&limit=1`, {
+            headers: api.headers
+        });
+        
+        if (existingTagResponse.ok) {
+            const existingTags = await existingTagResponse.json();
+            
+            if (existingTags && existingTags.length > 0) {
+                const existingTag = existingTags[0];
+                
+                if (existingTag.status === 'REJECTED') {
+                    // Tag precedentemente rifiutato - offri opzioni
+                    const reactivate = confirm(`🔍 Tag NFC precedentemente rifiutato: ${tagId}\n\n❌ Questo tag è stato rifiutato in precedenza dall'amministratore.\n\n🔄 VUOI RIATTIVARLO?\n\n✅ SÌ - Riattiva il tag per una nuova approvazione\n❌ NO - Mantieni il rifiuto precedente\n\n💡 Se clicchi SÌ, l'amministratore riceverà una nuova richiesta di approvazione.`);
+                    
+                    if (reactivate) {
+                        // Riattiva il tag cambiando status a PENDING
+                        const reactivateResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${existingTag.id}`, {
+                            method: 'PATCH',
+                            headers: api.headers,
+                            body: JSON.stringify({
+                                status: 'PENDING',
+                                detected_at: new Date().toISOString(), // Aggiorna data rilevamento
+                                operator_id: currentOperator.id, // Aggiorna operatore
+                                gps_lat: currentPosition?.coords.latitude,
+                                gps_lng: currentPosition?.coords.longitude,
+                                notes: `Tag riattivato dopo rifiuto precedente - Rilevato nuovamente da ${currentOperator.name}`,
+                                approved_at: null,
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                        
+                        if (!reactivateResponse.ok) {
+                            throw new Error('Errore riattivazione tag');
+                        }
+                        
+                        showSuccess(`🔄 Tag ${tagId} riattivato con successo!\n\n✅ Il tag è stato rimesso in lista per l'approvazione\n📱 L'amministratore riceverà una notifica\n🕒 Data rilevamento aggiornata: ${new Date().toLocaleString('it-IT')}\n\n💡 PROSSIMI PASSI:\n1. L'amministratore vedrà il tag nella sezione "In Attesa"\n2. Potrà approvarlo o rifiutarlo nuovamente\n3. Una volta approvato, sarà disponibile per tutti`);
+                        return;
+                    } else {
+                        showSuccess(`❌ Tag ${tagId} rimane rifiutato\n\n🚫 Il tag non è stato riattivato come richiesto\n📋 Status: Rifiutato\n\n💡 Se cambi idea, puoi sempre ri-scansionare il tag e scegliere di riattivarlo.`);
+                        return;
+                    }
+                } else if (existingTag.status === 'PENDING') {
+                    // Tag già in attesa
+                    showSuccess(`⏳ Tag ${tagId} già in attesa di approvazione\n\n📋 Status: In attesa\n📅 Prima rilevazione: ${new Date(existingTag.detected_at).toLocaleString('it-IT')}\n👤 Rilevato da: ${existingTag.operators?.name || 'N/A'}\n\n💡 L'amministratore deve ancora processare questo tag nella dashboard.`);
+                    return;
+                } else if (existingTag.status === 'APPROVED') {
+                    // Questo non dovrebbe succedere se il tag è approvato dovrebbe essere negli impianti
+                    showSuccess(`✅ Tag ${tagId} già approvato\n\n🔄 Ricarica la pagina per vedere l'impianto aggiornato\n\n💡 Se non vedi l'impianto, contatta l'amministratore.`);
+                    return;
+                }
+            }
+        }
+        
+        // Tag completamente nuovo - registra per approvazione
         await api.reportUnknownTag({
             tagId: tagId,
             operatorId: currentOperator.id,
@@ -300,11 +354,11 @@ async function handleUnknownTag(tagId) {
             suggestedCategory: guessCategory(tagId)
         });
         
-        showSuccess(`🔍 Tag NFC non configurato: ${tagId}\n\n✅ Tag registrato automaticamente per approvazione amministratore\n\n📋 Nome suggerito: Locale ${tagId}\n📂 Categoria suggerita: ${guessCategory(tagId)}\n\n📱 PROSSIMI PASSI:\n1. L'amministratore riceverà una notifica\n2. Il tag verrà configurato nella dashboard\n3. Una volta approvato, sarà disponibile per tutti\n\n💡 SUGGERIMENTO:\nInforma l'amministratore che hai rilevato un nuovo tag "${tagId}" presso questo impianto.`);
+        showSuccess(`🔍 Nuovo tag NFC rilevato: ${tagId}\n\n✅ Tag registrato automaticamente per approvazione amministratore\n\n📋 Nome suggerito: Locale ${tagId}\n📂 Categoria suggerita: ${guessCategory(tagId)}\n📍 Posizione GPS: ${currentPosition ? 'Registrata' : 'Non disponibile'}\n\n📱 PROSSIMI PASSI:\n1. L'amministratore riceverà una notifica\n2. Il tag verrà configurato nella dashboard\n3. Una volta approvato, sarà disponibile per tutti\n\n💡 SUGGERIMENTO:\nInforma l'amministratore che hai rilevato un nuovo tag "${tagId}" presso questo impianto.`);
         
     } catch (error) {
-        console.error('Errore registrazione tag sconosciuto:', error);
-        showError(`❌ Tag NFC non riconosciuto: ${tagId}\n\nImpossibile registrare il tag per approvazione.\nContatta l'amministratore per configurare questo tag.`);
+        console.error('Errore gestione tag sconosciuto:', error);
+        showError(`❌ Tag NFC non riconosciuto: ${tagId}\n\nImpossibile registrare il tag per approvazione.\nErrore: ${error.message}\n\nContatta l'amministratore per configurare questo tag.`);
     }
 }
 

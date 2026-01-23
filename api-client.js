@@ -86,8 +86,8 @@ class ControlsAPI {
     }
 
     // ===== TAG SCONOSCIUTI =====
-    async getUnknownTags() {
-        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.PENDING&select=*,operators(name)&order=created_at.desc`, {
+    async getUnknownTags(status = 'PENDING') {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`, {
             headers: this.headers
         });
         return await response.json();
