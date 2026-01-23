@@ -205,21 +205,22 @@ async function handleNFCRead(serialNumber, message) {
         const locationValid = validateLocation(room);
         const distance = calculateDistance(room);
         
-        // Se la posizione non è valida, chiedi conferma all'operatore
+        // Se la posizione non è valida, BLOCCA il controllo
         if (hasExpectedLocation(room) && !locationValid) {
             const allowedRadius = room.gps_radius || 50;
-            const confirmMessage = `⚠️ ATTENZIONE - POSIZIONE GPS ANOMALA!\n\n` +
+            const errorMessage = `🚫 CONTROLLO BLOCCATO - POSIZIONE GPS NON VALIDA!\n\n` +
                 `📍 Impianto: ${room.name}\n` +
                 `📏 Distanza rilevata: ${Math.round(distance)}m\n` +
                 `📏 Distanza massima consentita: ${allowedRadius}m\n\n` +
-                `🤔 Sei sicuro di essere presso l'impianto corretto?\n\n` +
-                `✅ CONFERMA per registrare comunque il controllo\n` +
-                `❌ ANNULLA per non registrare`;
+                `⚠️ DEVI ESSERE FISICAMENTE PRESSO L'IMPIANTO PER REGISTRARE IL CONTROLLO\n\n` +
+                `🔧 SOLUZIONI:\n` +
+                `• Avvicinati all'impianto "${room.name}"\n` +
+                `• Verifica che il GPS sia attivo e preciso\n` +
+                `• Attendi che il GPS migliori la precisione\n` +
+                `• Riprova quando sei entro ${allowedRadius}m dall'impianto`;
                 
-            if (!confirm(confirmMessage)) {
-                showError('Controllo annullato dall\'operatore.\n\nSuggerimenti:\n• Verifica di essere presso l\'impianto corretto\n• Controlla che il GPS sia attivo e preciso\n• Riprova quando sei più vicino all\'impianto');
-                return;
-            }
+            showError(errorMessage);
+            return; // BLOCCA completamente il controllo
         }
         
         // Crea record del controllo

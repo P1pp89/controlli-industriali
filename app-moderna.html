@@ -397,7 +397,13 @@
         
         // Inizializzazione
         document.addEventListener('DOMContentLoaded', function() {
-            initializeApp();
+            console.log('🚀 Inizializzazione app...');
+            try {
+                initializeApp();
+            } catch (error) {
+                console.error('❌ Errore inizializzazione:', error);
+                alert('Errore inizializzazione app: ' + error.message);
+            }
         });
         
         async function initializeApp() {
@@ -405,30 +411,44 @@
             
             try {
                 // Inizializza API client
+                console.log('📡 Inizializzazione API client...');
                 api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
                 
-                // Testa connessione
-                await testConnection();
-                
-                // Carica operatore salvato
+                // Carica operatore salvato (non dipende da connessione)
+                console.log('👤 Caricamento operatore salvato...');
                 loadSavedOperator();
                 
-                // Avvia GPS
+                // Avvia GPS (non dipende da connessione)
+                console.log('📍 Avvio GPS tracking...');
                 startGPSTracking();
                 
-                // Carica dati iniziali
-                await refreshData();
-                
-                // Avvia sync automatica
-                startAutoSync();
-                
-                // Controlla supporto NFC
+                // Controlla supporto NFC (non dipende da connessione)
+                console.log('📱 Controllo supporto NFC...');
                 checkNFCSupport();
+                
+                // Testa connessione (può fallire senza bloccare l'app)
+                console.log('🌐 Test connessione database...');
+                try {
+                    await testConnection();
+                    
+                    // Solo se connesso, carica dati
+                    console.log('📊 Caricamento dati iniziali...');
+                    await refreshData();
+                    
+                    // Avvia sync automatica
+                    console.log('🔄 Avvio sync automatica...');
+                    startAutoSync();
+                } catch (connectionError) {
+                    console.warn('⚠️ Connessione database fallita, modalità offline:', connectionError);
+                    isOnline = false;
+                    updateConnectionStatus(false);
+                    // L'app continua a funzionare in modalità offline
+                }
                 
                 console.log('✅ App inizializzata correttamente');
                 
             } catch (error) {
-                console.error('❌ Errore inizializzazione:', error);
+                console.error('❌ Errore critico inizializzazione:', error);
                 showError('Errore inizializzazione app: ' + error.message);
             }
         }
