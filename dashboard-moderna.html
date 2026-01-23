@@ -255,6 +255,7 @@
                     <div>
                         <button class="btn btn-primary" onclick="loadUnknownTags('PENDING')" style="margin-right: 0.5rem;">📋 In Attesa</button>
                         <button class="btn" onclick="loadUnknownTags('REJECTED')" style="background: #ef4444; color: white; margin-right: 0.5rem;">❌ Rifiutati</button>
+                        <button class="btn" onclick="createTestTag()" style="background: #10b981; color: white; margin-right: 0.5rem;">🧪 Crea Test</button>
                         <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
                     </div>
                 </div>
@@ -1120,8 +1121,15 @@
             
             try {
                 console.log(`📋 Caricamento tag sconosciuti con status: ${status}...`);
+                
+                // Debug: mostra URL della richiesta
+                const debugUrl = `${api.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`;
+                console.log('🔗 URL richiesta:', debugUrl);
+                
                 const response = await api.getUnknownTags(status);
-                console.log('Risposta API tag sconosciuti:', response);
+                console.log('📦 Risposta API tag sconosciuti:', response);
+                console.log('📊 Tipo risposta:', typeof response);
+                console.log('📏 Lunghezza risposta:', Array.isArray(response) ? response.length : 'Non è array');
                 
                 // Gestisci diversi formati di risposta
                 let unknownTags = [];
@@ -1137,17 +1145,33 @@
                     unknownTags = [];
                 }
                 
-                console.log('Tag sconosciuti processati:', unknownTags);
+                console.log('🏷️ Tag sconosciuti processati:', unknownTags);
+                console.log('🔢 Numero tag trovati:', unknownTags.length);
                 
                 // Debug: mostra la struttura del primo tag se presente
                 if (unknownTags.length > 0) {
-                    console.log('Struttura primo tag:', unknownTags[0]);
-                    console.log('Campi disponibili:', Object.keys(unknownTags[0]));
+                    console.log('🔍 Struttura primo tag:', unknownTags[0]);
+                    console.log('🗝️ Campi disponibili:', Object.keys(unknownTags[0]));
                 }
                 
                 if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
                     const statusText = status === 'REJECTED' ? 'rifiutati' : 'in attesa di approvazione';
-                    container.innerHTML = `<p style="padding: 1.5rem; text-align: center; color: #10b981;">✅ Nessun tag ${statusText}</p>`;
+                    container.innerHTML = `
+                        <div style="padding: 2rem; text-align: center;">
+                            <p style="color: #10b981; font-size: 1.2rem;">✅ Nessun tag ${statusText}</p>
+                            <p style="color: #666; margin-top: 1rem;">
+                                ${status === 'PENDING' ? 
+                                    'Per testare la funzionalità, clicca "🧪 Crea Test" per creare un tag di esempio.' : 
+                                    'Non ci sono tag rifiutati al momento.'
+                                }
+                            </p>
+                            <div style="margin-top: 1rem;">
+                                <strong>🔍 Debug Info:</strong><br>
+                                <small>Status richiesto: ${status}</small><br>
+                                <small>Risposta API: ${JSON.stringify(response)}</small>
+                            </div>
+                        </div>
+                    `;
                     return;
                 }
                 
@@ -2509,6 +2533,46 @@
             } catch (error) {
                 console.error('Errore eliminazione tag:', error);
                 showError('Errore eliminazione tag: ' + error.message);
+            }
+        }
+        
+        // Funzione per creare un tag di test
+        async function createTestTag() {
+            if (!confirm('Creare un tag di test per verificare il funzionamento?\n\nVerrà creato un tag "TEST001" con status PENDING.')) {
+                return;
+            }
+            
+            try {
+                // Crea un tag di test
+                const testTag = {
+                    tag_id: 'TEST001',
+                    operator_id: null, // Nessun operatore specifico
+                    detected_at: new Date().toISOString(),
+                    gps_lat: null,
+                    gps_lng: null,
+                    suggested_name: 'Tag di Test',
+                    suggested_category: 'Test',
+                    status: 'PENDING',
+                    notes: 'Tag creato per test funzionalità dashboard'
+                };
+                
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags`, {
+                    method: 'POST',
+                    headers: { ...api.headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify(testTag)
+                });
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+                
+                showSuccess('✅ Tag di test creato con successo!\n\nOra dovresti vedere il tag "TEST001" nella lista.');
+                await loadUnknownTags('PENDING'); // Ricarica la lista
+                
+            } catch (error) {
+                console.error('Errore creazione tag test:', error);
+                showError('Errore creazione tag test: ' + error.message);
             }
         }
         
