@@ -223,9 +223,6 @@ async function handleNFCRead(serialNumber, message) {
         }
         
         // Crea record del controllo
-        const locationValid = validateLocation(room);
-        const distance = calculateDistance(room);
-        
         const controlData = {
             control_id: generateControlId(),
             tag_id: tagId,
@@ -288,7 +285,6 @@ function generateLocationFeedback(room, locationValid, distance) {
     } else {
         return `📍 GPS: ⚠️ ATTENZIONE - Fuori zona consentita!\n   Distanza dall'impianto: ${Math.round(distance)}m (max ${allowedRadius}m)\n   \n   ⚠️ Il controllo è stato registrato ma segnalato come anomalo.\n   Verifica di essere effettivamente presso l'impianto "${room.name}".`;
     }
-}
 }
 
 async function handleUnknownTag(tagId) {
