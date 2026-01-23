@@ -369,6 +369,16 @@
                                 <option value="night">Notte (22-06)</option>
                             </select>
                         </div>
+                        <div>
+                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🏭 Categoria:</label>
+                            <select id="reportCategory" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
+                                <option value="">Tutte le categorie</option>
+                                <option value="elettrico">⚡ Impianti Elettrici</option>
+                                <option value="antincendio">🔥 Antincendio</option>
+                                <option value="hvac">❄️ HVAC</option>
+                                <option value="ups">🔋 UPS</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2314,6 +2324,84 @@
             }
         }
         
+        // ===== CONFIGURAZIONE AZIENDA =====
+        
+        function generateControlsTable(controls) {
+            return `
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px;">
+                    <thead>
+                        <tr>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 12%;">Data/Ora</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 25%;">Impianto</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 15%;">Tag ID</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 20%;">Operatore</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 10%;">Turno</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 10%;">GPS</th>
+                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 8%;">Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${controls.map((control, index) => {
+                            const date = new Date(control.timestamp);
+                            const hour = date.getHours();
+                            const shift = hour >= 6 && hour < 14 ? 'Mattino' : 
+                                        hour >= 14 && hour < 22 ? 'Pomeriggio' : 'Notte';
+                            const gpsStatus = control.location_valid ? 'Valido' : 'Anomalia';
+                            const statusColor = control.location_valid ? '#27ae60' : '#f39c12';
+                            const rowColor = index % 2 === 0 ? '#f8f9fa' : 'white';
+                            const categoryColor = getProfessionalCategoryColor(control.technical_rooms?.categories?.name || control.tag_id);
+                            
+                            return `
+                                <tr style="background: ${rowColor};">
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${date.toLocaleString('it-IT', { 
+                                        day: '2-digit', 
+                                        month: '2-digit', 
+                                        year: '2-digit',
+                                        hour: '2-digit', 
+                                        minute: '2-digit' 
+                                    })}</td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top; background: ${categoryColor};"><strong>${control.technical_rooms?.name || 'Impianto ' + control.tag_id}</strong></td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;"><code style="background: #ecf0f1; padding: 2px 4px; border-radius: 3px;">${control.tag_id}</code></td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${control.operators?.name || 'N/A'}</td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${shift}</td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${gpsStatus}</td>
+                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top; text-align: center;"><span style="color: ${statusColor}; font-weight: bold;">✓</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+        }
+        
+        function isProfessionalElectricalPlant(name) {
+            const electrical = ['elettr', 'gener', 'ups', 'quadr', 'ge', 'mt', 'qe'];
+            return electrical.some(keyword => name.toLowerCase().includes(keyword));
+        }
+        
+        function isProfessionalFirePlant(name) {
+            const fire = ['antincendio', 'fire', 'ai', 'estintore', 'idrante'];
+            return fire.some(keyword => name.toLowerCase().includes(keyword));
+        }
+        
+        function isProfessionalHVACPlant(name) {
+            const hvac = ['hvac', 'climatizzazione', 'ventilazione', 'aria', 'condizionamento'];
+            return hvac.some(keyword => name.toLowerCase().includes(keyword));
+        }
+        
+        function isProfessionalUPSPlant(name) {
+            const ups = ['ups', 'continuità', 'batterie', 'alimentazione'];
+            return ups.some(keyword => name.toLowerCase().includes(keyword));
+        }
+        
+        function getProfessionalCategoryColor(name) {
+            if (isProfessionalElectricalPlant(name)) return '#fff3cd';
+            if (isProfessionalFirePlant(name)) return '#f8d7da';
+            if (isProfessionalHVACPlant(name)) return '#d1ecf1';
+            if (isProfessionalUPSPlant(name)) return '#d4edda';
+            return 'transparent';
+        }
+
         // ===== CONFIGURAZIONE AZIENDA =====
         
         function showCompanyConfigModal() {
