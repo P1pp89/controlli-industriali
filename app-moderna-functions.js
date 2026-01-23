@@ -300,7 +300,7 @@ async function handleUnknownTag(tagId) {
             suggestedCategory: guessCategory(tagId)
         });
         
-        showSuccess(`🔍 Tag NFC non configurato: ${tagId}\n\n✅ Tag registrato automaticamente per approvazione amministratore\n\n📋 Nome suggerito: Locale ${tagId}\n📂 Categoria suggerita: ${guessCategory(tagId)}\n\nL'amministratore riceverà una notifica per configurare questo tag.\nUna volta approvato, sarà disponibile per tutti gli operatori.`);
+        showSuccess(`🔍 Tag NFC non configurato: ${tagId}\n\n✅ Tag registrato automaticamente per approvazione amministratore\n\n📋 Nome suggerito: Locale ${tagId}\n📂 Categoria suggerita: ${guessCategory(tagId)}\n\n📱 PROSSIMI PASSI:\n1. L'amministratore riceverà una notifica\n2. Il tag verrà configurato nella dashboard\n3. Una volta approvato, sarà disponibile per tutti\n\n💡 SUGGERIMENTO:\nInforma l'amministratore che hai rilevato un nuovo tag "${tagId}" presso questo impianto.`);
         
     } catch (error) {
         console.error('Errore registrazione tag sconosciuto:', error);

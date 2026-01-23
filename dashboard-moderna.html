@@ -1111,9 +1111,13 @@
         }
         
         async function loadUnknownTags() {
+            const container = document.getElementById('unknownTagsList');
+            container.innerHTML = '<div class="loading">Caricamento tag sconosciuti...</div>';
+            
             try {
+                console.log('📋 Caricamento tag sconosciuti...');
                 const unknownTags = await api.getUnknownTags();
-                const container = document.getElementById('unknownTagsList');
+                console.log('Tag sconosciuti ricevuti:', unknownTags);
                 
                 if (unknownTags.length === 0) {
                     container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #10b981;">✅ Nessun tag sconosciuto in attesa di approvazione</p>';
@@ -1128,6 +1132,7 @@
                                 <th>Rilevato da</th>
                                 <th>Data</th>
                                 <th>Nome Suggerito</th>
+                                <th>Categoria</th>
                                 <th>Azioni</th>
                             </tr>
                         </thead>
@@ -1137,10 +1142,12 @@
                                     <td><code>${tag.tag_id}</code></td>
                                     <td>${tag.operators?.name || 'N/A'}</td>
                                     <td>${new Date(tag.detected_at).toLocaleString('it-IT')}</td>
-                                    <td>${tag.suggested_name}</td>
+                                    <td>${tag.suggested_name || 'N/A'}</td>
+                                    <td>${tag.suggested_category || 'N/A'}</td>
                                     <td>
                                         <button class="btn btn-success" onclick="quickApproveTag('${tag.tag_id}', '${tag.suggested_name}', '${tag.suggested_category}')">✅ Approva</button>
                                         <button class="btn btn-primary" onclick="customApproveTag('${tag.tag_id}')">✏️ Personalizza</button>
+                                        <button class="btn btn-danger" onclick="rejectTag('${tag.id}')">❌ Rifiuta</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1149,8 +1156,39 @@
                 `;
                 
             } catch (error) {
-                console.error('Errore caricamento tag sconosciuti:', error);
-                showError('Errore caricamento tag sconosciuti');
+                console.error('❌ Errore caricamento tag sconosciuti:', error);
+                
+                // Messaggio di errore più dettagliato
+                let errorMessage = 'Errore caricamento tag sconosciuti';
+                if (error.message.includes('relation "unknown_tags" does not exist')) {
+                    errorMessage = `
+                        <div style="padding: 2rem; text-align: center;">
+                            <h4 style="color: #e74c3c;">📋 Tabella Tag Sconosciuti Non Trovata</h4>
+                            <p style="margin: 1rem 0;">La tabella per gestire i tag sconosciuti non esiste nel database.</p>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                                <strong>🔧 Come risolvere:</strong><br>
+                                1. Vai su Supabase → SQL Editor<br>
+                                2. Esegui lo script <code>fix-database-schema.sql</code><br>
+                                3. Ricarica questa pagina
+                            </div>
+                            <button onclick="loadUnknownTags()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                                🔄 Riprova
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    errorMessage = `
+                        <div style="padding: 2rem; text-align: center;">
+                            <h4 style="color: #e74c3c;">❌ Errore Caricamento</h4>
+                            <p style="margin: 1rem 0;">${error.message}</p>
+                            <button onclick="loadUnknownTags()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
+                                🔄 Riprova
+                            </button>
+                        </div>
+                    `;
+                }
+                
+                container.innerHTML = errorMessage;
             }
         }
         
@@ -2142,6 +2180,64 @@
         
         function customApproveTag(tagId) {
             alert('Personalizzazione tag: ' + tagId + '\n(Usa il tab Configurazione per gestire i tag in modo completo)');
+        }
+        
+        async function quickApproveTag(tagId, suggestedName, suggestedCategory) {
+            if (!confirm(`Approvare il tag ${tagId} con nome "${suggestedName}"?`)) {
+                return;
+            }
+            
+            try {
+                // Aggiungi il tag come impianto tecnico
+                const roomData = {
+                    tag_id: tagId,
+                    name: suggestedName || `Impianto ${tagId}`,
+                    description: `Impianto aggiunto automaticamente da tag sconosciuto`,
+                    category_id: null, // Potresti mappare suggestedCategory a un ID categoria
+                    active: true
+                };
+                
+                await api.addTechnicalRoom(roomData);
+                
+                // Marca il tag come approvato (se l'API lo supporta)
+                // await api.approveUnknownTag(tagId, roomData);
+                
+                showSuccess(`Tag ${tagId} approvato e aggiunto come "${suggestedName}"`);
+                await loadUnknownTags(); // Ricarica la lista
+                
+            } catch (error) {
+                console.error('Errore approvazione tag:', error);
+                showError('Errore approvazione tag: ' + error.message);
+            }
+        }
+        
+        async function rejectTag(tagId) {
+            if (!confirm(`Rifiutare definitivamente il tag ${tagId}?`)) {
+                return;
+            }
+            
+            try {
+                // Marca il tag come rifiutato
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagId}`, {
+                    method: 'PATCH',
+                    headers: api.headers,
+                    body: JSON.stringify({
+                        status: 'REJECTED',
+                        approved_at: new Date().toISOString()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Errore rifiuto tag');
+                }
+                
+                showSuccess(`Tag rifiutato`);
+                await loadUnknownTags(); // Ricarica la lista
+                
+            } catch (error) {
+                console.error('Errore rifiuto tag:', error);
+                showError('Errore rifiuto tag: ' + error.message);
+            }
         }
         
         // Funzione per aprire i registri professionali
