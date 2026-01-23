@@ -92,12 +92,12 @@ function startGPSTracking() {
             const accuracy = Math.round(position.coords.accuracy);
             
             document.getElementById('gpsInfo').innerHTML = 
-                `📍 ${lat}, ${lng}<br><small>Precisione: ±${accuracy}m</small>`;
+                `📍 ${lat}, ${lng}<br><small>Precisione: ±${accuracy}m</small><br><small style="color: #10b981;">GPS attivo e funzionante</small>`;
         },
         (error) => {
             console.error('Errore GPS:', error);
-            document.getElementById('gpsInfo').textContent = 
-                `❌ Errore GPS: ${getGPSErrorMessage(error.code)}`;
+            document.getElementById('gpsInfo').innerHTML = 
+                `❌ Errore GPS: ${getGPSErrorMessage(error.code)}<br><small style="color: #ef4444;">Controlla impostazioni GPS</small>`;
         },
         options
     );
@@ -201,7 +201,31 @@ async function handleNFCRead(serialNumber, message) {
             return;
         }
         
+        // Verifica posizione GPS prima di procedere
+        const locationValid = validateLocation(room);
+        const distance = calculateDistance(room);
+        
+        // Se la posizione non è valida, chiedi conferma all'operatore
+        if (hasExpectedLocation(room) && !locationValid) {
+            const allowedRadius = room.gps_radius || 50;
+            const confirmMessage = `⚠️ ATTENZIONE - POSIZIONE GPS ANOMALA!\n\n` +
+                `📍 Impianto: ${room.name}\n` +
+                `📏 Distanza rilevata: ${Math.round(distance)}m\n` +
+                `📏 Distanza massima consentita: ${allowedRadius}m\n\n` +
+                `🤔 Sei sicuro di essere presso l'impianto corretto?\n\n` +
+                `✅ CONFERMA per registrare comunque il controllo\n` +
+                `❌ ANNULLA per non registrare`;
+                
+            if (!confirm(confirmMessage)) {
+                showError('Controllo annullato dall\'operatore.\n\nSuggerimenti:\n• Verifica di essere presso l\'impianto corretto\n• Controlla che il GPS sia attivo e preciso\n• Riprova quando sei più vicino all\'impianto');
+                return;
+            }
+        }
+        
         // Crea record del controllo
+        const locationValid = validateLocation(room);
+        const distance = calculateDistance(room);
+        
         const controlData = {
             control_id: generateControlId(),
             tag_id: tagId,
@@ -212,10 +236,10 @@ async function handleNFCRead(serialNumber, message) {
             gps_lat: currentPosition?.coords.latitude,
             gps_lng: currentPosition?.coords.longitude,
             gps_accuracy: currentPosition?.coords.accuracy,
-            location_valid: validateLocation(room),
-            distance_from_expected: calculateDistance(room),
+            location_valid: locationValid,
+            distance_from_expected: distance,
             shift_type: getCurrentShift(),
-            notes: 'Controllo effettuato tramite app web',
+            notes: generateLocationNote(room, locationValid, distance),
             synced: true
         };
         
@@ -225,13 +249,46 @@ async function handleNFCRead(serialNumber, message) {
         // Aggiorna UI
         await refreshData();
         
-        // Feedback successo
-        showSuccess(`✅ Controllo registrato!\n\n📍 Locale: ${room.name}\n👤 Operatore: ${currentOperator.name}\n🕒 Ora: ${new Date().toLocaleTimeString('it-IT')}`);
+        // Feedback successo con informazioni GPS
+        const locationMessage = generateLocationFeedback(room, locationValid, distance);
+        showSuccess(`✅ Controllo registrato!\n\n📍 Locale: ${room.name}\n👤 Operatore: ${currentOperator.name}\n🕒 Ora: ${new Date().toLocaleTimeString('it-IT')}\n\n${locationMessage}`);
         
     } catch (error) {
         console.error('Errore gestione controllo:', error);
         showError('Errore durante il salvataggio del controllo: ' + error.message);
     }
+}
+
+function generateLocationNote(room, locationValid, distance) {
+    if (!hasExpectedLocation(room)) {
+        return 'Controllo effettuato tramite app web - GPS non configurato per questo impianto';
+    }
+    
+    if (locationValid) {
+        return `Controllo effettuato tramite app web - GPS valido (distanza: ${Math.round(distance)}m)`;
+    } else {
+        const allowedRadius = room.gps_radius || 50;
+        return `Controllo effettuato tramite app web - GPS fuori zona (distanza: ${Math.round(distance)}m, consentita: ${allowedRadius}m)`;
+    }
+}
+
+function generateLocationFeedback(room, locationValid, distance) {
+    if (!currentPosition) {
+        return '📍 GPS: Non disponibile';
+    }
+    
+    if (!hasExpectedLocation(room)) {
+        return '📍 GPS: Posizione registrata (validazione non configurata)';
+    }
+    
+    const allowedRadius = room.gps_radius || 50;
+    
+    if (locationValid) {
+        return `📍 GPS: ✅ Posizione valida\n   Distanza dall'impianto: ${Math.round(distance)}m (max ${allowedRadius}m)`;
+    } else {
+        return `📍 GPS: ⚠️ ATTENZIONE - Fuori zona consentita!\n   Distanza dall'impianto: ${Math.round(distance)}m (max ${allowedRadius}m)\n   \n   ⚠️ Il controllo è stato registrato ma segnalato come anomalo.\n   Verifica di essere effettivamente presso l'impianto "${room.name}".`;
+    }
+}
 }
 
 async function handleUnknownTag(tagId) {
@@ -276,25 +333,55 @@ function extractNFCMessage(message) {
 }
 
 function validateLocation(room) {
-    if (!currentPosition || !room.hasExpectedLocation()) {
+    if (!currentPosition || !hasExpectedLocation(room)) {
         return true; // Se non ha GPS o posizione attesa, considera valido
     }
     
-    return room.isLocationValid(
-        currentPosition.coords.latitude,
-        currentPosition.coords.longitude
-    );
+    return isLocationValid(room, currentPosition.coords.latitude, currentPosition.coords.longitude);
 }
 
 function calculateDistance(room) {
-    if (!currentPosition || !room.hasExpectedLocation()) {
+    if (!currentPosition || !hasExpectedLocation(room)) {
         return 0;
     }
     
-    return room.distanceFromExpected(
-        currentPosition.coords.latitude,
-        currentPosition.coords.longitude
-    );
+    return distanceFromExpected(room, currentPosition.coords.latitude, currentPosition.coords.longitude);
+}
+
+// Funzioni helper per validazione GPS
+function hasExpectedLocation(room) {
+    return room.expected_lat != null && room.expected_lng != null;
+}
+
+function isLocationValid(room, currentLat, currentLng) {
+    if (!hasExpectedLocation(room)) {
+        return true; // Se non ha coordinate attese, considera sempre valido
+    }
+    
+    const distance = distanceFromExpected(room, currentLat, currentLng);
+    const allowedRadius = room.gps_radius || 50; // Default 50 metri
+    
+    return distance <= allowedRadius;
+}
+
+function distanceFromExpected(room, currentLat, currentLng) {
+    if (!hasExpectedLocation(room)) {
+        return 0;
+    }
+    
+    // Formula di Haversine per calcolare distanza tra due punti GPS
+    const R = 6371000; // Raggio della Terra in metri
+    const lat1Rad = room.expected_lat * Math.PI / 180;
+    const lat2Rad = currentLat * Math.PI / 180;
+    const deltaLatRad = (currentLat - room.expected_lat) * Math.PI / 180;
+    const deltaLngRad = (currentLng - room.expected_lng) * Math.PI / 180;
+    
+    const a = Math.sin(deltaLatRad/2) * Math.sin(deltaLatRad/2) +
+              Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+              Math.sin(deltaLngRad/2) * Math.sin(deltaLngRad/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return R * c; // Distanza in metri
 }
 
 function getCurrentShift() {
