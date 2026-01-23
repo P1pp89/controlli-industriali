@@ -1116,10 +1116,26 @@
             
             try {
                 console.log('📋 Caricamento tag sconosciuti...');
-                const unknownTags = await api.getUnknownTags();
-                console.log('Tag sconosciuti ricevuti:', unknownTags);
+                const response = await api.getUnknownTags();
+                console.log('Risposta API tag sconosciuti:', response);
                 
-                if (unknownTags.length === 0) {
+                // Gestisci diversi formati di risposta
+                let unknownTags = [];
+                if (Array.isArray(response)) {
+                    unknownTags = response;
+                } else if (response && Array.isArray(response.data)) {
+                    unknownTags = response.data;
+                } else if (response && typeof response === 'object') {
+                    // Se è un oggetto, prova a convertirlo in array
+                    unknownTags = Object.values(response);
+                } else {
+                    console.warn('Formato risposta inaspettato:', response);
+                    unknownTags = [];
+                }
+                
+                console.log('Tag sconosciuti processati:', unknownTags);
+                
+                if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
                     container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #10b981;">✅ Nessun tag sconosciuto in attesa di approvazione</p>';
                     return;
                 }
@@ -1139,9 +1155,9 @@
                         <tbody>
                             ${unknownTags.map(tag => `
                                 <tr>
-                                    <td><code>${tag.tag_id}</code></td>
+                                    <td><code>${tag.tag_id || 'N/A'}</code></td>
                                     <td>${tag.operators?.name || 'N/A'}</td>
-                                    <td>${new Date(tag.detected_at).toLocaleString('it-IT')}</td>
+                                    <td>${tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A'}</td>
                                     <td>${tag.suggested_name || 'N/A'}</td>
                                     <td>${tag.suggested_category || 'N/A'}</td>
                                     <td>
@@ -1181,6 +1197,10 @@
                         <div style="padding: 2rem; text-align: center;">
                             <h4 style="color: #e74c3c;">❌ Errore Caricamento</h4>
                             <p style="margin: 1rem 0;">${error.message}</p>
+                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
+                                <strong>🔍 Debug Info:</strong><br>
+                                <code style="font-size: 0.8rem;">${JSON.stringify(error, null, 2)}</code>
+                            </div>
                             <button onclick="loadUnknownTags()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
                                 🔄 Riprova
                             </button>
