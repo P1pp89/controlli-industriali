@@ -2227,28 +2227,6 @@
         
         // Funzioni placeholder per azioni - RIMOSSE, ora implementate nel tab Configurazione
         
-        async function quickApproveTag(tagId, suggestedName, suggestedCategory) {
-            try {
-                // Trova categoria ID
-                const categories = await api.getCategories();
-                const category = categories.find(c => c.name === suggestedCategory);
-                
-                await api.approveUnknownTag(tagId, {
-                    name: suggestedName,
-                    description: `Impianto ${tagId} - Configurato automaticamente`,
-                    category_id: category?.id
-                });
-                
-                showSuccess(`Tag ${tagId} approvato e configurato!`);
-                loadUnknownTags(); // Ricarica lista
-                refreshData(); // Aggiorna statistiche
-                
-            } catch (error) {
-                console.error('Errore approvazione tag:', error);
-                showError('Errore durante l\'approvazione del tag');
-            }
-        }
-        
         function customApproveTag(tagId, suggestedName, suggestedCategory) {
             if (!tagId || tagId === 'undefined' || tagId === '') {
                 alert('❌ Errore: ID tag non valido');
