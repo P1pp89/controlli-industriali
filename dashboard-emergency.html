@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 Dashboard Emergency - Controlli Industriali</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .emergency-banner {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 1rem 2rem;
+            text-align: center;
+            font-weight: bold;
+            border-bottom: 2px solid #f59e0b;
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .status {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #10b981;
+        }
+        
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #dc2626;
+        }
+        
+        .status-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #3b82f6;
+        }
+        
+        pre {
+            background: #f1f5f9;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚨 Dashboard Emergency Access</h1>
+        <p>Accesso di emergenza senza login - Solo per debug</p>
+    </div>
+    
+    <div class="emergency-banner">
+        ⚠️ MODALITÀ EMERGENZA ATTIVA - Usa solo per risolvere problemi di accesso
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <h2>🔧 Reset e Riparazione</h2>
+            <p>Usa questi strumenti per risolvere i problemi della dashboard:</p>
+            
+            <div style="margin: 2rem 0;">
+                <button class="btn btn-danger" onclick="clearAllStorage()">
+                    🗑️ Cancella Tutto (Storage + Cache)
+                </button>
+                
+                <button class="btn btn-primary" onclick="testConnection()">
+                    🔗 Test Connessione Database
+                </button>
+                
+                <button class="btn btn-success" onclick="openMainDashboard()">
+                    🚀 Apri Dashboard Principale
+                </button>
+            </div>
+            
+            <div id="status"></div>
+        </div>
+        
+        <div class="card">
+            <h2>📊 Test Rapido Database</h2>
+            <p>Verifica se il database risponde correttamente:</p>
+            
+            <button class="btn btn-primary" onclick="testDatabase()">
+                🧪 Test Database Completo
+            </button>
+            
+            <div id="dbStatus"></div>
+        </div>
+        
+        <div class="card">
+            <h2>🔐 Reset Login</h2>
+            <p>Se hai problemi con il login, usa questi reset:</p>
+            
+            <button class="btn btn-primary" onclick="resetLoginData()">
+                🔄 Reset Dati Login
+            </button>
+            
+            <button class="btn btn-success" onclick="createEmergencySession()">
+                🆘 Crea Sessione Emergenza
+            </button>
+            
+            <div id="loginStatus"></div>
+        </div>
+        
+        <div class="card">
+            <h2>📋 Informazioni Sistema</h2>
+            <div id="systemInfo">
+                <p><strong>Browser:</strong> <span id="browserInfo"></span></p>
+                <p><strong>Data/Ora:</strong> <span id="currentTime"></span></p>
+                <p><strong>LocalStorage:</strong> <span id="storageInfo"></span></p>
+                <p><strong>URL Corrente:</strong> <span id="currentUrl"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-client.js"></script>
+    <script>
+        // Configurazione
+        const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
+        
+        let api;
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+            updateSystemInfo();
+        });
+        
+        function updateSystemInfo() {
+            document.getElementById('browserInfo').textContent = navigator.userAgent.split(' ').pop();
+            document.getElementById('currentTime').textContent = new Date().toLocaleString('it-IT');
+            document.getElementById('storageInfo').textContent = `${Object.keys(localStorage).length} chiavi`;
+            document.getElementById('currentUrl').textContent = window.location.href;
+        }
+        
+        function showStatus(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status status-${type}">${message}</div>`;
+        }
+        
+        function clearAllStorage() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Cancella anche i cookie del dominio
+                document.cookie.split(";").forEach(function(c) { 
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+                });
+                
+                showStatus('status', '✅ Tutti i dati locali sono stati cancellati!<br>🔄 Ricarica la pagina per applicare le modifiche.', 'success');
+                
+                setTimeout(() => {
+                    if (confirm('Ricaricare la pagina ora?')) {
+                        location.reload(true);
+                    }
+                }, 2000);
+                
+            } catch (error) {
+                showStatus('status', `❌ Errore durante la cancellazione: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testConnection() {
+            showStatus('status', '🔄 Test connessione in corso...', 'info');
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/operators?limit=1`, {
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                
+                if (response.ok) {
+                    showStatus('status', `✅ Connessione OK!<br>Status: ${response.status}<br>URL: ${SUPABASE_URL}`, 'success');
+                } else {
+                    showStatus('status', `⚠️ Connessione con problemi<br>Status: ${response.status}<br>Messaggio: ${response.statusText}`, 'error');
+                }
+                
+            } catch (error) {
+                showStatus('status', `❌ Errore connessione: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testDatabase() {
+            showStatus('dbStatus', '🧪 Test database completo in corso...', 'info');
+            
+            try {
+                const tests = [
+                    { name: 'Operatori', endpoint: 'operators' },
+                    { name: 'Impianti', endpoint: 'technical_rooms' },
+                    { name: 'Tag Sconosciuti', endpoint: 'unknown_tags' },
+                    { name: 'Controlli', endpoint: 'controls' }
+                ];
+                
+                let results = '<h3>📊 Risultati Test:</h3>';
+                
+                for (const test of tests) {
+                    try {
+                        const response = await fetch(`${SUPABASE_URL}/rest/v1/${test.endpoint}?limit=1`, {
+                            headers: {
+                                'apikey': SUPABASE_KEY,
+                                'Authorization': `Bearer ${SUPABASE_KEY}`
+                            }
+                        });
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            results += `<p>✅ ${test.name}: OK (${Array.isArray(data) ? data.length : 'N/A'} record)</p>`;
+                        } else {
+                            results += `<p>❌ ${test.name}: Errore ${response.status}</p>`;
+                        }
+                    } catch (error) {
+                        results += `<p>💥 ${test.name}: ${error.message}</p>`;
+                    }
+                }
+                
+                showStatus('dbStatus', results, 'success');
+                
+            } catch (error) {
+                showStatus('dbStatus', `❌ Errore test database: ${error.message}`, 'error');
+            }
+        }
+        
+        function resetLoginData() {
+            try {
+                // Rimuovi tutti i dati di login
+                localStorage.removeItem('dashboardSession');
+                localStorage.removeItem('lastSyncTime');
+                localStorage.removeItem('currentOperator');
+                localStorage.removeItem('companyConfig');
+                
+                showStatus('loginStatus', '✅ Dati di login resettati!<br>Ora puoi provare ad accedere alla dashboard principale.', 'success');
+                
+            } catch (error) {
+                showStatus('loginStatus', `❌ Errore reset login: ${error.message}`, 'error');
+            }
+        }
+        
+        function createEmergencySession() {
+            try {
+                const emergencySession = {
+                    username: 'emergency',
+                    loginTime: Date.now(),
+                    expiresAt: Date.now() + (8 * 60 * 60 * 1000) // 8 ore
+                };
+                
+                localStorage.setItem('dashboardSession', JSON.stringify(emergencySession));
+                
+                showStatus('loginStatus', '🆘 Sessione di emergenza creata!<br>Username: emergency<br>Durata: 8 ore<br><br>Ora puoi aprire la dashboard principale.', 'success');
+                
+            } catch (error) {
+                showStatus('loginStatus', `❌ Errore creazione sessione: ${error.message}`, 'error');
+            }
+        }
+        
+        function openMainDashboard() {
+            window.open('dashboard-moderna.html', '_blank');
+        }
+    </script>
+</body>
+</html>
