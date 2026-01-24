@@ -331,20 +331,6 @@
             <div style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748b;">
                 <p>🔒 Accesso sicuro richiesto</p>
                 <p>Contatta l'amministratore per le credenziali</p>
-                
-                <!-- DEBUG: Bottone bypass per emergenza -->
-                <div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border-radius: 6px; border: 1px solid #f59e0b;">
-                    <p style="color: #92400e; font-weight: bold;">🚨 DEBUG MODE</p>
-                    <p style="color: #92400e; margin: 0.5rem 0;">Credenziali di test:</p>
-                    <p style="color: #92400e; font-family: monospace; font-size: 0.7rem;">
-                        test / test<br>
-                        admin / dashboard2024<br>
-                        123 / 123
-                    </p>
-                    <button onclick="bypassLogin()" style="background: #f59e0b; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem; margin-top: 0.5rem;">
-                        🔓 Bypass Login (Emergency)
-                    </button>
-                </div>
             </div>
         </div>
     </div>
@@ -465,16 +451,15 @@
         // CONFIGURAZIONE LOGIN
         const LOGIN_CONFIG = {
             users: {
-                'admin': 'dashboard2024',
-                'tecnico': 'controlli123',
-                'supervisore': 'impianti456',
-                'test': 'test',
-                '123': '123',
-                'demo': 'demo'
+                // INSERISCI QUI LE TUE CREDENZIALI PERSONALIZZATE
+                'admin': 'tuaPasswordAdmin123',
+                'supervisore': 'tuaPasswordSupervisore456',
+                'operatore': 'tuaPasswordOperatore789'
+                // Aggiungi altri utenti se necessario
             },
             sessionDuration: 8 * 60 * 60 * 1000,
-            maxAttempts: 5,
-            lockoutDuration: 5 * 60 * 1000
+            maxAttempts: 3,
+            lockoutDuration: 10 * 60 * 1000
         };
         
         // Inizializzazione
@@ -609,7 +594,7 @@
                         showLoginError(`🚫 Troppi tentativi falliti!\n\nAccount bloccato per 5 minuti.\nTentativi: ${loginAttempts}/${LOGIN_CONFIG.maxAttempts}`);
                     } else {
                         const remaining = LOGIN_CONFIG.maxAttempts - loginAttempts;
-                        showLoginError(`❌ Credenziali non valide\n\nTentativi rimanenti: ${remaining}\n\n💡 Prova: test/test o admin/dashboard2024`);
+                        showLoginError(`❌ Credenziali non valide\n\nTentativi rimanenti: ${remaining}`);
                     }
                     
                     document.getElementById('loginPassword').value = '';
