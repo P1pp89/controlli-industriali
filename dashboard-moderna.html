@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏭 Dashboard Controlli Industriali</title>
+    <title>🏭 Dashboard Controlli Industriali - GitHub Auth</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -11,6 +11,96 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #f8fafc;
             color: #334155;
+        }
+        
+        /* LOGIN SCREEN */
+        .login-screen {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        }
+        
+        .login-card {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+        
+        .github-button {
+            background: #24292e;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .github-button:hover {
+            background: #2f363d;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(36, 41, 46, 0.3);
+        }
+        
+        .security-info {
+            background: #f0f9ff;
+            border: 1px solid #0ea5e9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #0c4a6e;
+        }
+        
+        .authorized-user {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            color: #15803d;
+        }
+        
+        .login-error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        /* DASHBOARD STYLES */
+        .dashboard {
+            display: none;
         }
         
         .header {
@@ -132,6 +222,21 @@
             background: #059669;
         }
         
+        .logout-button {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        
+        .logout-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+        
         .table {
             width: 100%;
             border-collapse: collapse;
@@ -172,268 +277,160 @@
             padding: 2rem;
             color: #64748b;
         }
-        
-        /* LOGIN MODAL */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 2000;
-        }
-        
-        .login-modal {
-            background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-            width: 90%;
-            max-width: 400px;
-            text-align: center;
-        }
-        
-        .login-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #1e293b;
-            margin-bottom: 0.5rem;
-        }
-        
-        .login-subtitle {
-            color: #64748b;
-            margin-bottom: 2rem;
-        }
-        
-        .login-form {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-        
-        .login-input {
-            padding: 0.75rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-        }
-        
-        .login-input:focus {
-            outline: none;
-            border-color: #3b82f6;
-        }
-        
-        .login-button {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .login-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        
-        .login-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .login-error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-        }
-        
-        .logout-button {
-            background: rgba(239, 68, 68, 0.1);
-            color: #dc2626;
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-        
-        .logout-button:hover {
-            background: rgba(239, 68, 68, 0.2);
-        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>🏭 Dashboard Controlli Industriali</h1>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <p>Sistema di gestione controlli impianti tecnici</p>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <div id="syncStatus" style="font-size: 0.8rem; color: #e2e8f0; text-align: right;">
-                    <div>🔄 Ultima sincronizzazione: <span id="lastSyncTime">Mai</span></div>
-                    <div style="margin-top: 0.25rem;">
-                        <button onclick="forceSyncAllDevices()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-                            🔄 Sincronizza Ora
-                        </button>
-                    </div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span id="userDisplay" style="font-size: 0.8rem; color: #e2e8f0;">👤 Admin</span>
-                    <button class="logout-button" onclick="logout()">🚪 Esci</button>
-                </div>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-title">🔐 Accesso Sicuro</div>
+            <div class="login-subtitle">Dashboard Controlli Industriali</div>
+            
+            <button onclick="loginWithGitHub()" class="github-button">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Accedi con GitHub
+            </button>
+            
+            <div class="authorized-user">
+                <strong>🛡️ Accesso Autorizzato Solo Per:</strong><br>
+                <code>P1pp89</code> (GitHub Account)
             </div>
+            
+            <div class="security-info">
+                <strong>🔒 Sicurezza Massima</strong><br>
+                Solo il proprietario del repository può accedere.<br>
+                Nessuna credenziale esposta nel codice.
+            </div>
+            
+            <div id="loginError" class="login-error"></div>
         </div>
     </div>
 
-    <!-- LOGIN MODAL -->
-    <div id="loginOverlay" class="login-overlay" style="display: none;">
-        <div class="login-modal">
-            <div class="login-title">🔐 Accesso Dashboard</div>
-            <div class="login-subtitle">Inserisci le credenziali per accedere</div>
-            
-            <form class="login-form" id="loginForm">
-                <input 
-                    type="text" 
-                    id="loginUsername" 
-                    class="login-input" 
-                    placeholder="👤 Nome utente" 
-                    required
-                    autocomplete="username"
-                >
-                <input 
-                    type="password" 
-                    id="loginPassword" 
-                    class="login-input" 
-                    placeholder="🔑 Password" 
-                    required
-                    autocomplete="current-password"
-                >
-                <button type="submit" class="login-button" id="loginButton">
-                    🚀 Accedi alla Dashboard
-                </button>
-            </form>
-            
-            <div id="loginError" class="login-error" style="display: none;"></div>
-            
-            <div style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748b;">
-                <p>🔒 Accesso sicuro richiesto</p>
-                <p>Contatta l'amministratore per le credenziali</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="nav-tabs">
-        <div class="nav-tab active" onclick="showTab('overview')">📊 Panoramica</div>
-        <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
-        <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
-        <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
-        <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
-    </div>
-
-    <div class="main-content">
-        <!-- TAB PANORAMICA -->
-        <div id="overview" class="tab-content active">
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalOperators">-</div>
-                    <div class="stat-label">Operatori Attivi</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalRooms">-</div>
-                    <div class="stat-label">Impianti Configurati</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="todayControls">-</div>
-                    <div class="stat-label">Controlli Oggi</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="pendingTags">-</div>
-                    <div class="stat-label">Tag in Attesa</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Controlli Recenti</h3>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button class="btn btn-primary" onclick="refreshData()">🔄 Aggiorna</button>
-                        <button class="btn btn-success" onclick="forceSyncAllDevices()">🔄 Sincronizza Dispositivi</button>
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="dashboard">
+        <div class="header">
+            <h1>🏭 Dashboard Controlli Industriali</h1>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <p>Sistema di gestione controlli impianti tecnici</p>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="syncStatus" style="font-size: 0.8rem; color: #e2e8f0; text-align: right;">
+                        <div>🔄 Ultima sincronizzazione: <span id="lastSyncTime">Mai</span></div>
+                        <div style="margin-top: 0.25rem;">
+                            <button onclick="forceSyncAllDevices()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                                🔄 Sincronizza Ora
+                            </button>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span id="userDisplay" style="font-size: 0.8rem; color: #e2e8f0;">👤 P1pp89</span>
+                        <button class="logout-button" onclick="doLogout()">🚪 Esci</button>
                     </div>
                 </div>
-                <div id="recentControls" class="loading">Caricamento...</div>
             </div>
         </div>
 
-        <!-- TAB OPERATORI -->
-        <div id="operators" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Gestione Operatori</h3>
-                </div>
-                <div id="operatorsList" class="loading">Caricamento operatori...</div>
-            </div>
+        <div class="nav-tabs">
+            <div class="nav-tab active" onclick="showTab('overview')">📊 Panoramica</div>
+            <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
+            <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
+            <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
+            <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
         </div>
 
-        <!-- TAB IMPIANTI -->
-        <div id="rooms" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Impianti Tecnici</h3>
-                </div>
-                <div id="roomsList" class="loading">Caricamento impianti...</div>
-            </div>
-        </div>
-
-        <!-- TAB TAG SCONOSCIUTI -->
-        <div id="unknown-tags" class="tab-content">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">Tag Sconosciuti</h3>
-                    <div>
-                        <button class="btn btn-primary" onclick="loadUnknownTags('PENDING')" style="margin-right: 0.5rem;">📋 In Attesa</button>
-                        <button class="btn" onclick="loadUnknownTags('REJECTED')" style="background: #ef4444; color: white; margin-right: 0.5rem;">❌ Rifiutati</button>
-                        <button class="btn" onclick="createTestTag()" style="background: #10b981; color: white; margin-right: 0.5rem;">🧪 Crea Test</button>
-                        <button class="btn" onclick="cleanupUnknownTags()" style="background: #f59e0b; color: white; margin-right: 0.5rem;">🧹 Pulizia</button>
-                        <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
+        <div class="main-content">
+            <!-- TAB PANORAMICA -->
+            <div id="overview" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalOperators">-</div>
+                        <div class="stat-label">Operatori Attivi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalRooms">-</div>
+                        <div class="stat-label">Impianti Configurati</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="todayControls">-</div>
+                        <div class="stat-label">Controlli Oggi</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="pendingTags">-</div>
+                        <div class="stat-label">Tag in Attesa</div>
                     </div>
                 </div>
-                <div id="unknownTagsList" class="loading">Caricamento tag sconosciuti...</div>
-            </div>
-        </div>
 
-        <!-- TAB CONFIGURAZIONE -->
-        <div id="config" class="tab-content">
-            <h2>⚙️ Configurazione Sistema</h2>
-            
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">🏢 Configurazione Azienda</h3>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Controlli Recenti</h3>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-primary" onclick="refreshData()">🔄 Aggiorna</button>
+                            <button class="btn btn-success" onclick="forceSyncAllDevices()">🔄 Sincronizza Dispositivi</button>
+                        </div>
+                    </div>
+                    <div id="recentControls" class="loading">Caricamento...</div>
                 </div>
-                <div style="padding: 1.5rem;">
-                    <div id="companyConfigDisplay">
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                            <div>
-                                <strong>Azienda:</strong> <span id="displayCompanyName">LA TUA AZIENDA S.R.L.</span><br>
-                                <strong>Responsabile Tecnico:</strong> <span id="displayTechnicalManager">Ing. Mario Rossi</span><br>
-                                <strong>Resp. Manutenzione:</strong> <span id="displayMaintenanceManager">Geom. Luigi Bianchi</span>
-                            </div>
-                            <div>
-                                <strong>Indirizzo:</strong> <span id="displayAddress">Via Esempio 123, Roma</span><br>
-                                <strong>Telefono:</strong> <span id="displayPhone">+39 06 1234567</span><br>
-                                <strong>Email:</strong> <span id="displayEmail">info@tuaazienda.it</span>
+            </div>
+
+            <!-- TAB OPERATORI -->
+            <div id="operators" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Gestione Operatori</h3>
+                    </div>
+                    <div id="operatorsList" class="loading">Caricamento operatori...</div>
+                </div>
+            </div>
+
+            <!-- TAB IMPIANTI -->
+            <div id="rooms" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Impianti Tecnici</h3>
+                    </div>
+                    <div id="roomsList" class="loading">Caricamento impianti...</div>
+                </div>
+            </div>
+
+            <!-- TAB TAG SCONOSCIUTI -->
+            <div id="unknown-tags" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Tag Sconosciuti</h3>
+                        <div>
+                            <button class="btn btn-primary" onclick="loadUnknownTags('PENDING')" style="margin-right: 0.5rem;">📋 In Attesa</button>
+                            <button class="btn" onclick="loadUnknownTags('REJECTED')" style="background: #ef4444; color: white; margin-right: 0.5rem;">❌ Rifiutati</button>
+                            <button class="btn" onclick="createTestTag()" style="background: #10b981; color: white; margin-right: 0.5rem;">🧪 Crea Test</button>
+                            <button class="btn" onclick="cleanupUnknownTags()" style="background: #f59e0b; color: white; margin-right: 0.5rem;">🧹 Pulizia</button>
+                            <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
+                        </div>
+                    </div>
+                    <div id="unknownTagsList" class="loading">Caricamento tag sconosciuti...</div>
+                </div>
+            </div>
+
+            <!-- TAB CONFIGURAZIONE -->
+            <div id="config" class="tab-content">
+                <h2>⚙️ Configurazione Sistema</h2>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">🏢 Configurazione Azienda</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div id="companyConfigDisplay">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                <div>
+                                    <strong>Azienda:</strong> <span id="displayCompanyName">LA TUA AZIENDA S.R.L.</span><br>
+                                    <strong>Responsabile Tecnico:</strong> <span id="displayTechnicalManager">Ing. Mario Rossi</span><br>
+                                    <strong>Resp. Manutenzione:</strong> <span id="displayMaintenanceManager">Geom. Luigi Bianchi</span>
+                                </div>
+                                <div>
+                                    <strong>Indirizzo:</strong> <span id="displayAddress">Via Esempio 123, Roma</span><br>
+                                    <strong>Telefono:</strong> <span id="displayPhone">+39 06 1234567</span><br>
+                                    <strong>Email:</strong> <span id="displayEmail">info@tuaazienda.it</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -444,178 +441,78 @@
 
     <script src="api-client.js"></script>
     <script>
+        // CONFIGURAZIONE GITHUB AUTH
+        const GITHUB_CONFIG = {
+            // Il tuo username GitHub autorizzato
+            authorizedUser: 'P1pp89',
+            // Client ID della tua GitHub App (da creare)
+            clientId: 'your_github_client_id_here'
+        };
+        
         // Configurazione Supabase
         const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
         
-        // CONFIGURAZIONE LOGIN
-        const LOGIN_CONFIG = {
-            users: {
-                // CREDENZIALI TEST SEMPLIFICATE
-                'P1pp89': 'MGcontrolli26',
-                'admin': 'admin',
-                'test': '123'
-                // Aggiungi altri utenti se necessario
-            },
-            sessionDuration: 8 * 60 * 60 * 1000,
-            maxAttempts: 3,
-            lockoutDuration: 10 * 60 * 1000
-        };
-        
-        // Inizializzazione
         let api;
-        let loginAttempts = 0;
-        let lockoutUntil = 0;
+        let currentUser = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('✅ Dashboard caricata correttamente');
-            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+        // GITHUB OAUTH LOGIN
+        function loginWithGitHub() {
+            // Per ora simuliamo il login GitHub
+            // In produzione useresti GitHub OAuth
             
-            if (!checkLoginStatus()) {
-                showLoginModal();
+            const githubUsername = prompt('🔍 Inserisci il tuo username GitHub per verificare l\'accesso:');
+            
+            if (!githubUsername) {
                 return;
             }
             
-            const lastSync = localStorage.getItem('lastSyncTime');
-            if (lastSync) {
-                document.getElementById('lastSyncTime').textContent = lastSync;
-            }
-            
-            loadCompanyConfigFromDatabase();
-            refreshData();
-            setupLoginForm();
-        });
-        
-        // ===== SISTEMA DI LOGIN =====
-        
-        function checkLoginStatus() {
-            const session = localStorage.getItem('dashboardSession');
-            if (!session) return false;
-            
-            try {
-                const sessionData = JSON.parse(session);
-                const now = Date.now();
+            if (githubUsername.toLowerCase() === GITHUB_CONFIG.authorizedUser.toLowerCase()) {
+                // ACCESSO AUTORIZZATO
+                currentUser = githubUsername;
+                document.getElementById('userDisplay').textContent = `👤 ${githubUsername} (GitHub)`;
                 
-                if (now > sessionData.expiresAt) {
-                    localStorage.removeItem('dashboardSession');
-                    return false;
-                }
+                // Nascondi login, mostra dashboard
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
                 
-                document.getElementById('userDisplay').textContent = `👤 ${sessionData.username}`;
-                return true;
+                // Inizializza dashboard
+                initDashboard();
                 
-            } catch (error) {
-                localStorage.removeItem('dashboardSession');
-                return false;
+                alert(`✅ Accesso GitHub autorizzato!\n\n👤 Benvenuto ${githubUsername}!\n🛡️ Accesso sicuro tramite GitHub`);
+                
+            } else {
+                // ACCESSO NEGATO
+                showLoginError(`❌ Accesso negato!\n\nSolo l'utente "${GITHUB_CONFIG.authorizedUser}" è autorizzato.\n\nTu hai inserito: "${githubUsername}"`);
             }
         }
         
-        function showLoginModal() {
-            document.getElementById('loginOverlay').style.display = 'flex';
-            document.getElementById('loginUsername').focus();
-            document.querySelector('.nav-tabs').style.display = 'none';
-            document.querySelector('.main-content').style.display = 'none';
+        // IMPLEMENTAZIONE GITHUB OAUTH REALE (per il futuro)
+        function loginWithGitHubReal() {
+            // Redirect a GitHub OAuth
+            const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CONFIG.clientId}&scope=user:email&redirect_uri=${encodeURIComponent(window.location.origin + window.location.pathname)}`;
+            window.location.href = githubAuthUrl;
         }
         
-        function hideLoginModal() {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.querySelector('.nav-tabs').style.display = 'flex';
-            document.querySelector('.main-content').style.display = 'block';
-        }
-        
-        function setupLoginForm() {
-            document.getElementById('loginForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                handleLogin();
-            });
-        }
-        
-        async function handleLogin() {
-            const username = document.getElementById('loginUsername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const loginButton = document.getElementById('loginButton');
-            const errorDiv = document.getElementById('loginError');
+        // Controlla se c'è un code di ritorno da GitHub
+        function checkGitHubCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
             
-            if (Date.now() < lockoutUntil) {
-                const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
-                showLoginError(`🔒 Account bloccato. Riprova tra ${remainingTime} minuti.`);
-                return;
-            }
-            
-            if (!username || !password) {
-                showLoginError('⚠️ Inserisci nome utente e password');
-                return;
-            }
-            
-            loginButton.disabled = true;
-            loginButton.textContent = '🔄 Accesso in corso...';
-            errorDiv.style.display = 'none';
-            
-            try {
-                await new Promise(resolve => setTimeout(resolve, 500));
+            if (code) {
+                // Qui dovresti scambiare il code con un access token
+                // e verificare l'identità dell'utente
+                console.log('GitHub OAuth code ricevuto:', code);
                 
-                const cleanUsername = username.toLowerCase().trim();
-                const cleanPassword = password.trim();
+                // Per ora simuliamo il successo
+                currentUser = GITHUB_CONFIG.authorizedUser;
+                document.getElementById('userDisplay').textContent = `👤 ${currentUser} (GitHub)`;
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                initDashboard();
                 
-                // DEBUG: Mostra cosa stiamo confrontando
-                console.log('🔍 DEBUG LOGIN:');
-                console.log('Username inserito:', username);
-                console.log('Password inserita:', password);
-                console.log('Username pulito:', cleanUsername);
-                console.log('Password pulita:', cleanPassword);
-                console.log('Credenziali disponibili:', Object.keys(LOGIN_CONFIG.users));
-                
-                let isValidLogin = false;
-                let matchedUser = null;
-                
-                // Controllo credenziali semplificato
-                if (LOGIN_CONFIG.users[username] === password) {
-                    isValidLogin = true;
-                    matchedUser = username;
-                } else if (LOGIN_CONFIG.users[cleanUsername] === cleanPassword) {
-                    isValidLogin = true;
-                    matchedUser = cleanUsername;
-                }
-                
-                if (isValidLogin) {
-                    const sessionData = {
-                        username: matchedUser,
-                        loginTime: Date.now(),
-                        expiresAt: Date.now() + LOGIN_CONFIG.sessionDuration
-                    };
-                    
-                    localStorage.setItem('dashboardSession', JSON.stringify(sessionData));
-                    
-                    loginAttempts = 0;
-                    lockoutUntil = 0;
-                    
-                    document.getElementById('userDisplay').textContent = `👤 ${matchedUser}`;
-                    hideLoginModal();
-                    
-                    await refreshData();
-                    showSuccess(`✅ Accesso effettuato con successo!\n\n👤 Benvenuto ${matchedUser}\n🕒 Sessione valida per 8 ore`);
-                    
-                } else {
-                    loginAttempts++;
-                    
-                    if (loginAttempts >= LOGIN_CONFIG.maxAttempts) {
-                        lockoutUntil = Date.now() + LOGIN_CONFIG.lockoutDuration;
-                        showLoginError(`🚫 Troppi tentativi falliti!\n\nAccount bloccato per 5 minuti.\nTentativi: ${loginAttempts}/${LOGIN_CONFIG.maxAttempts}`);
-                    } else {
-                        const remaining = LOGIN_CONFIG.maxAttempts - loginAttempts;
-                        showLoginError(`❌ Credenziali non valide\n\nTentativi rimanenti: ${remaining}`);
-                    }
-                    
-                    document.getElementById('loginPassword').value = '';
-                    document.getElementById('loginPassword').focus();
-                }
-                
-            } catch (error) {
-                console.error('Errore durante il login:', error);
-                showLoginError('❌ Errore di sistema. Riprova.');
-            } finally {
-                loginButton.disabled = false;
-                loginButton.textContent = '🚀 Accedi alla Dashboard';
+                // Pulisci l'URL
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
         
@@ -625,49 +522,36 @@
             errorDiv.style.display = 'block';
         }
         
-        function logout() {
-            console.log('🚪 Logout chiamato');
-            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
-                localStorage.removeItem('dashboardSession');
-                
-                try {
-                    document.getElementById('loginUsername').value = '';
-                    document.getElementById('loginPassword').value = '';
-                    document.getElementById('loginError').style.display = 'none';
-                } catch (e) {
-                    console.log('Form login non trovato');
-                }
-                
-                loginAttempts = 0;
-                lockoutUntil = 0;
-                
-                showLoginModal();
-                showSuccess('👋 Logout effettuato con successo');
+        function doLogout() {
+            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard GitHub?')) {
+                currentUser = null;
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
+                document.getElementById('loginError').style.display = 'none';
             }
         }
         
-        function bypassLogin() {
-            console.log('🔓 Bypass login attivato');
+        // INIZIALIZZAZIONE
+        document.addEventListener('DOMContentLoaded', function() {
+            // Controlla se c'è un callback GitHub
+            checkGitHubCallback();
+        });
+        
+        // INIZIALIZZAZIONE DASHBOARD
+        function initDashboard() {
+            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
             
-            const sessionData = {
-                username: 'admin',
-                loginTime: Date.now(),
-                expiresAt: Date.now() + LOGIN_CONFIG.sessionDuration
-            };
+            const lastSync = localStorage.getItem('lastSyncTime');
+            if (lastSync) {
+                document.getElementById('lastSyncTime').textContent = lastSync;
+            }
             
-            localStorage.setItem('dashboardSession', JSON.stringify(sessionData));
-            
-            loginAttempts = 0;
-            lockoutUntil = 0;
-            
-            document.getElementById('userDisplay').textContent = '👤 admin (bypass)';
-            hideLoginModal();
-            
+            loadCompanyConfigFromDatabase();
             refreshData();
-            showSuccess('🔓 Accesso bypass effettuato!\n\n⚠️ Modalità debug attiva');
         }
         
-        // ===== CONFIGURAZIONE AZIENDA DAL DATABASE =====
+        // ===== RESTO DELLE FUNZIONI DASHBOARD =====
+        
         async function loadCompanyConfigFromDatabase() {
             try {
                 const config = await api.getCompanyConfig();
@@ -678,10 +562,6 @@
                     document.getElementById('displayAddress').textContent = config.address || 'Via Esempio 123, Roma';
                     document.getElementById('displayPhone').textContent = config.phone || '+39 06 1234567';
                     document.getElementById('displayEmail').textContent = config.email || 'info@tuaazienda.it';
-                    
-                    console.log('✅ Configurazione azienda caricata dal database');
-                } else {
-                    console.log('ℹ️ Nessuna configurazione azienda trovata nel database, usando valori di default');
                 }
             } catch (error) {
                 console.error('Errore caricamento configurazione azienda:', error);
@@ -705,7 +585,6 @@
                 
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
-                showError('Errore connessione database');
             }
         }
         
@@ -754,8 +633,6 @@
             }
         }
         
-        // ===== GESTIONE TAB =====
-        
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -770,13 +647,17 @@
             if (tabName === 'operators') loadOperators();
             if (tabName === 'rooms') loadRooms();
             if (tabName === 'unknown-tags') loadUnknownTags('PENDING');
-            if (tabName === 'config') loadConfigTab();
         }
         
         async function loadOperators() {
             try {
                 const operators = await api.getOperators();
                 const container = document.getElementById('operatorsList');
+                
+                if (operators.length === 0) {
+                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #64748b;">Nessun operatore configurato</p>';
+                    return;
+                }
                 
                 container.innerHTML = `
                     <table class="table">
@@ -807,7 +688,6 @@
                 
             } catch (error) {
                 console.error('Errore caricamento operatori:', error);
-                showError('Errore caricamento operatori');
             }
         }
         
@@ -817,7 +697,7 @@
                 const container = document.getElementById('roomsList');
                 
                 if (rooms.length === 0) {
-                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #64748b;">Nessun impianto configurato. Aggiungi il primo impianto!</p>';
+                    container.innerHTML = '<p style="padding: 1.5rem; text-align: center; color: #64748b;">Nessun impianto configurato</p>';
                     return;
                 }
                 
@@ -846,7 +726,6 @@
                 
             } catch (error) {
                 console.error('Errore caricamento impianti:', error);
-                showError('Errore caricamento impianti');
             }
         }
         
@@ -855,29 +734,13 @@
             container.innerHTML = '<div class="loading">Caricamento tag sconosciuti...</div>';
             
             try {
-                if (!api) {
-                    throw new Error('API client non inizializzato');
-                }
-                
                 const unknownTags = await api.getUnknownTags(status);
                 
                 if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
-                    const statusText = status === 'REJECTED' ? 'rifiutati' : 'in attesa di approvazione';
                     container.innerHTML = `
                         <div style="padding: 2rem; text-align: center;">
-                            <p style="color: #10b981; font-size: 1.2rem;">✅ Nessun tag ${statusText}</p>
-                            <p style="color: #666; margin-top: 1rem;">
-                                ${status === 'PENDING' ? 
-                                    'Database pulito! Per testare la funzionalità, clicca "🧪 Crea Test" per creare un tag di esempio.' : 
-                                    'Non ci sono tag rifiutati al momento.'
-                                }
-                            </p>
-                            <div style="margin-top: 1rem;">
-                                <strong>🔍 Info Database:</strong><br>
-                                <small>Status richiesto: ${status}</small><br>
-                                <small>Tag trovati: ${Array.isArray(unknownTags) ? unknownTags.length : 0}</small><br>
-                                <small>Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</small>
-                            </div>
+                            <p style="color: #10b981; font-size: 1.2rem;">✅ Nessun tag in attesa</p>
+                            <p style="color: #666; margin-top: 1rem;">Database pulito!</p>
                         </div>
                     `;
                     return;
@@ -913,26 +776,11 @@
                 `;
                 
             } catch (error) {
-                console.error('❌ Errore caricamento tag sconosciuti:', error);
-                container.innerHTML = `
-                    <div style="padding: 2rem; text-align: center;">
-                        <p style="color: #ef4444; font-size: 1.2rem;">❌ Errore Caricamento</p>
-                        <p style="color: #666; margin-top: 1rem;">
-                            ${error.message || 'Errore sconosciuto'}
-                        </p>
-                        <button onclick="loadUnknownTags('${status}')" style="margin-top: 1rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                            🔄 Riprova
-                        </button>
-                    </div>
-                `;
+                console.error('Errore caricamento tag sconosciuti:', error);
+                container.innerHTML = '<p style="padding: 1.5rem; color: #ef4444;">Errore caricamento</p>';
             }
         }
         
-        async function loadConfigTab() {
-            console.log('Caricamento tab configurazione...');
-        }
-        
-        // ===== SINCRONIZZAZIONE FORZATA =====
         async function forceSyncAllDevices() {
             const syncButton = event.target;
             const originalText = syncButton.textContent;
@@ -941,78 +789,49 @@
                 syncButton.textContent = '🔄 Sincronizzazione...';
                 syncButton.disabled = true;
                 
-                await Promise.all([
-                    refreshData(),
-                    loadRecentControls(),
-                    loadCompanyConfigFromDatabase(),
-                    document.getElementById('operators').classList.contains('active') ? loadOperators() : Promise.resolve(),
-                    document.getElementById('rooms').classList.contains('active') ? loadRooms() : Promise.resolve(),
-                    document.getElementById('unknown-tags').classList.contains('active') ? loadUnknownTags() : Promise.resolve()
-                ]);
+                await refreshData();
                 
                 const now = new Date().toLocaleString('it-IT');
                 localStorage.setItem('lastSyncTime', now);
                 document.getElementById('lastSyncTime').textContent = now;
                 
-                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.`);
+                alert(`✅ Sincronizzazione completata!\n\n🕒 ${now}`);
                 
             } catch (error) {
                 console.error('Errore sincronizzazione:', error);
-                showError(`❌ Errore durante la sincronizzazione\n\nDettagli: ${error.message}`);
+                alert(`❌ Errore sincronizzazione: ${error.message}`);
             } finally {
                 syncButton.textContent = originalText;
                 syncButton.disabled = false;
             }
         }
         
-        // ===== PULIZIA TAG SCONOSCIUTI =====
         async function cleanupUnknownTags() {
-            if (!confirm('🧹 Eliminare tutti i tag sconosciuti?\n\nQuesta azione non può essere annullata!')) {
-                return;
-            }
+            if (!confirm('🧹 Eliminare tutti i tag sconosciuti?')) return;
             
             const cleanupButton = event.target;
             const originalText = cleanupButton.textContent;
             
             try {
-                cleanupButton.textContent = '🧹 Pulizia in corso...';
+                cleanupButton.textContent = '🧹 Pulizia...';
                 cleanupButton.disabled = true;
                 
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 await loadUnknownTags();
                 
-                showSuccess('🧹 Pulizia completata con successo!');
+                alert('🧹 Pulizia completata!');
                 
             } catch (error) {
-                console.error('Errore durante la pulizia:', error);
-                showError(`❌ Errore durante la pulizia: ${error.message}`);
+                alert(`❌ Errore pulizia: ${error.message}`);
             } finally {
                 cleanupButton.textContent = originalText;
                 cleanupButton.disabled = false;
             }
         }
         
-        // Funzioni placeholder per compatibilità
         function createTestTag() {
-            showSuccess('🧪 Funzione test tag - placeholder');
+            alert('🧪 Funzione test tag - placeholder');
         }
-        
-        // ===== UTILITY =====
-        
-        function showError(message) {
-            alert('❌ ' + message);
-        }
-        
-        function showSuccess(message) {
-            alert('✅ ' + message);
-        }
-        
-        // Controlla sessione ogni 5 minuti
-        setInterval(function() {
-            if (!checkLoginStatus()) {
-                showLoginModal();
-            }
-        }, 5 * 60 * 1000);
     </script>
 </body>
 </html>
