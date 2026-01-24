@@ -1149,7 +1149,7 @@
                 console.log('🔧 Generazione registro elettrico...');
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI IMPIANTI ELETTRICI",
                     subtitle: "Controlli periodici impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici",
                     icon: "⚡",
@@ -1171,7 +1171,7 @@
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI ANTINCENDIO",
                     subtitle: "Controlli periodici impianti antincendio e sistemi di sicurezza",
                     icon: "🔥",
@@ -1192,7 +1192,7 @@
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI HVAC",
                     subtitle: "Controlli periodici sistemi di climatizzazione e ventilazione",
                     icon: "❄️",
@@ -1213,7 +1213,7 @@
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI UPS",
                     subtitle: "Controlli periodici gruppi di continuità e alimentazioni ausiliarie",
                     icon: "🔋",
@@ -1234,7 +1234,7 @@
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI COMPLETO",
                     subtitle: "Controlli periodici di tutti gli impianti tecnici industriali",
                     icon: "📊",
@@ -1255,7 +1255,7 @@
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
-                const html = generateProfessionalRegisterHTML({
+                const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI PER TURNI",
                     subtitle: "Controlli suddivisi per turni di lavoro (Mattino, Pomeriggio, Notte)",
                     icon: "🕐",
@@ -1310,7 +1310,7 @@
             }
         }
         
-        function generateProfessionalRegisterHTML(config) {
+        async function generateProfessionalRegisterHTML(config) {
             const { title, subtitle, icon, color, controls, category, showShifts } = config;
             
             const companyName = document.getElementById('displayCompanyName')?.textContent || 'LA TUA AZIENDA S.R.L.';
@@ -1319,6 +1319,15 @@
             const address = document.getElementById('displayAddress')?.textContent || 'Via Esempio 123, Roma';
             const phone = document.getElementById('displayPhone')?.textContent || '+39 06 1234567';
             const email = document.getElementById('displayEmail')?.textContent || 'info@tuaazienda.it';
+            
+            // Carica configurazione azienda per ottenere il logo
+            let logoData = null;
+            try {
+                const companyConfig = await api.getCompanyConfig();
+                logoData = companyConfig?.logo_data;
+            } catch (error) {
+                console.error('Errore caricamento logo:', error);
+            }
             
             const filters = getRegistryFilters();
             const startDate = filters.startDate || new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
@@ -1398,11 +1407,15 @@
                 `).join('');
             }
             
-            // Logo aziendale (placeholder per ora)
-            const logoSection = `
+            // Logo aziendale - usa il logo reale se disponibile, altrimenti placeholder
+            const logoSection = logoData ? `
                 <div style="text-align: center; margin-bottom: 2rem;">
-                    <div style="width: 120px; height: 80px; margin: 0 auto; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
-                        <span style="color: #666; font-size: 12px;">LOGO AZIENDA</span>
+                    <img src="${logoData}" alt="Logo ${companyName}" style="max-height: 100px; max-width: 300px; object-fit: contain; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                </div>
+            ` : `
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 120px; height: 80px; margin: 0 auto; background: ${color}; color: white; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-weight: bold; font-size: 14px;">
+                        ${companyName}
                     </div>
                 </div>
             `;
