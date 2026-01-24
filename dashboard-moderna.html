@@ -1245,20 +1245,37 @@
                 // Simula delay per sicurezza (ridotto per debug)
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                console.log('🔍 Verifica credenziali:', { 
-                    username, 
-                    expectedPassword: LOGIN_CONFIG.users[username],
-                    actualPassword: password,
-                    match: LOGIN_CONFIG.users[username] === password
+                // Verifica credenziali con pulizia extra
+                const cleanUsername = username.toLowerCase().trim();
+                const cleanPassword = password.trim();
+                
+                console.log('🔍 Verifica credenziali pulite:', { 
+                    originalUsername: username,
+                    cleanUsername: cleanUsername,
+                    originalPassword: password,
+                    cleanPassword: cleanPassword
                 });
                 
-                // Verifica credenziali
-                if (LOGIN_CONFIG.users[username] === password) {
-                    console.log('✅ Login riuscito per:', username);
+                // Controlla sia username originale che pulito
+                let isValidLogin = false;
+                let matchedUser = null;
+                
+                for (const [user, pass] of Object.entries(LOGIN_CONFIG.users)) {
+                    if ((user === username || user === cleanUsername) && pass === cleanPassword) {
+                        isValidLogin = true;
+                        matchedUser = user;
+                        break;
+                    }
+                }
+                
+                console.log('🎯 Risultato verifica:', { isValidLogin, matchedUser });
+                
+                if (isValidLogin) {
+                    console.log('✅ Login riuscito per:', matchedUser);
                     
                     // Login riuscito
                     const sessionData = {
-                        username: username,
+                        username: matchedUser,
                         loginTime: Date.now(),
                         expiresAt: Date.now() + LOGIN_CONFIG.sessionDuration
                     };
@@ -1271,14 +1288,14 @@
                     lockoutUntil = 0;
                     
                     // Aggiorna UI
-                    document.getElementById('userDisplay').textContent = `👤 ${username}`;
+                    document.getElementById('userDisplay').textContent = `👤 ${matchedUser}`;
                     hideLoginModal();
                     
                     // Carica dati
                     console.log('📊 Caricamento dati dashboard...');
                     await refreshData();
                     
-                    showSuccess(`✅ Accesso effettuato con successo!\n\n👤 Benvenuto ${username}\n🕒 Sessione valida per 8 ore`);
+                    showSuccess(`✅ Accesso effettuato con successo!\n\n👤 Benvenuto ${matchedUser}\n🕒 Sessione valida per 8 ore`);
                     
                 } else {
                     console.log('❌ Login fallito per:', username);
@@ -1728,26 +1745,19 @@
             try {
                 console.log(`📋 Caricamento tag sconosciuti con status: ${status}...`);
                 
-                // Forza refresh senza cache
-                const debugUrl = `${api.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`;
-                console.log('🔗 URL richiesta:', debugUrl);
-                
-                const response = await fetch(debugUrl, {
-                    headers: {
-                        ...api.headers,
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma': 'no-cache',
-                        'Expires': '0'
-                    }
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                // Verifica che l'API client sia inizializzato
+                if (!api) {
+                    throw new Error('API client non inizializzato');
                 }
                 
-                const unknownTags = await response.json();
+                console.log('🔗 API URL:', api.supabaseUrl);
+                console.log('🔑 API Key presente:', !!api.supabaseKey);
+                
+                // Usa l'API client invece di fetch diretto per evitare problemi di redirect
+                const unknownTags = await api.getUnknownTags(status);
+                
                 console.log('📦 Risposta API tag sconosciuti:', unknownTags);
-                console.log('📊 Numero tag trovati:', unknownTags.length);
+                console.log('📊 Numero tag trovati:', Array.isArray(unknownTags) ? unknownTags.length : 'Non è array');
                 
                 if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
                     const statusText = status === 'REJECTED' ? 'rifiutati' : 'in attesa di approvazione';
@@ -1763,13 +1773,120 @@
                             <div style="margin-top: 1rem;">
                                 <strong>🔍 Info Database:</strong><br>
                                 <small>Status richiesto: ${status}</small><br>
-                                <small>Tag trovati: ${unknownTags.length}</small><br>
+                                <small>Tag trovati: ${Array.isArray(unknownTags) ? unknownTags.length : 0}</small><br>
                                 <small>Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</small>
                             </div>
                         </div>
                     `;
                     return;
                 }
+                
+                // Se ci sono tag, mostra la tabella
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Tag ID</th>
+                                <th>Rilevato da</th>
+                                <th>Data</th>
+                                <th>Nome Suggerito</th>
+                                <th>Categoria</th>
+                                <th>Status</th>
+                                <th>UUID</th>
+                                <th>Azioni</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${unknownTags.map((tag, index) => {
+                                console.log(`🏷️ Tag ${index + 1}:`, tag);
+                                
+                                // Validazione dei dati per evitare undefined
+                                const tagId = tag.tag_id || 'N/A';
+                                const operatorName = tag.operators?.name || 'N/A';
+                                const detectedAt = tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A';
+                                const suggestedName = tag.suggested_name || 'N/A';
+                                const suggestedCategory = tag.suggested_category || 'N/A';
+                                const tagStatus = tag.status || 'PENDING';
+                                const uuid = tag.id || '';
+                                
+                                console.log(`   - Tag ID: "${tagId}"`);
+                                console.log(`   - UUID: "${uuid}"`);
+                                console.log(`   - Status: "${tagStatus}"`);
+                                console.log(`   - Suggested Name: "${suggestedName}"`);
+                                
+                                // Escape delle stringhe per evitare problemi con apici
+                                const escapedTagId = tagId.replace(/'/g, "\\'");
+                                const escapedSuggestedName = suggestedName.replace(/'/g, "\\'");
+                                const escapedSuggestedCategory = suggestedCategory.replace(/'/g, "\\'");
+                                
+                                // Badge per lo status
+                                let statusBadge = '';
+                                if (tagStatus === 'PENDING') {
+                                    statusBadge = '<span class="status-badge status-pending">⏳ In Attesa</span>';
+                                } else if (tagStatus === 'REJECTED') {
+                                    statusBadge = '<span class="status-badge" style="background: #fee2e2; color: #991b1b;">❌ Rifiutato</span>';
+                                } else if (tagStatus === 'APPROVED') {
+                                    statusBadge = '<span class="status-badge status-approved">✅ Approvato</span>';
+                                }
+                                
+                                // Azioni diverse in base allo status
+                                let actions = '';
+                                if (tagStatus === 'PENDING') {
+                                    // Per tag PENDING, mostra sempre i pulsanti anche se tagId è N/A
+                                    actions = `
+                                        <button class="btn btn-success" onclick="quickApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✅ Approva</button>
+                                        <button class="btn btn-primary" onclick="showCustomTagModal('${escapedTagId}')">✏️ Personalizza</button>
+                                        <button class="btn" onclick="rejectTag('${uuid}')" style="background: #ef4444; color: white;">❌ Rifiuta</button>
+                                    `;
+                                } else if (tagStatus === 'REJECTED') {
+                                    actions = `
+                                        <button class="btn btn-success" onclick="reactivateTag('${uuid}', '${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">🔄 Riattiva</button>
+                                        <button class="btn" onclick="deleteRejectedTag('${uuid}')" style="background: #dc2626; color: white;">🗑️ Elimina</button>
+                                    `;
+                                } else if (tagStatus === 'APPROVED') {
+                                    actions = `
+                                        <span style="color: #10b981; font-size: 0.9rem;">✅ Configurato</span>
+                                    `;
+                                }
+                                
+                                return `
+                                    <tr>
+                                        <td><code>${tagId}</code></td>
+                                        <td>${operatorName}</td>
+                                        <td>${detectedAt}</td>
+                                        <td>${suggestedName}</td>
+                                        <td>${suggestedCategory}</td>
+                                        <td>${statusBadge}</td>
+                                        <td><small>${uuid.substring(0, 8)}...</small></td>
+                                        <td>${actions}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                `;
+                
+            } catch (error) {
+                console.error('❌ Errore caricamento tag sconosciuti:', error);
+                container.innerHTML = `
+                    <div style="padding: 2rem; text-align: center;">
+                        <p style="color: #ef4444; font-size: 1.2rem;">❌ Errore Caricamento</p>
+                        <p style="color: #666; margin-top: 1rem;">
+                            ${error.message || 'Errore sconosciuto'}
+                        </p>
+                        <div style="margin-top: 1rem;">
+                            <strong>🔍 Debug Info:</strong><br>
+                            <small>Errore: ${error.name || 'Unknown'}</small><br>
+                            <small>Messaggio: ${error.message || 'N/A'}</small><br>
+                            <small>Status: ${error.status || 'N/A'}</small>
+                        </div>
+                        <button onclick="loadUnknownTags('${status}')" style="margin-top: 1rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
+                            🔄 Riprova
+                        </button>
+                    </div>
+                `;
+            }
+        }
                 
                 container.innerHTML = `
                     <table class="table">
