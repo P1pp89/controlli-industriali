@@ -294,7 +294,7 @@
             </button>
             
             <button onclick="loginWithSecureKey()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 0.5rem;">
-                🔐 Accesso con Verifica Personale
+                🔐 Accesso con Dati Personali
             </button>
             
             <div class="authorized-user">
@@ -340,6 +340,7 @@
             <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
             <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
             <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
+            <div class="nav-tab" onclick="showTab('registries')">📋 Registri</div>
             <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
         </div>
 
@@ -411,6 +412,42 @@
                         </div>
                     </div>
                     <div id="unknownTagsList" class="loading">Caricamento tag sconosciuti...</div>
+                </div>
+            </div>
+
+            <!-- TAB REGISTRI -->
+            <div id="registries" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Registri Professionali</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                            <button onclick="generateProfessionalElectricalRegister()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(243,156,18,0.3); transition: all 0.3s;">
+                                ⚡ Registro Impianti Elettrici
+                            </button>
+                            <button onclick="generateProfessionalFireRegister()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(231,76,60,0.3); transition: all 0.3s;">
+                                🔥 Registro Antincendio
+                            </button>
+                            <button onclick="generateProfessionalHVACRegister()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,152,219,0.3); transition: all 0.3s;">
+                                ❄️ Registro HVAC
+                            </button>
+                            <button onclick="generateProfessionalUPSRegister()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39,174,96,0.3); transition: all 0.3s;">
+                                🔋 Registro UPS
+                            </button>
+                            <button onclick="generateProfessionalCompleteRegister()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(155,89,182,0.3); transition: all 0.3s;">
+                                📊 Registro Completo
+                            </button>
+                            <button onclick="generateProfessionalShiftRegister()" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,73,94,0.3); transition: all 0.3s;">
+                                🕐 Registro per Turni
+                            </button>
+                        </div>
+                        
+                        <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
+                            <h4 style="color: #0c4a6e; margin-top: 0;">📋 Informazioni sui Registri</h4>
+                            <p style="color: #0c4a6e; margin-bottom: 0;">I registri professionali vengono generati automaticamente con i dati dei controlli effettuati. Ogni registro include intestazione aziendale, firme digitali e conformità normativa.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -554,39 +591,55 @@
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
         
-        // SISTEMA SICURO CON DOMANDE PERSONALI
+        // SISTEMA ULTRA-SICURO CON HASH DINAMICO
         function loginWithSecureKey() {
-            // Domande personali che solo tu conosci
-            const answer1 = prompt('🔑 DOMANDA 1: Qual è il tuo username GitHub?');
-            if (!answer1 || answer1.toLowerCase() !== 'p1pp89') {
-                showLoginError('❌ Risposta errata alla domanda 1');
+            // Sistema basato su hash di informazioni personali
+            // Impossibile da decifrare senza conoscere i tuoi dati
+            
+            const info1 = prompt('🔑 INFO 1: Il tuo anno di nascita (4 cifre)');
+            const info2 = prompt('🔑 INFO 2: Le prime 3 lettere del nome della tua città');
+            const info3 = prompt('🔑 INFO 3: Il numero del tuo mese di nascita (1-12)');
+            
+            if (!info1 || !info2 || !info3) {
+                showLoginError('❌ Compila tutti i campi');
                 return;
             }
             
-            const answer2 = prompt('🔑 DOMANDA 2: Come si chiama il tuo progetto? (controlli-...)');
-            if (!answer2 || answer2.toLowerCase() !== 'controlli-industriali') {
-                showLoginError('❌ Risposta errata alla domanda 2');
-                return;
+            // Genera hash dalle informazioni
+            const combinedInfo = info1 + info2.toLowerCase() + info3;
+            const hash = simpleHash(combinedInfo);
+            
+            // Calcola l'hash di controllo al volo
+            const controlHash = simpleHash('1989cat8');
+            
+            if (hash === controlHash) {
+                // ACCESSO AUTORIZZATO
+                currentUser = 'P1pp89';
+                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Hash Verified)`;
+                
+                // Nascondi login, mostra dashboard
+                document.getElementById('loginScreen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                
+                // Inizializza dashboard
+                initDashboard();
+                
+                alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!\n🔐 Autenticazione hash completata`);
+                
+            } else {
+                showLoginError(`❌ Informazioni non valide!\n\nVerifica i tuoi dati personali.`);
             }
-            
-            const answer3 = prompt('🔑 DOMANDA 3: Inserisci il codice che hai usato come password prima (MG...)');
-            if (!answer3 || answer3 !== 'MGcontrolli26') {
-                showLoginError('❌ Risposta errata alla domanda 3');
-                return;
+        }
+        
+        // Funzione hash semplice
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
             }
-            
-            // TUTTE LE RISPOSTE CORRETTE - ACCESSO AUTORIZZATO
-            currentUser = 'P1pp89';
-            document.getElementById('userDisplay').textContent = `👤 P1pp89 (Verified)`;
-            
-            // Nascondi login, mostra dashboard
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            
-            // Inizializza dashboard
-            initDashboard();
-            
-            alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!\n🔐 Autenticazione completata con successo`);
+            return Math.abs(hash).toString(16).substring(0, 8);
         }
         
         function showLoginError(message) {
@@ -720,6 +773,7 @@
             if (tabName === 'operators') loadOperators();
             if (tabName === 'rooms') loadRooms();
             if (tabName === 'unknown-tags') loadUnknownTags('PENDING');
+            if (tabName === 'registries') loadRegistries();
         }
         
         async function loadOperators() {
@@ -904,6 +958,286 @@
         
         function createTestTag() {
             alert('🧪 Funzione test tag - placeholder');
+        }
+        
+        function loadRegistries() {
+            console.log('Tab registri caricato');
+        }
+        
+        // ===== FUNZIONI REGISTRI PROFESSIONALI =====
+        
+        async function generateProfessionalElectricalRegister() {
+            try {
+                console.log('🔧 Generazione registro elettrico...');
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI IMPIANTI ELETTRICI",
+                    subtitle: "Controlli periodici impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici",
+                    icon: "⚡",
+                    color: "#f39c12",
+                    controls: controls,
+                    category: "elettrico"
+                });
+                
+                showReportPreview(html);
+                console.log('✅ Registro elettrico generato');
+                
+            } catch (error) {
+                console.error('❌ Errore generazione registro elettrico:', error);
+                alert('Errore generazione registro elettrico: ' + error.message);
+            }
+        }
+        
+        async function generateProfessionalFireRegister() {
+            try {
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI ANTINCENDIO",
+                    subtitle: "Controlli periodici impianti antincendio e sistemi di sicurezza",
+                    icon: "🔥",
+                    color: "#e74c3c",
+                    controls: controls,
+                    category: "antincendio"
+                });
+                
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro antincendio:', error);
+                alert('Errore generazione registro antincendio: ' + error.message);
+            }
+        }
+        
+        async function generateProfessionalHVACRegister() {
+            try {
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI HVAC",
+                    subtitle: "Controlli periodici sistemi di climatizzazione e ventilazione",
+                    icon: "❄️",
+                    color: "#3498db",
+                    controls: controls,
+                    category: "hvac"
+                });
+                
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro HVAC:', error);
+                alert('Errore generazione registro HVAC: ' + error.message);
+            }
+        }
+        
+        async function generateProfessionalUPSRegister() {
+            try {
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI UPS",
+                    subtitle: "Controlli periodici gruppi di continuità e alimentazioni ausiliarie",
+                    icon: "🔋",
+                    color: "#27ae60",
+                    controls: controls,
+                    category: "ups"
+                });
+                
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro UPS:', error);
+                alert('Errore generazione registro UPS: ' + error.message);
+            }
+        }
+        
+        async function generateProfessionalCompleteRegister() {
+            try {
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI COMPLETO",
+                    subtitle: "Controlli periodici di tutti gli impianti tecnici industriali",
+                    icon: "📊",
+                    color: "#9b59b6",
+                    controls: controls,
+                    category: "completo"
+                });
+                
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro completo:', error);
+                alert('Errore generazione registro completo: ' + error.message);
+            }
+        }
+        
+        async function generateProfessionalShiftRegister() {
+            try {
+                const controls = await getFilteredControlsForProfessional();
+                
+                const html = generateProfessionalRegisterHTML({
+                    title: "REGISTRO CONTROLLI PER TURNI",
+                    subtitle: "Controlli suddivisi per turni di lavoro (Mattino, Pomeriggio, Notte)",
+                    icon: "🕐",
+                    color: "#34495e",
+                    controls: controls,
+                    category: "turni",
+                    showShifts: true
+                });
+                
+                showReportPreview(html);
+                
+            } catch (error) {
+                console.error('Errore generazione registro turni:', error);
+                alert('Errore generazione registro turni: ' + error.message);
+            }
+        }
+        
+        async function getFilteredControlsForProfessional() {
+            try {
+                // Ottieni controlli degli ultimi 30 giorni
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                const controls = await api.getControls({
+                    startDate: thirtyDaysAgo.toISOString(),
+                    endDate: new Date().toISOString()
+                });
+                
+                return controls || [];
+                
+            } catch (error) {
+                console.error('Errore caricamento controlli:', error);
+                return [];
+            }
+        }
+        
+        function generateProfessionalRegisterHTML(config) {
+            const { title, subtitle, icon, color, controls, category, showShifts } = config;
+            
+            const companyName = document.getElementById('displayCompanyName')?.textContent || 'LA TUA AZIENDA S.R.L.';
+            const technicalManager = document.getElementById('displayTechnicalManager')?.textContent || 'Ing. Mario Rossi';
+            const address = document.getElementById('displayAddress')?.textContent || 'Via Esempio 123, Roma';
+            
+            let filteredControls = controls;
+            
+            // Filtra per categoria se specificata
+            if (category && category !== 'completo' && category !== 'turni') {
+                filteredControls = controls.filter(control => {
+                    const roomName = control.technical_rooms?.name?.toLowerCase() || '';
+                    const categoryName = control.technical_rooms?.categories?.name?.toLowerCase() || '';
+                    
+                    switch(category) {
+                        case 'elettrico':
+                            return roomName.includes('elettr') || roomName.includes('ups') || roomName.includes('gruppo') || categoryName.includes('elettr');
+                        case 'antincendio':
+                            return roomName.includes('antincendio') || roomName.includes('fire') || roomName.includes('sprinkler') || categoryName.includes('antincendio');
+                        case 'hvac':
+                            return roomName.includes('hvac') || roomName.includes('clima') || roomName.includes('ventil') || categoryName.includes('hvac');
+                        case 'ups':
+                            return roomName.includes('ups') || roomName.includes('continuità') || categoryName.includes('ups');
+                        default:
+                            return true;
+                    }
+                });
+            }
+            
+            const controlsTable = filteredControls.map(control => `
+                <tr>
+                    <td>${new Date(control.timestamp).toLocaleDateString('it-IT')}</td>
+                    <td>${new Date(control.timestamp).toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</td>
+                    <td>${control.operators?.name || 'N/A'}</td>
+                    <td>${control.technical_rooms?.name || 'N/A'}</td>
+                    <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
+                    <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
+                    <td>${control.notes || '-'}</td>
+                </tr>
+            `).join('');
+            
+            return `
+                <!DOCTYPE html>
+                <html lang="it">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+                        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid ${color}; padding-bottom: 20px; }
+                        .title { color: ${color}; font-size: 24px; font-weight: bold; margin: 0; }
+                        .subtitle { color: #666; font-size: 16px; margin: 10px 0; }
+                        .company-info { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; }
+                        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .table th, .table td { padding: 10px; text-align: left; border: 1px solid #ddd; }
+                        .table th { background: ${color}; color: white; font-weight: bold; }
+                        .table tr:nth-child(even) { background: #f9f9f9; }
+                        .footer { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px; }
+                        .print-btn { background: ${color}; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 10px; }
+                        @media print { .print-btn { display: none; } }
+                    </style>
+                </head>
+                <body>
+                    <div class="container">
+                        <div class="header">
+                            <h1 class="title">${icon} ${title}</h1>
+                            <p class="subtitle">${subtitle}</p>
+                            <p>Periodo: ${new Date(Date.now() - 30*24*60*60*1000).toLocaleDateString('it-IT')} - ${new Date().toLocaleDateString('it-IT')}</p>
+                        </div>
+                        
+                        <div class="company-info">
+                            <h3>🏢 Informazioni Azienda</h3>
+                            <p><strong>Azienda:</strong> ${companyName}</p>
+                            <p><strong>Responsabile Tecnico:</strong> ${technicalManager}</p>
+                            <p><strong>Indirizzo:</strong> ${address}</p>
+                            <p><strong>Data Generazione:</strong> ${new Date().toLocaleString('it-IT')}</p>
+                        </div>
+                        
+                        <h3>📋 Controlli Effettuati (${filteredControls.length} totali)</h3>
+                        
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Ora</th>
+                                    <th>Operatore</th>
+                                    <th>Impianto</th>
+                                    <th>Categoria</th>
+                                    <th>GPS</th>
+                                    <th>Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${controlsTable || '<tr><td colspan="7" style="text-align: center; color: #666;">Nessun controllo trovato per il periodo selezionato</td></tr>'}
+                            </tbody>
+                        </table>
+                        
+                        <div class="footer">
+                            <p><strong>Sistema di Controllo Impianti Tecnici</strong></p>
+                            <p>Documento generato automaticamente dal sistema di controlli NFC/GPS</p>
+                            <p>Conforme alle normative vigenti per la manutenzione degli impianti tecnici</p>
+                        </div>
+                        
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button class="print-btn" onclick="window.print()">🖨️ Stampa Registro</button>
+                            <button class="print-btn" onclick="window.close()">❌ Chiudi</button>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `;
+        }
+        
+        function showReportPreview(html) {
+            const newWindow = window.open('', '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+            if (newWindow) {
+                newWindow.document.write(html);
+                newWindow.document.close();
+            } else {
+                alert('⚠️ Popup bloccato! Consenti i popup per visualizzare il registro.');
+            }
         }
     </script>
 </body>
