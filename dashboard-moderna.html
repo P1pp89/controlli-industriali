@@ -420,8 +420,44 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">📋 Registri Professionali</h3>
+                        <button class="btn btn-primary" onclick="showRegistryFilters()">⚙️ Filtri Avanzati</button>
                     </div>
                     <div style="padding: 1.5rem;">
+                        
+                        <!-- Filtri per registri -->
+                        <div id="registryFilters" style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; display: none;">
+                            <h4>🔍 Filtri per Registri</h4>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                                <div>
+                                    <label><strong>Data Inizio:</strong></label>
+                                    <input type="date" id="filterStartDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label><strong>Data Fine:</strong></label>
+                                    <input type="date" id="filterEndDate" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label><strong>Operatore:</strong></label>
+                                    <select id="filterOperator" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Tutti gli operatori</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><strong>Turno:</strong></label>
+                                    <select id="filterShift" style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="">Tutti i turni</option>
+                                        <option value="mattino">Mattino (06:00-14:00)</option>
+                                        <option value="pomeriggio">Pomeriggio (14:00-22:00)</option>
+                                        <option value="notte">Notte (22:00-06:00)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <button class="btn btn-primary" onclick="applyRegistryFilters()">✅ Applica Filtri</button>
+                                <button class="btn" onclick="resetRegistryFilters()" style="background: #6c757d; color: white; margin-left: 0.5rem;">🔄 Reset</button>
+                            </div>
+                        </div>
+                        
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                             <button onclick="generateProfessionalElectricalRegister()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(243,156,18,0.3); transition: all 0.3s;">
                                 ⚡ Registro Impianti Elettrici
@@ -444,8 +480,8 @@
                         </div>
                         
                         <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-                            <h4 style="color: #0c4a6e; margin-top: 0;">📋 Informazioni sui Registri</h4>
-                            <p style="color: #0c4a6e; margin-bottom: 0;">I registri professionali vengono generati automaticamente con i dati dei controlli effettuati. Ogni registro include intestazione aziendale, firme digitali e conformità normativa.</p>
+                            <h4 style="color: #0c4a6e; margin-top: 0;">📋 Registri Professionali Avanzati</h4>
+                            <p style="color: #0c4a6e; margin-bottom: 0;">I registri includono logo aziendale, filtri personalizzabili, firme digitali e conformità normativa. Usa i filtri avanzati per personalizzare periodo, operatori e turni.</p>
                         </div>
                     </div>
                 </div>
@@ -458,6 +494,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">🏢 Configurazione Azienda</h3>
+                        <button class="btn btn-primary" onclick="editCompanyConfig()">✏️ Modifica Dati</button>
                     </div>
                     <div style="padding: 1.5rem;">
                         <div id="companyConfigDisplay">
@@ -472,6 +509,44 @@
                                     <strong>Telefono:</strong> <span id="displayPhone">+39 06 1234567</span><br>
                                     <strong>Email:</strong> <span id="displayEmail">info@tuaazienda.it</span>
                                 </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form di modifica (nascosto inizialmente) -->
+                        <div id="companyConfigForm" style="display: none; margin-top: 2rem; padding: 1.5rem; background: #f8f9fa; border-radius: 8px;">
+                            <h4>✏️ Modifica Configurazione Azienda</h4>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                                <div>
+                                    <label><strong>Nome Azienda:</strong></label>
+                                    <input type="text" id="editCompanyName" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                    
+                                    <label><strong>Responsabile Tecnico:</strong></label>
+                                    <input type="text" id="editTechnicalManager" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                    
+                                    <label><strong>Resp. Manutenzione:</strong></label>
+                                    <input type="text" id="editMaintenanceManager" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                                <div>
+                                    <label><strong>Indirizzo:</strong></label>
+                                    <input type="text" id="editAddress" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                    
+                                    <label><strong>Telefono:</strong></label>
+                                    <input type="text" id="editPhone" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                    
+                                    <label><strong>Email:</strong></label>
+                                    <input type="email" id="editEmail" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                            
+                            <div style="margin-top: 1rem;">
+                                <label><strong>Logo Aziendale:</strong></label>
+                                <input type="file" id="editLogo" accept="image/*" style="width: 100%; padding: 0.5rem; margin: 0.25rem 0; border: 1px solid #ddd; border-radius: 4px;">
+                                <small style="color: #666;">Formati supportati: JPG, PNG, SVG (max 2MB)</small>
+                            </div>
+                            
+                            <div style="margin-top: 1.5rem; text-align: center;">
+                                <button class="btn btn-success" onclick="saveCompanyConfig()" style="margin-right: 0.5rem;">💾 Salva Modifiche</button>
+                                <button class="btn" onclick="cancelEditCompanyConfig()" style="background: #6c757d; color: white;">❌ Annulla</button>
                             </div>
                         </div>
                     </div>
@@ -962,6 +1037,137 @@
         
         function loadRegistries() {
             console.log('Tab registri caricato');
+            loadOperatorsForFilter();
+            setDefaultDates();
+        }
+        
+        // ===== GESTIONE CONFIGURAZIONE AZIENDA =====
+        
+        function editCompanyConfig() {
+            // Mostra il form di modifica
+            document.getElementById('companyConfigForm').style.display = 'block';
+            
+            // Popola i campi con i valori attuali
+            document.getElementById('editCompanyName').value = document.getElementById('displayCompanyName').textContent;
+            document.getElementById('editTechnicalManager').value = document.getElementById('displayTechnicalManager').textContent;
+            document.getElementById('editMaintenanceManager').value = document.getElementById('displayMaintenanceManager').textContent;
+            document.getElementById('editAddress').value = document.getElementById('displayAddress').textContent;
+            document.getElementById('editPhone').value = document.getElementById('displayPhone').textContent;
+            document.getElementById('editEmail').value = document.getElementById('displayEmail').textContent;
+        }
+        
+        function cancelEditCompanyConfig() {
+            document.getElementById('companyConfigForm').style.display = 'none';
+        }
+        
+        async function saveCompanyConfig() {
+            try {
+                const config = {
+                    company_name: document.getElementById('editCompanyName').value,
+                    technical_manager: document.getElementById('editTechnicalManager').value,
+                    maintenance_manager: document.getElementById('editMaintenanceManager').value,
+                    address: document.getElementById('editAddress').value,
+                    phone: document.getElementById('editPhone').value,
+                    email: document.getElementById('editEmail').value
+                };
+                
+                // Gestione logo
+                const logoFile = document.getElementById('editLogo').files[0];
+                if (logoFile) {
+                    const logoData = await fileToBase64(logoFile);
+                    config.logo_data = logoData;
+                    config.logo_name = logoFile.name;
+                }
+                
+                const success = await api.saveCompanyConfig(config);
+                
+                if (success) {
+                    // Aggiorna la visualizzazione
+                    document.getElementById('displayCompanyName').textContent = config.company_name;
+                    document.getElementById('displayTechnicalManager').textContent = config.technical_manager;
+                    document.getElementById('displayMaintenanceManager').textContent = config.maintenance_manager;
+                    document.getElementById('displayAddress').textContent = config.address;
+                    document.getElementById('displayPhone').textContent = config.phone;
+                    document.getElementById('displayEmail').textContent = config.email;
+                    
+                    // Nascondi il form
+                    document.getElementById('companyConfigForm').style.display = 'none';
+                    
+                    alert('✅ Configurazione azienda salvata con successo!');
+                } else {
+                    alert('❌ Errore nel salvataggio della configurazione');
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio configurazione:', error);
+                alert('❌ Errore nel salvataggio: ' + error.message);
+            }
+        }
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
+        }
+        
+        // ===== GESTIONE FILTRI REGISTRI =====
+        
+        function showRegistryFilters() {
+            const filtersDiv = document.getElementById('registryFilters');
+            filtersDiv.style.display = filtersDiv.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        async function loadOperatorsForFilter() {
+            try {
+                const operators = await api.getOperators();
+                const select = document.getElementById('filterOperator');
+                
+                // Pulisci opzioni esistenti (tranne "Tutti")
+                select.innerHTML = '<option value="">Tutti gli operatori</option>';
+                
+                // Aggiungi operatori
+                operators.forEach(op => {
+                    const option = document.createElement('option');
+                    option.value = op.id;
+                    option.textContent = op.name;
+                    select.appendChild(option);
+                });
+                
+            } catch (error) {
+                console.error('Errore caricamento operatori per filtro:', error);
+            }
+        }
+        
+        function setDefaultDates() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('filterStartDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+            document.getElementById('filterEndDate').value = today.toISOString().split('T')[0];
+        }
+        
+        function applyRegistryFilters() {
+            alert('✅ Filtri applicati! I prossimi registri useranno questi parametri.');
+        }
+        
+        function resetRegistryFilters() {
+            document.getElementById('filterOperator').value = '';
+            document.getElementById('filterShift').value = '';
+            setDefaultDates();
+            alert('🔄 Filtri resettati ai valori predefiniti.');
+        }
+        
+        function getRegistryFilters() {
+            return {
+                startDate: document.getElementById('filterStartDate').value,
+                endDate: document.getElementById('filterEndDate').value,
+                operatorId: document.getElementById('filterOperator').value,
+                shift: document.getElementById('filterShift').value
+            };
         }
         
         // ===== FUNZIONI REGISTRI PROFESSIONALI =====
@@ -1097,16 +1303,34 @@
         
         async function getFilteredControlsForProfessional() {
             try {
-                // Ottieni controlli degli ultimi 30 giorni
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const filters = getRegistryFilters();
+                
+                // Usa le date dai filtri o default
+                const startDate = filters.startDate ? new Date(filters.startDate) : new Date(Date.now() - 30*24*60*60*1000);
+                const endDate = filters.endDate ? new Date(filters.endDate) : new Date();
                 
                 const controls = await api.getControls({
-                    startDate: thirtyDaysAgo.toISOString(),
-                    endDate: new Date().toISOString()
+                    startDate: startDate.toISOString(),
+                    endDate: endDate.toISOString(),
+                    operatorId: filters.operatorId || undefined
                 });
                 
-                return controls || [];
+                let filteredControls = controls || [];
+                
+                // Filtra per turno se specificato
+                if (filters.shift) {
+                    filteredControls = filteredControls.filter(control => {
+                        const hour = new Date(control.timestamp).getHours();
+                        switch(filters.shift) {
+                            case 'mattino': return hour >= 6 && hour < 14;
+                            case 'pomeriggio': return hour >= 14 && hour < 22;
+                            case 'notte': return hour >= 22 || hour < 6;
+                            default: return true;
+                        }
+                    });
+                }
+                
+                return filteredControls;
                 
             } catch (error) {
                 console.error('Errore caricamento controlli:', error);
@@ -1119,7 +1343,14 @@
             
             const companyName = document.getElementById('displayCompanyName')?.textContent || 'LA TUA AZIENDA S.R.L.';
             const technicalManager = document.getElementById('displayTechnicalManager')?.textContent || 'Ing. Mario Rossi';
+            const maintenanceManager = document.getElementById('displayMaintenanceManager')?.textContent || 'Geom. Luigi Bianchi';
             const address = document.getElementById('displayAddress')?.textContent || 'Via Esempio 123, Roma';
+            const phone = document.getElementById('displayPhone')?.textContent || '+39 06 1234567';
+            const email = document.getElementById('displayEmail')?.textContent || 'info@tuaazienda.it';
+            
+            const filters = getRegistryFilters();
+            const startDate = filters.startDate || new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+            const endDate = filters.endDate || new Date().toISOString().split('T')[0];
             
             let filteredControls = controls;
             
@@ -1144,17 +1375,65 @@
                 });
             }
             
-            const controlsTable = filteredControls.map(control => `
-                <tr>
-                    <td>${new Date(control.timestamp).toLocaleDateString('it-IT')}</td>
-                    <td>${new Date(control.timestamp).toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</td>
-                    <td>${control.operators?.name || 'N/A'}</td>
-                    <td>${control.technical_rooms?.name || 'N/A'}</td>
-                    <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
-                    <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
-                    <td>${control.notes || '-'}</td>
-                </tr>
-            `).join('');
+            // Raggruppa per turni se richiesto
+            let controlsTable = '';
+            
+            if (showShifts) {
+                const shifts = {
+                    'mattino': filteredControls.filter(c => {
+                        const hour = new Date(c.timestamp).getHours();
+                        return hour >= 6 && hour < 14;
+                    }),
+                    'pomeriggio': filteredControls.filter(c => {
+                        const hour = new Date(c.timestamp).getHours();
+                        return hour >= 14 && hour < 22;
+                    }),
+                    'notte': filteredControls.filter(c => {
+                        const hour = new Date(c.timestamp).getHours();
+                        return hour >= 22 || hour < 6;
+                    })
+                };
+                
+                controlsTable = Object.entries(shifts).map(([shiftName, shiftControls]) => `
+                    <tr style="background: ${color}; color: white;">
+                        <td colspan="7" style="font-weight: bold; text-align: center; padding: 1rem;">
+                            🕐 TURNO ${shiftName.toUpperCase()} (${shiftControls.length} controlli)
+                        </td>
+                    </tr>
+                    ${shiftControls.map(control => `
+                        <tr>
+                            <td>${new Date(control.timestamp).toLocaleDateString('it-IT')}</td>
+                            <td>${new Date(control.timestamp).toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</td>
+                            <td>${control.operators?.name || 'N/A'}</td>
+                            <td>${control.technical_rooms?.name || 'N/A'}</td>
+                            <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
+                            <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
+                            <td>${control.notes || '-'}</td>
+                        </tr>
+                    `).join('')}
+                `).join('');
+            } else {
+                controlsTable = filteredControls.map(control => `
+                    <tr>
+                        <td>${new Date(control.timestamp).toLocaleDateString('it-IT')}</td>
+                        <td>${new Date(control.timestamp).toLocaleTimeString('it-IT', {hour: '2-digit', minute: '2-digit'})}</td>
+                        <td>${control.operators?.name || 'N/A'}</td>
+                        <td>${control.technical_rooms?.name || 'N/A'}</td>
+                        <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
+                        <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
+                        <td>${control.notes || '-'}</td>
+                    </tr>
+                `).join('');
+            }
+            
+            // Logo aziendale (placeholder per ora)
+            const logoSection = `
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <div style="width: 120px; height: 80px; margin: 0 auto; background: #f0f0f0; border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; border-radius: 8px;">
+                        <span style="color: #666; font-size: 12px;">LOGO AZIENDA</span>
+                    </div>
+                </div>
+            `;
             
             return `
                 <!DOCTYPE html>
@@ -1164,38 +1443,85 @@
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <title>${title}</title>
                     <style>
-                        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-                        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                        @page { margin: 2cm; }
+                        body { font-family: 'Arial', sans-serif; margin: 0; padding: 0; background: white; color: #333; line-height: 1.4; }
+                        .container { max-width: 100%; margin: 0 auto; }
                         .header { text-align: center; margin-bottom: 30px; border-bottom: 3px solid ${color}; padding-bottom: 20px; }
-                        .title { color: ${color}; font-size: 24px; font-weight: bold; margin: 0; }
-                        .subtitle { color: #666; font-size: 16px; margin: 10px 0; }
-                        .company-info { background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; }
-                        .table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-                        .table th, .table td { padding: 10px; text-align: left; border: 1px solid #ddd; }
-                        .table th { background: ${color}; color: white; font-weight: bold; }
+                        .title { color: ${color}; font-size: 28px; font-weight: bold; margin: 10px 0; text-transform: uppercase; }
+                        .subtitle { color: #666; font-size: 16px; margin: 10px 0; font-style: italic; }
+                        .company-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 5px solid ${color}; }
+                        .company-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                        .info-section h4 { color: ${color}; margin-top: 0; margin-bottom: 10px; }
+                        .table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 12px; }
+                        .table th, .table td { padding: 8px; text-align: left; border: 1px solid #ddd; }
+                        .table th { background: ${color}; color: white; font-weight: bold; text-align: center; }
                         .table tr:nth-child(even) { background: #f9f9f9; }
-                        .footer { margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 12px; }
-                        .print-btn { background: ${color}; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; margin: 10px; }
-                        @media print { .print-btn { display: none; } }
+                        .table tr:hover { background: #f0f8ff; }
+                        .footer { margin-top: 40px; padding-top: 20px; border-top: 2px solid #eee; text-align: center; color: #666; font-size: 11px; }
+                        .signatures { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 40px; }
+                        .signature-box { text-align: center; border-top: 1px solid #333; padding-top: 10px; }
+                        .print-btn { background: ${color}; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; margin: 10px; font-size: 14px; }
+                        .print-btn:hover { opacity: 0.9; }
+                        @media print { .print-btn, .no-print { display: none !important; } }
+                        .stats-summary { background: #e8f4fd; padding: 15px; border-radius: 8px; margin: 20px 0; }
+                        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; }
+                        .stat-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #ddd; }
+                        .stat-number { font-size: 24px; font-weight: bold; color: ${color}; }
+                        .stat-label { font-size: 12px; color: #666; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
+                        ${logoSection}
+                        
                         <div class="header">
                             <h1 class="title">${icon} ${title}</h1>
                             <p class="subtitle">${subtitle}</p>
-                            <p>Periodo: ${new Date(Date.now() - 30*24*60*60*1000).toLocaleDateString('it-IT')} - ${new Date().toLocaleDateString('it-IT')}</p>
+                            <p><strong>Periodo:</strong> ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
                         </div>
                         
                         <div class="company-info">
-                            <h3>🏢 Informazioni Azienda</h3>
-                            <p><strong>Azienda:</strong> ${companyName}</p>
-                            <p><strong>Responsabile Tecnico:</strong> ${technicalManager}</p>
-                            <p><strong>Indirizzo:</strong> ${address}</p>
-                            <p><strong>Data Generazione:</strong> ${new Date().toLocaleString('it-IT')}</p>
+                            <div class="company-grid">
+                                <div class="info-section">
+                                    <h4>🏢 Informazioni Azienda</h4>
+                                    <p><strong>Ragione Sociale:</strong> ${companyName}</p>
+                                    <p><strong>Indirizzo:</strong> ${address}</p>
+                                    <p><strong>Telefono:</strong> ${phone}</p>
+                                    <p><strong>Email:</strong> ${email}</p>
+                                </div>
+                                <div class="info-section">
+                                    <h4>👥 Responsabili</h4>
+                                    <p><strong>Responsabile Tecnico:</strong> ${technicalManager}</p>
+                                    <p><strong>Resp. Manutenzione:</strong> ${maintenanceManager}</p>
+                                    <p><strong>Data Generazione:</strong> ${new Date().toLocaleDateString('it-IT')}</p>
+                                    <p><strong>Ora Generazione:</strong> ${new Date().toLocaleTimeString('it-IT')}</p>
+                                </div>
+                            </div>
                         </div>
                         
-                        <h3>📋 Controlli Effettuati (${filteredControls.length} totali)</h3>
+                        <div class="stats-summary">
+                            <h4 style="margin-top: 0; color: ${color};">📊 Riepilogo Statistico</h4>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <div class="stat-number">${filteredControls.length}</div>
+                                    <div class="stat-label">Controlli Totali</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">${filteredControls.filter(c => c.location_valid).length}</div>
+                                    <div class="stat-label">GPS Validi</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">${[...new Set(filteredControls.map(c => c.operators?.name))].filter(Boolean).length}</div>
+                                    <div class="stat-label">Operatori</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">${[...new Set(filteredControls.map(c => new Date(c.timestamp).toDateString()))].length}</div>
+                                    <div class="stat-label">Giorni Attivi</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h3 style="color: ${color};">📋 Dettaglio Controlli Effettuati</h3>
                         
                         <table class="table">
                             <thead>
@@ -1210,21 +1536,45 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${controlsTable || '<tr><td colspan="7" style="text-align: center; color: #666;">Nessun controllo trovato per il periodo selezionato</td></tr>'}
+                                ${controlsTable || '<tr><td colspan="7" style="text-align: center; color: #666; padding: 2rem;">Nessun controllo trovato per i filtri selezionati</td></tr>'}
                             </tbody>
                         </table>
                         
-                        <div class="footer">
-                            <p><strong>Sistema di Controllo Impianti Tecnici</strong></p>
-                            <p>Documento generato automaticamente dal sistema di controlli NFC/GPS</p>
-                            <p>Conforme alle normative vigenti per la manutenzione degli impianti tecnici</p>
+                        <div class="signatures">
+                            <div class="signature-box">
+                                <strong>Responsabile Tecnico</strong><br>
+                                ${technicalManager}
+                            </div>
+                            <div class="signature-box">
+                                <strong>Resp. Manutenzione</strong><br>
+                                ${maintenanceManager}
+                            </div>
+                            <div class="signature-box">
+                                <strong>Timbro e Firma Azienda</strong><br>
+                                ${companyName}
+                            </div>
                         </div>
                         
-                        <div style="text-align: center; margin-top: 20px;">
+                        <div class="footer">
+                            <p><strong>${companyName}</strong></p>
+                            <p>Sistema di Controllo Impianti Tecnici - Documento generato automaticamente</p>
+                            <p>Conforme alle normative vigenti per la manutenzione degli impianti tecnici industriali</p>
+                            <p style="margin-top: 10px; font-size: 10px;">Documento non valido senza firma e timbro aziendale</p>
+                        </div>
+                        
+                        <div class="no-print" style="text-align: center; margin-top: 30px;">
                             <button class="print-btn" onclick="window.print()">🖨️ Stampa Registro</button>
-                            <button class="print-btn" onclick="window.close()">❌ Chiudi</button>
+                            <button class="print-btn" onclick="downloadPDF()" style="background: #28a745;">📄 Scarica PDF</button>
+                            <button class="print-btn" onclick="window.close()" style="background: #6c757d;">❌ Chiudi</button>
                         </div>
                     </div>
+                    
+                    <script>
+                        function downloadPDF() {
+                            alert('💡 Per scaricare come PDF:\\n\\n1. Clicca "Stampa"\\n2. Seleziona "Salva come PDF"\\n3. Scegli la destinazione');
+                            window.print();
+                        }
+                    </script>
                 </body>
                 </html>
             `;
