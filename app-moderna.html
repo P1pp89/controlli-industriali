@@ -340,10 +340,6 @@
                 <button class="help-button" onclick="refreshData()">
                     🔄 Aggiorna Dati
                 </button>
-                
-                <button class="help-button" onclick="forceSyncWithDashboard()">
-                    🔄 Sincronizza con Dashboard
-                </button>
             </div>
 
             <!-- Statistiche -->
@@ -509,41 +505,6 @@
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
                 document.getElementById('syncInfo').textContent = 'Errore sincronizzazione';
-            }
-        }
-        
-        // ===== SINCRONIZZAZIONE FORZATA CON DASHBOARD =====
-        async function forceSyncWithDashboard() {
-            const syncButton = event.target;
-            const originalText = syncButton.textContent;
-            
-            try {
-                syncButton.textContent = '🔄 Sincronizzazione...';
-                syncButton.disabled = true;
-                
-                // Aggiorna info di sincronizzazione
-                document.getElementById('syncInfo').textContent = 'Sincronizzazione in corso...';
-                
-                // Forza il refresh completo di tutti i dati
-                await Promise.all([
-                    refreshData(),
-                    loadRecentControls()
-                ]);
-                
-                // Aggiorna timestamp
-                const now = new Date().toLocaleString('it-IT');
-                localStorage.setItem('lastSyncTime', now);
-                document.getElementById('syncInfo').textContent = `Sincronizzato: ${now}`;
-                
-                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 ${now}\n\n📱 L'app è ora sincronizzata con la dashboard.\n\n💡 Tutti i dati sono aggiornati e allineati.`);
-                
-            } catch (error) {
-                console.error('Errore sincronizzazione:', error);
-                document.getElementById('syncInfo').textContent = 'Errore sincronizzazione';
-                showError(`❌ Errore sincronizzazione\n\n${error.message}\n\n🔧 Verifica la connessione e riprova.`);
-            } finally {
-                syncButton.textContent = originalText;
-                syncButton.disabled = false;
             }
         }
         

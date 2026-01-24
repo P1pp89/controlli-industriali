@@ -210,6 +210,58 @@ class ControlsAPI {
         };
     }
 
+    // ===== CONFIGURAZIONE AZIENDA =====
+    async getCompanyConfig() {
+        try {
+            const response = await fetch(`${this.supabaseUrl}/rest/v1/company_config?select=*&limit=1`, {
+                headers: this.headers
+            });
+            
+            if (response.ok) {
+                const configs = await response.json();
+                return configs.length > 0 ? configs[0] : null;
+            }
+        } catch (error) {
+            console.error('Errore caricamento configurazione azienda:', error);
+        }
+        return null;
+    }
+
+    async saveCompanyConfig(config) {
+        try {
+            // Prima controlla se esiste già una configurazione
+            const existing = await this.getCompanyConfig();
+            
+            if (existing) {
+                // Aggiorna configurazione esistente
+                const response = await fetch(`${this.supabaseUrl}/rest/v1/company_config?id=eq.${existing.id}`, {
+                    method: 'PATCH',
+                    headers: this.headers,
+                    body: JSON.stringify({
+                        ...config,
+                        updated_at: new Date().toISOString()
+                    })
+                });
+                return response.ok;
+            } else {
+                // Crea nuova configurazione
+                const response = await fetch(`${this.supabaseUrl}/rest/v1/company_config`, {
+                    method: 'POST',
+                    headers: { ...this.headers, 'Prefer': 'return=representation' },
+                    body: JSON.stringify({
+                        ...config,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
+                    })
+                });
+                return response.ok;
+            }
+        } catch (error) {
+            console.error('Errore salvataggio configurazione azienda:', error);
+            return false;
+        }
+    }
+
     // ===== CONTROLLI RECENTI =====
     async getRecentControls(limit = 10) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/controls?select=*,operators(name),technical_rooms(name,tag_id)&order=timestamp.desc&limit=${limit}`, {

@@ -962,9 +962,34 @@
                 document.getElementById('lastSyncTime').textContent = lastSync;
             }
             
+            // Carica configurazione azienda dal database
+            loadCompanyConfigFromDatabase();
+            
             // Carica dati iniziali
             refreshData();
         });
+        
+        // ===== CONFIGURAZIONE AZIENDA DAL DATABASE =====
+        async function loadCompanyConfigFromDatabase() {
+            try {
+                const config = await api.getCompanyConfig();
+                if (config) {
+                    // Aggiorna i campi di visualizzazione
+                    document.getElementById('displayCompanyName').textContent = config.company_name || 'LA TUA AZIENDA S.R.L.';
+                    document.getElementById('displayTechnicalManager').textContent = config.technical_manager || 'Ing. Mario Rossi';
+                    document.getElementById('displayMaintenanceManager').textContent = config.maintenance_manager || 'Geom. Luigi Bianchi';
+                    document.getElementById('displayAddress').textContent = config.address || 'Via Esempio 123, Roma';
+                    document.getElementById('displayPhone').textContent = config.phone || '+39 06 1234567';
+                    document.getElementById('displayEmail').textContent = config.email || 'info@tuaazienda.it';
+                    
+                    console.log('✅ Configurazione azienda caricata dal database');
+                } else {
+                    console.log('ℹ️ Nessuna configurazione azienda trovata nel database, usando valori di default');
+                }
+            } catch (error) {
+                console.error('Errore caricamento configurazione azienda:', error);
+            }
+        }
         
         function showTab(tabName) {
             // Nascondi tutti i tab
@@ -999,6 +1024,11 @@
                 // Carica controlli recenti
                 await loadRecentControls();
                 
+                // Aggiorna timestamp sincronizzazione
+                const now = new Date().toLocaleString('it-IT');
+                document.getElementById('lastSyncTime').textContent = now;
+                localStorage.setItem('lastSyncTime', now);
+                
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
                 showError('Errore connessione database');
@@ -1018,6 +1048,7 @@
                 await Promise.all([
                     refreshData(),
                     loadRecentControls(),
+                    loadCompanyConfigFromDatabase(), // Aggiunto caricamento configurazione azienda
                     // Se siamo nel tab operatori, ricarica anche quelli
                     document.getElementById('operators').classList.contains('active') ? loadOperators() : Promise.resolve(),
                     // Se siamo nel tab impianti, ricarica anche quelli
@@ -1026,12 +1057,16 @@
                     document.getElementById('unknown-tags').classList.contains('active') ? loadUnknownTags() : Promise.resolve()
                 ]);
                 
+                // Aggiorna display configurazione azienda
+                await updateCompanyDisplay();
+                
                 // Aggiorna timestamp ultima sincronizzazione
                 const now = new Date().toLocaleString('it-IT');
                 localStorage.setItem('lastSyncTime', now);
+                document.getElementById('lastSyncTime').textContent = now;
                 
                 // Mostra messaggio di successo
-                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.\n\n💡 SUGGERIMENTO: Aggiorna anche l'app sui dispositivi mobili per vedere le modifiche.`);
+                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.\n📋 Configurazione azienda sincronizzata.\n\n💡 SUGGERIMENTO: Aggiorna anche l'app sui dispositivi mobili per vedere le modifiche.`);
                 
             } catch (error) {
                 console.error('Errore sincronizzazione:', error);
@@ -1065,75 +1100,87 @@
                 
                 let deletedCount = 0;
                 
-                // 1. Elimina tag con campi N/A o vuoti
-                console.log('🧹 Eliminazione tag con campi N/A...');
-                const naTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?or=(tag_id.is.null,suggested_name.is.null,suggested_name.eq.N/A,tag_id.eq.N/A)`, {
-                    method: 'DELETE',
+                // 1. Prima ottieni tutti i tag da eliminare per contarli
+                console.log('🔍 Ricerca tag da eliminare...');
+                
+                // Tag con campi N/A o vuoti
+                const naTagsQuery = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id&or=(tag_id.eq.N/A,suggested_name.eq.N/A,tag_id.is.null,suggested_name.is.null)`, {
                     headers: api.headers
                 });
+                const naTags = await naTagsQuery.json();
+                console.log('Tag N/A trovati:', naTags.length);
                 
-                if (naTagsResponse.ok) {
-                    const naCount = parseInt(naTagsResponse.headers.get('content-range')?.split('/')[1] || '0');
-                    deletedCount += naCount;
-                    console.log(`✅ Eliminati ${naCount} tag con campi N/A`);
-                }
-                
-                // 2. Elimina tag rifiutati da più di 30 giorni
-                console.log('🧹 Eliminazione tag rifiutati vecchi...');
+                // Tag rifiutati vecchi
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                
-                const oldRejectedResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?status=eq.REJECTED&created_at=lt.${thirtyDaysAgo.toISOString()}`, {
-                    method: 'DELETE',
+                const oldRejectedQuery = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id&status=eq.REJECTED&created_at=lt.${thirtyDaysAgo.toISOString()}`, {
                     headers: api.headers
                 });
+                const oldRejected = await oldRejectedQuery.json();
+                console.log('Tag rifiutati vecchi trovati:', oldRejected.length);
                 
-                if (oldRejectedResponse.ok) {
-                    const oldCount = parseInt(oldRejectedResponse.headers.get('content-range')?.split('/')[1] || '0');
-                    deletedCount += oldCount;
-                    console.log(`✅ Eliminati ${oldCount} tag rifiutati vecchi`);
-                }
-                
-                // 3. Trova e elimina duplicati (stesso tag_id con status diversi, mantieni il più recente)
-                console.log('🧹 Ricerca duplicati...');
-                const allTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=*&order=tag_id,created_at.desc`, {
+                // Trova duplicati
+                const allTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id,tag_id,created_at&order=tag_id,created_at.desc`, {
                     headers: api.headers
                 });
+                const allTags = await allTagsResponse.json();
                 
-                if (allTagsResponse.ok) {
-                    const allTags = await allTagsResponse.json();
-                    const seenTagIds = new Set();
-                    const duplicatesToDelete = [];
+                const seenTagIds = new Set();
+                const duplicatesToDelete = [];
+                
+                allTags.forEach(tag => {
+                    if (seenTagIds.has(tag.tag_id)) {
+                        duplicatesToDelete.push(tag.id);
+                    } else {
+                        seenTagIds.add(tag.tag_id);
+                    }
+                });
+                console.log('Tag duplicati trovati:', duplicatesToDelete.length);
+                
+                // 2. Elimina i tag uno per uno per evitare problemi con le query
+                const allTagsToDelete = [
+                    ...naTags.map(t => t.id),
+                    ...oldRejected.map(t => t.id),
+                    ...duplicatesToDelete
+                ];
+                
+                console.log('Totale tag da eliminare:', allTagsToDelete.length);
+                
+                // Elimina in batch di 10 per evitare timeout
+                for (let i = 0; i < allTagsToDelete.length; i += 10) {
+                    const batch = allTagsToDelete.slice(i, i + 10);
                     
-                    allTags.forEach(tag => {
-                        if (seenTagIds.has(tag.tag_id)) {
-                            duplicatesToDelete.push(tag.id);
-                        } else {
-                            seenTagIds.add(tag.tag_id);
-                        }
-                    });
-                    
-                    // Elimina duplicati uno per uno
-                    for (const duplicateId of duplicatesToDelete) {
-                        const deleteResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${duplicateId}`, {
-                            method: 'DELETE',
-                            headers: api.headers
-                        });
-                        
-                        if (deleteResponse.ok) {
-                            deletedCount++;
+                    for (const tagId of batch) {
+                        try {
+                            const deleteResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagId}`, {
+                                method: 'DELETE',
+                                headers: api.headers
+                            });
+                            
+                            if (deleteResponse.ok) {
+                                deletedCount++;
+                                console.log(`✅ Eliminato tag ID: ${tagId}`);
+                            } else {
+                                console.warn(`⚠️ Errore eliminazione tag ID: ${tagId}`);
+                            }
+                        } catch (error) {
+                            console.error(`❌ Errore eliminazione tag ID: ${tagId}`, error);
                         }
                     }
                     
-                    console.log(`✅ Eliminati ${duplicatesToDelete.length} tag duplicati`);
+                    // Pausa breve tra i batch
+                    await new Promise(resolve => setTimeout(resolve, 100));
                 }
+                
+                // Attendi un momento prima di ricaricare per assicurarsi che le eliminazioni siano completate
+                await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 // Ricarica la lista
                 await loadUnknownTags();
                 
                 // Mostra risultato
                 if (deletedCount > 0) {
-                    showSuccess(`🧹 Pulizia completata con successo!\n\n✅ Eliminati ${deletedCount} tag sconosciuti\n\n📋 DETTAGLI:\n• Tag con campi "N/A" o vuoti\n• Tag rifiutati da più di 30 giorni\n• Tag duplicati\n\n💡 La lista è ora più pulita e organizzata!`);
+                    showSuccess(`🧹 Pulizia completata con successo!\n\n✅ Eliminati ${deletedCount} tag sconosciuti\n\n📋 DETTAGLI:\n• Tag con campi "N/A" o vuoti: ${naTags.length}\n• Tag rifiutati vecchi: ${oldRejected.length}\n• Tag duplicati: ${duplicatesToDelete.length}\n\n💡 La lista è ora più pulita e organizzata!`);
                 } else {
                     showSuccess(`🧹 Pulizia completata!\n\n✅ Nessun tag da eliminare trovato\n\n📋 La lista dei tag sconosciuti è già pulita e organizzata.`);
                 }
@@ -3027,48 +3074,137 @@
             document.getElementById('companyConfigModal').style.display = 'none';
         }
         
-        function updateCompanyDisplay() {
-            const config = getCompanyConfig();
-            
-            document.getElementById('displayCompanyName').textContent = config.name;
-            document.getElementById('displayTechnicalManager').textContent = config.technicalManager;
-            document.getElementById('displayMaintenanceManager').textContent = config.maintenanceManager;
-            document.getElementById('displayAddress').textContent = config.address;
-            document.getElementById('displayPhone').textContent = config.phone;
-            document.getElementById('displayEmail').textContent = config.email;
+        async function updateCompanyDisplay() {
+            try {
+                // Prima prova a caricare dal database
+                const dbConfig = await api.getCompanyConfig();
+                
+                if (dbConfig) {
+                    document.getElementById('displayCompanyName').textContent = dbConfig.company_name || 'LA TUA AZIENDA S.R.L.';
+                    document.getElementById('displayTechnicalManager').textContent = dbConfig.technical_manager || 'Ing. Mario Rossi';
+                    document.getElementById('displayMaintenanceManager').textContent = dbConfig.maintenance_manager || 'Geom. Luigi Bianchi';
+                    document.getElementById('displayAddress').textContent = dbConfig.address || 'Via Esempio 123, Roma';
+                    document.getElementById('displayPhone').textContent = dbConfig.phone || '+39 06 1234567';
+                    document.getElementById('displayEmail').textContent = dbConfig.email || 'info@tuaazienda.it';
+                } else {
+                    // Fallback: usa configurazione locale
+                    const config = getCompanyConfig();
+                    document.getElementById('displayCompanyName').textContent = config.name;
+                    document.getElementById('displayTechnicalManager').textContent = config.technicalManager;
+                    document.getElementById('displayMaintenanceManager').textContent = config.maintenanceManager;
+                    document.getElementById('displayAddress').textContent = config.address;
+                    document.getElementById('displayPhone').textContent = config.phone;
+                    document.getElementById('displayEmail').textContent = config.email;
+                }
+            } catch (error) {
+                console.error('Errore aggiornamento display configurazione:', error);
+                // Fallback: usa configurazione locale
+                const config = getCompanyConfig();
+                document.getElementById('displayCompanyName').textContent = config.name;
+                document.getElementById('displayTechnicalManager').textContent = config.technicalManager;
+                document.getElementById('displayMaintenanceManager').textContent = config.maintenanceManager;
+                document.getElementById('displayAddress').textContent = config.address;
+                document.getElementById('displayPhone').textContent = config.phone;
+                document.getElementById('displayEmail').textContent = config.email;
+            }
         }
         
         // Form handler per configurazione azienda
         document.getElementById('companyConfigForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const newConfig = {
-                name: document.getElementById('companyName').value.trim(),
-                email: document.getElementById('companyEmail').value.trim(),
-                address: document.getElementById('companyAddress').value.trim(),
-                phone: document.getElementById('companyPhone').value.trim(),
-                technicalManager: document.getElementById('technicalManager').value.trim(),
-                maintenanceManager: document.getElementById('maintenanceManager').value.trim()
-            };
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
             
-            // Gestione logo
-            const logoFile = document.getElementById('companyLogo').files[0];
-            if (logoFile) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    newConfig.logoData = e.target.result;
-                    newConfig.logoName = logoFile.name;
-                    updateCompanyConfig(newConfig);
-                    updateCompanyDisplay();
-                    closeCompanyConfigModal();
-                    showSuccess('Configurazione azienda aggiornata con successo');
+            try {
+                submitButton.textContent = '💾 Salvataggio...';
+                submitButton.disabled = true;
+                
+                const newConfig = {
+                    company_name: document.getElementById('companyName').value.trim(),
+                    email: document.getElementById('companyEmail').value.trim(),
+                    address: document.getElementById('companyAddress').value.trim(),
+                    phone: document.getElementById('companyPhone').value.trim(),
+                    technical_manager: document.getElementById('technicalManager').value.trim(),
+                    maintenance_manager: document.getElementById('maintenanceManager').value.trim()
                 };
-                reader.readAsDataURL(logoFile);
-            } else {
-                updateCompanyConfig(newConfig);
+                
+                // Gestione logo
+                const logoFile = document.getElementById('companyLogo').files[0];
+                if (logoFile) {
+                    const reader = new FileReader();
+                    reader.onload = async function(e) {
+                        newConfig.logo_data = e.target.result;
+                        newConfig.logo_name = logoFile.name;
+                        
+                        // Salva nel database
+                        const success = await api.saveCompanyConfig(newConfig);
+                        
+                        if (success) {
+                            // Aggiorna anche localStorage per compatibilità
+                            updateCompanyConfig({
+                                name: newConfig.company_name,
+                                email: newConfig.email,
+                                address: newConfig.address,
+                                phone: newConfig.phone,
+                                technicalManager: newConfig.technical_manager,
+                                maintenanceManager: newConfig.maintenance_manager,
+                                logoData: newConfig.logo_data,
+                                logoName: newConfig.logo_name
+                            });
+                            
+                            updateCompanyDisplay();
+                            closeCompanyConfigModal();
+                            showSuccess('✅ Configurazione azienda salvata nel database!\n\n🔄 La configurazione è ora sincronizzata tra tutti i dispositivi.');
+                        } else {
+                            throw new Error('Errore salvataggio nel database');
+                        }
+                    };
+                    reader.readAsDataURL(logoFile);
+                } else {
+                    // Salva nel database senza logo
+                    const success = await api.saveCompanyConfig(newConfig);
+                    
+                    if (success) {
+                        // Aggiorna anche localStorage per compatibilità
+                        updateCompanyConfig({
+                            name: newConfig.company_name,
+                            email: newConfig.email,
+                            address: newConfig.address,
+                            phone: newConfig.phone,
+                            technicalManager: newConfig.technical_manager,
+                            maintenanceManager: newConfig.maintenance_manager
+                        });
+                        
+                        updateCompanyDisplay();
+                        closeCompanyConfigModal();
+                        showSuccess('✅ Configurazione azienda salvata nel database!\n\n🔄 La configurazione è ora sincronizzata tra tutti i dispositivi.');
+                    } else {
+                        throw new Error('Errore salvataggio nel database');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Errore salvataggio configurazione:', error);
+                showError(`❌ Errore salvataggio configurazione\n\n${error.message}\n\n🔧 La configurazione è stata salvata localmente ma non sincronizzata.`);
+                
+                // Fallback: salva almeno localmente
+                const localConfig = {
+                    name: document.getElementById('companyName').value.trim(),
+                    email: document.getElementById('companyEmail').value.trim(),
+                    address: document.getElementById('companyAddress').value.trim(),
+                    phone: document.getElementById('companyPhone').value.trim(),
+                    technicalManager: document.getElementById('technicalManager').value.trim(),
+                    maintenanceManager: document.getElementById('maintenanceManager').value.trim()
+                };
+                
+                updateCompanyConfig(localConfig);
                 updateCompanyDisplay();
                 closeCompanyConfigModal();
-                showSuccess('Configurazione azienda aggiornata con successo');
+                
+            } finally {
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
             }
         });
         
