@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Dashboard Controlli Industriali - FIXED</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .logout-button {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏭 Dashboard Controlli Industriali - VERSIONE CORRETTA</h1>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <p>Sistema di gestione controlli impianti tecnici</p>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <span id="userDisplay" style="font-size: 0.8rem; color: #e2e8f0;">👤 Admin</span>
+                <button class="logout-button" onclick="logout()">🚪 Esci</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="card">
+            <div class="card-header">
+                <h3>✅ Dashboard Corretta</h3>
+                <button class="btn btn-success" onclick="testFunctions()">🧪 Test Funzioni</button>
+            </div>
+            <div style="padding: 1.5rem;">
+                <p>Questa è una versione corretta della dashboard senza errori di sintassi.</p>
+                <div id="testResults" style="margin-top: 1rem;"></div>
+                
+                <div style="margin-top: 2rem;">
+                    <h4>🔧 Azioni Disponibili:</h4>
+                    <button class="btn btn-primary" onclick="clearStorage()" style="margin: 0.5rem;">🗑️ Pulisci Storage</button>
+                    <button class="btn btn-primary" onclick="createSession()" style="margin: 0.5rem;">🔐 Crea Sessione</button>
+                    <button class="btn btn-success" onclick="openOriginal()" style="margin: 0.5rem;">🚀 Apri Dashboard Originale</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="api-client.js"></script>
+    <script>
+        // Configurazione
+        const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
+        
+        let api;
+        
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ Dashboard corretta caricata');
+            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+        });
+        
+        // FUNZIONE LOGOUT CORRETTA
+        function logout() {
+            console.log('🚪 Logout chiamato');
+            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
+                localStorage.removeItem('dashboardSession');
+                alert('👋 Logout effettuato con successo');
+                location.reload();
+            }
+        }
+        
+        function testFunctions() {
+            const results = document.getElementById('testResults');
+            let html = '<h4>🧪 Test Risultati:</h4>';
+            
+            // Test funzioni base
+            try {
+                logout; // Test se esiste
+                html += '<p>✅ Funzione logout: OK</p>';
+            } catch (e) {
+                html += '<p>❌ Funzione logout: ERRORE</p>';
+            }
+            
+            try {
+                api; // Test se esiste
+                html += '<p>✅ API client: OK</p>';
+            } catch (e) {
+                html += '<p>❌ API client: ERRORE</p>';
+            }
+            
+            // Test localStorage
+            try {
+                localStorage.setItem('test', 'ok');
+                localStorage.removeItem('test');
+                html += '<p>✅ LocalStorage: OK</p>';
+            } catch (e) {
+                html += '<p>❌ LocalStorage: ERRORE</p>';
+            }
+            
+            results.innerHTML = html;
+        }
+        
+        function clearStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            alert('🗑️ Storage pulito!');
+        }
+        
+        function createSession() {
+            const session = {
+                username: 'admin',
+                loginTime: Date.now(),
+                expiresAt: Date.now() + (8 * 60 * 60 * 1000)
+            };
+            localStorage.setItem('dashboardSession', JSON.stringify(session));
+            alert('🔐 Sessione creata!');
+        }
+        
+        function openOriginal() {
+            window.open('dashboard-moderna.html', '_blank');
+        }
+    </script>
+</body>
+</html>

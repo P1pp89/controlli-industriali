@@ -1332,14 +1332,20 @@
             errorDiv.style.display = 'block';
         }
         
+        // FUNZIONE LOGOUT CORRETTA
         function logout() {
+            console.log('🚪 Logout chiamato');
             if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
                 localStorage.removeItem('dashboardSession');
                 
                 // Pulisci form
-                document.getElementById('loginUsername').value = '';
-                document.getElementById('loginPassword').value = '';
-                document.getElementById('loginError').style.display = 'none';
+                try {
+                    document.getElementById('loginUsername').value = '';
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('loginError').style.display = 'none';
+                } catch (e) {
+                    console.log('Form login non trovato');
+                }
                 
                 // Reset tentativi
                 loginAttempts = 0;
