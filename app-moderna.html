@@ -340,6 +340,10 @@
                 <button class="help-button" onclick="refreshData()">
                     🔄 Aggiorna Dati
                 </button>
+                
+                <button class="help-button" onclick="forceSyncWithDashboard()">
+                    🔄 Sincronizza con Dashboard
+                </button>
             </div>
 
             <!-- Statistiche -->
@@ -410,6 +414,12 @@
             console.log('🚀 Inizializzazione app moderna...');
             
             try {
+                // Mostra ultima sincronizzazione salvata
+                const lastSync = localStorage.getItem('lastSyncTime');
+                if (lastSync) {
+                    document.getElementById('syncInfo').textContent = `Ultima sync: ${lastSync}`;
+                }
+                
                 // Inizializza API client
                 console.log('📡 Inizializzazione API client...');
                 api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
@@ -442,6 +452,7 @@
                     console.warn('⚠️ Connessione database fallita, modalità offline:', connectionError);
                     isOnline = false;
                     updateConnectionStatus(false);
+                    document.getElementById('syncInfo').textContent = 'Modalità offline';
                     // L'app continua a funzionare in modalità offline
                 }
                 
@@ -490,8 +501,49 @@
                 
                 await loadRecentControls();
                 
+                // Aggiorna timestamp sincronizzazione
+                const now = new Date().toLocaleString('it-IT');
+                document.getElementById('syncInfo').textContent = `Aggiornato: ${now}`;
+                localStorage.setItem('lastSyncTime', now);
+                
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
+                document.getElementById('syncInfo').textContent = 'Errore sincronizzazione';
+            }
+        }
+        
+        // ===== SINCRONIZZAZIONE FORZATA CON DASHBOARD =====
+        async function forceSyncWithDashboard() {
+            const syncButton = event.target;
+            const originalText = syncButton.textContent;
+            
+            try {
+                syncButton.textContent = '🔄 Sincronizzazione...';
+                syncButton.disabled = true;
+                
+                // Aggiorna info di sincronizzazione
+                document.getElementById('syncInfo').textContent = 'Sincronizzazione in corso...';
+                
+                // Forza il refresh completo di tutti i dati
+                await Promise.all([
+                    refreshData(),
+                    loadRecentControls()
+                ]);
+                
+                // Aggiorna timestamp
+                const now = new Date().toLocaleString('it-IT');
+                localStorage.setItem('lastSyncTime', now);
+                document.getElementById('syncInfo').textContent = `Sincronizzato: ${now}`;
+                
+                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 ${now}\n\n📱 L'app è ora sincronizzata con la dashboard.\n\n💡 Tutti i dati sono aggiornati e allineati.`);
+                
+            } catch (error) {
+                console.error('Errore sincronizzazione:', error);
+                document.getElementById('syncInfo').textContent = 'Errore sincronizzazione';
+                showError(`❌ Errore sincronizzazione\n\n${error.message}\n\n🔧 Verifica la connessione e riprova.`);
+            } finally {
+                syncButton.textContent = originalText;
+                syncButton.disabled = false;
             }
         }
         

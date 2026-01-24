@@ -182,7 +182,17 @@
 <body>
     <div class="header">
         <h1>🏭 Dashboard Controlli Industriali</h1>
-        <p>Sistema di gestione controlli impianti tecnici</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <p>Sistema di gestione controlli impianti tecnici</p>
+            <div id="syncStatus" style="font-size: 0.8rem; color: #e2e8f0; text-align: right;">
+                <div>🔄 Ultima sincronizzazione: <span id="lastSyncTime">Mai</span></div>
+                <div style="margin-top: 0.25rem;">
+                    <button onclick="forceSyncAllDevices()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                        🔄 Sincronizza Ora
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="nav-tabs">
@@ -219,7 +229,10 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Controlli Recenti</h3>
-                    <button class="btn btn-primary" onclick="refreshData()">🔄 Aggiorna</button>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-primary" onclick="refreshData()">🔄 Aggiorna</button>
+                        <button class="btn btn-success" onclick="forceSyncAllDevices()">🔄 Sincronizza Dispositivi</button>
+                    </div>
                 </div>
                 <div id="recentControls" class="loading">Caricamento...</div>
             </div>
@@ -256,6 +269,7 @@
                         <button class="btn btn-primary" onclick="loadUnknownTags('PENDING')" style="margin-right: 0.5rem;">📋 In Attesa</button>
                         <button class="btn" onclick="loadUnknownTags('REJECTED')" style="background: #ef4444; color: white; margin-right: 0.5rem;">❌ Rifiutati</button>
                         <button class="btn" onclick="createTestTag()" style="background: #10b981; color: white; margin-right: 0.5rem;">🧪 Crea Test</button>
+                        <button class="btn" onclick="cleanupUnknownTags()" style="background: #f59e0b; color: white; margin-right: 0.5rem;">🧹 Pulizia</button>
                         <button class="btn btn-primary" onclick="loadUnknownTags()">🔄 Aggiorna</button>
                     </div>
                 </div>
@@ -942,6 +956,12 @@
             // Inizializza API client
             api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
             
+            // Mostra ultima sincronizzazione salvata
+            const lastSync = localStorage.getItem('lastSyncTime');
+            if (lastSync) {
+                document.getElementById('lastSyncTime').textContent = lastSync;
+            }
+            
             // Carica dati iniziali
             refreshData();
         });
@@ -982,6 +1002,148 @@
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
                 showError('Errore connessione database');
+            }
+        }
+        
+        // ===== SINCRONIZZAZIONE FORZATA =====
+        async function forceSyncAllDevices() {
+            const syncButton = event.target;
+            const originalText = syncButton.textContent;
+            
+            try {
+                syncButton.textContent = '🔄 Sincronizzazione...';
+                syncButton.disabled = true;
+                
+                // Forza il refresh di tutti i dati
+                await Promise.all([
+                    refreshData(),
+                    loadRecentControls(),
+                    // Se siamo nel tab operatori, ricarica anche quelli
+                    document.getElementById('operators').classList.contains('active') ? loadOperators() : Promise.resolve(),
+                    // Se siamo nel tab impianti, ricarica anche quelli
+                    document.getElementById('rooms').classList.contains('active') ? loadRooms() : Promise.resolve(),
+                    // Se siamo nel tab tag sconosciuti, ricarica anche quelli
+                    document.getElementById('unknown-tags').classList.contains('active') ? loadUnknownTags() : Promise.resolve()
+                ]);
+                
+                // Aggiorna timestamp ultima sincronizzazione
+                const now = new Date().toLocaleString('it-IT');
+                localStorage.setItem('lastSyncTime', now);
+                
+                // Mostra messaggio di successo
+                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.\n\n💡 SUGGERIMENTO: Aggiorna anche l'app sui dispositivi mobili per vedere le modifiche.`);
+                
+            } catch (error) {
+                console.error('Errore sincronizzazione:', error);
+                showError(`❌ Errore durante la sincronizzazione\n\nDettagli: ${error.message}\n\n🔧 SOLUZIONI:\n• Verifica la connessione internet\n• Ricarica la pagina\n• Riprova tra qualche minuto`);
+            } finally {
+                syncButton.textContent = originalText;
+                syncButton.disabled = false;
+            }
+        }
+        
+        // ===== PULIZIA TAG SCONOSCIUTI =====
+        async function cleanupUnknownTags() {
+            const confirmMessage = `🧹 PULIZIA TAG SCONOSCIUTI\n\n` +
+                `Questa operazione eliminerà DEFINITIVAMENTE:\n\n` +
+                `❌ Tutti i tag con campi "N/A"\n` +
+                `❌ Tutti i tag rifiutati da più di 30 giorni\n` +
+                `❌ Tutti i tag duplicati\n\n` +
+                `⚠️ ATTENZIONE: Questa azione NON può essere annullata!\n\n` +
+                `Sei sicuro di voler procedere?`;
+                
+            if (!confirm(confirmMessage)) {
+                return;
+            }
+            
+            const cleanupButton = event.target;
+            const originalText = cleanupButton.textContent;
+            
+            try {
+                cleanupButton.textContent = '🧹 Pulizia in corso...';
+                cleanupButton.disabled = true;
+                
+                let deletedCount = 0;
+                
+                // 1. Elimina tag con campi N/A o vuoti
+                console.log('🧹 Eliminazione tag con campi N/A...');
+                const naTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?or=(tag_id.is.null,suggested_name.is.null,suggested_name.eq.N/A,tag_id.eq.N/A)`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+                
+                if (naTagsResponse.ok) {
+                    const naCount = parseInt(naTagsResponse.headers.get('content-range')?.split('/')[1] || '0');
+                    deletedCount += naCount;
+                    console.log(`✅ Eliminati ${naCount} tag con campi N/A`);
+                }
+                
+                // 2. Elimina tag rifiutati da più di 30 giorni
+                console.log('🧹 Eliminazione tag rifiutati vecchi...');
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                const oldRejectedResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?status=eq.REJECTED&created_at=lt.${thirtyDaysAgo.toISOString()}`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+                
+                if (oldRejectedResponse.ok) {
+                    const oldCount = parseInt(oldRejectedResponse.headers.get('content-range')?.split('/')[1] || '0');
+                    deletedCount += oldCount;
+                    console.log(`✅ Eliminati ${oldCount} tag rifiutati vecchi`);
+                }
+                
+                // 3. Trova e elimina duplicati (stesso tag_id con status diversi, mantieni il più recente)
+                console.log('🧹 Ricerca duplicati...');
+                const allTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=*&order=tag_id,created_at.desc`, {
+                    headers: api.headers
+                });
+                
+                if (allTagsResponse.ok) {
+                    const allTags = await allTagsResponse.json();
+                    const seenTagIds = new Set();
+                    const duplicatesToDelete = [];
+                    
+                    allTags.forEach(tag => {
+                        if (seenTagIds.has(tag.tag_id)) {
+                            duplicatesToDelete.push(tag.id);
+                        } else {
+                            seenTagIds.add(tag.tag_id);
+                        }
+                    });
+                    
+                    // Elimina duplicati uno per uno
+                    for (const duplicateId of duplicatesToDelete) {
+                        const deleteResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${duplicateId}`, {
+                            method: 'DELETE',
+                            headers: api.headers
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            deletedCount++;
+                        }
+                    }
+                    
+                    console.log(`✅ Eliminati ${duplicatesToDelete.length} tag duplicati`);
+                }
+                
+                // Ricarica la lista
+                await loadUnknownTags();
+                
+                // Mostra risultato
+                if (deletedCount > 0) {
+                    showSuccess(`🧹 Pulizia completata con successo!\n\n✅ Eliminati ${deletedCount} tag sconosciuti\n\n📋 DETTAGLI:\n• Tag con campi "N/A" o vuoti\n• Tag rifiutati da più di 30 giorni\n• Tag duplicati\n\n💡 La lista è ora più pulita e organizzata!`);
+                } else {
+                    showSuccess(`🧹 Pulizia completata!\n\n✅ Nessun tag da eliminare trovato\n\n📋 La lista dei tag sconosciuti è già pulita e organizzata.`);
+                }
+                
+            } catch (error) {
+                console.error('Errore durante la pulizia:', error);
+                showError(`❌ Errore durante la pulizia\n\nDettagli: ${error.message}\n\n🔧 SOLUZIONI:\n• Verifica la connessione internet\n• Riprova tra qualche minuto\n• Contatta l'amministratore se il problema persiste`);
+            } finally {
+                cleanupButton.textContent = originalText;
+                cleanupButton.disabled = false;
             }
         }
         
