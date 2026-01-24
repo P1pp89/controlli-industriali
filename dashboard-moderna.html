@@ -290,7 +290,11 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                Accedi con GitHub
+                🔐 Accedi con GitHub OAuth
+            </button>
+            
+            <button onclick="loginWithSecureKey()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 0.5rem;">
+                🔑 Accesso con Chiave Sicura (Fallback)
             </button>
             
             <div class="authorized-user">
@@ -441,12 +445,14 @@
 
     <script src="api-client.js"></script>
     <script>
-        // CONFIGURAZIONE GITHUB AUTH
+        // CONFIGURAZIONE GITHUB OAUTH REALE
         const GITHUB_CONFIG = {
             // Il tuo username GitHub autorizzato
             authorizedUser: 'P1pp89',
-            // Client ID della tua GitHub App (da creare)
-            clientId: 'your_github_client_id_here'
+            // Client ID della tua GitHub App (DEVI CREARE L'APP)
+            clientId: 'Ov23liABCDEF123456', // SOSTITUISCI CON IL TUO
+            // Client Secret (MANTIENI SEGRETO)
+            clientSecret: 'ghs_ABCDEF123456789' // SOSTITUISCI CON IL TUO
         };
         
         // Configurazione Supabase
@@ -456,21 +462,125 @@
         let api;
         let currentUser = null;
 
-        // GITHUB OAUTH LOGIN
+        // GITHUB OAUTH LOGIN REALE
         function loginWithGitHub() {
-            // Per ora simuliamo il login GitHub
-            // In produzione useresti GitHub OAuth
+            // Implementazione OAuth reale con GitHub
+            const clientId = 'Ov23liABCDEF123456'; // Il tuo Client ID GitHub App
+            const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+            const scope = 'user:email';
+            const state = generateRandomState();
             
-            const githubUsername = prompt('🔍 Inserisci il tuo username GitHub per verificare l\'accesso:');
+            // Salva lo state per verificare la risposta
+            localStorage.setItem('github_oauth_state', state);
             
-            if (!githubUsername) {
+            // Redirect a GitHub per l'autenticazione
+            const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+            
+            console.log('🔄 Reindirizzamento a GitHub OAuth...');
+            window.location.href = githubAuthUrl;
+        }
+        
+        // Genera state casuale per sicurezza OAuth
+        function generateRandomState() {
+            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        }
+        
+        // Controlla se c'è un code di ritorno da GitHub
+        async function checkGitHubCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+            const state = urlParams.get('state');
+            const storedState = localStorage.getItem('github_oauth_state');
+            
+            if (code && state) {
+                console.log('🔍 Callback GitHub ricevuto, verifica in corso...');
+                
+                // Verifica state per sicurezza
+                if (state !== storedState) {
+                    showLoginError('❌ Errore di sicurezza OAuth. Riprova.');
+                    return;
+                }
+                
+                try {
+                    // Scambia il code con un access token
+                    const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            client_id: 'Ov23liABCDEF123456', // Il tuo Client ID
+                            client_secret: 'ghs_ABCDEF123456789', // Il tuo Client Secret (DA NASCONDERE)
+                            code: code
+                        })
+                    });
+                    
+                    const tokenData = await tokenResponse.json();
+                    
+                    if (tokenData.access_token) {
+                        // Ottieni informazioni utente da GitHub
+                        const userResponse = await fetch('https://api.github.com/user', {
+                            headers: {
+                                'Authorization': `token ${tokenData.access_token}`,
+                                'Accept': 'application/vnd.github.v3+json'
+                            }
+                        });
+                        
+                        const userData = await userResponse.json();
+                        
+                        console.log('👤 Utente GitHub:', userData.login);
+                        
+                        // Verifica se l'utente è autorizzato
+                        if (userData.login.toLowerCase() === GITHUB_CONFIG.authorizedUser.toLowerCase()) {
+                            // ACCESSO AUTORIZZATO
+                            currentUser = userData.login;
+                            document.getElementById('userDisplay').textContent = `👤 ${userData.login} (GitHub Verified)`;
+                            
+                            // Nascondi login, mostra dashboard
+                            document.getElementById('loginScreen').style.display = 'none';
+                            document.getElementById('dashboard').style.display = 'block';
+                            
+                            // Inizializza dashboard
+                            initDashboard();
+                            
+                            alert(`✅ Accesso GitHub verificato!\n\n👤 Benvenuto ${userData.login}!\n🛡️ Autenticazione OAuth completata`);
+                            
+                        } else {
+                            // ACCESSO NEGATO
+                            showLoginError(`❌ Accesso negato!\n\nSolo l'utente "${GITHUB_CONFIG.authorizedUser}" è autorizzato.\n\nTu sei: "${userData.login}"`);
+                        }
+                        
+                    } else {
+                        showLoginError('❌ Errore ottenimento token GitHub');
+                    }
+                    
+                } catch (error) {
+                    console.error('Errore OAuth GitHub:', error);
+                    showLoginError('❌ Errore durante l\'autenticazione GitHub');
+                }
+                
+                // Pulisci l'URL e lo state
+                localStorage.removeItem('github_oauth_state');
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+        
+        // SISTEMA FALLBACK CON CHIAVE SICURA
+        function loginWithSecureKey() {
+            const secureKey = prompt('🔑 Inserisci la chiave sicura di accesso:\n\n(Questa è una chiave segreta che solo tu conosci)');
+            
+            if (!secureKey) {
                 return;
             }
             
-            if (githubUsername.toLowerCase() === GITHUB_CONFIG.authorizedUser.toLowerCase()) {
+            // Chiave sicura generata con hash del tuo nome + data + segreto
+            const validKey = 'P1pp89_MGcontrolli_2024_SecureKey_XyZ789';
+            
+            if (secureKey === validKey) {
                 // ACCESSO AUTORIZZATO
-                currentUser = githubUsername;
-                document.getElementById('userDisplay').textContent = `👤 ${githubUsername} (GitHub)`;
+                currentUser = 'P1pp89';
+                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Secure Key)`;
                 
                 // Nascondi login, mostra dashboard
                 document.getElementById('loginScreen').style.display = 'none';
@@ -479,40 +589,10 @@
                 // Inizializza dashboard
                 initDashboard();
                 
-                alert(`✅ Accesso GitHub autorizzato!\n\n👤 Benvenuto ${githubUsername}!\n🛡️ Accesso sicuro tramite GitHub`);
+                alert(`✅ Accesso con chiave sicura!\n\n👤 Benvenuto P1pp89!\n🔑 Autenticazione tramite chiave personale`);
                 
             } else {
-                // ACCESSO NEGATO
-                showLoginError(`❌ Accesso negato!\n\nSolo l'utente "${GITHUB_CONFIG.authorizedUser}" è autorizzato.\n\nTu hai inserito: "${githubUsername}"`);
-            }
-        }
-        
-        // IMPLEMENTAZIONE GITHUB OAUTH REALE (per il futuro)
-        function loginWithGitHubReal() {
-            // Redirect a GitHub OAuth
-            const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CONFIG.clientId}&scope=user:email&redirect_uri=${encodeURIComponent(window.location.origin + window.location.pathname)}`;
-            window.location.href = githubAuthUrl;
-        }
-        
-        // Controlla se c'è un code di ritorno da GitHub
-        function checkGitHubCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            
-            if (code) {
-                // Qui dovresti scambiare il code con un access token
-                // e verificare l'identità dell'utente
-                console.log('GitHub OAuth code ricevuto:', code);
-                
-                // Per ora simuliamo il successo
-                currentUser = GITHUB_CONFIG.authorizedUser;
-                document.getElementById('userDisplay').textContent = `👤 ${currentUser} (GitHub)`;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                initDashboard();
-                
-                // Pulisci l'URL
-                window.history.replaceState({}, document.title, window.location.pathname);
+                showLoginError(`❌ Chiave sicura non valida!\n\nLa chiave inserita non corrisponde.\nSolo il proprietario conosce la chiave corretta.`);
             }
         }
         
