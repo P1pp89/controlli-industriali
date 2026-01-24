@@ -294,7 +294,7 @@
             </button>
             
             <button onclick="loginWithSecureKey()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 0.5rem;">
-                🔑 Accesso con Chiave Sicura (Fallback)
+                🔐 Accesso con Verifica Personale
             </button>
             
             <div class="authorized-user">
@@ -554,34 +554,39 @@
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
         
-        // SISTEMA FALLBACK CON CHIAVE SICURA
+        // SISTEMA SICURO CON DOMANDE PERSONALI
         function loginWithSecureKey() {
-            const secureKey = prompt('🔑 Inserisci la chiave sicura di accesso:\n\n(Questa è una chiave segreta che solo tu conosci)');
-            
-            if (!secureKey) {
+            // Domande personali che solo tu conosci
+            const answer1 = prompt('🔑 DOMANDA 1: Qual è il tuo username GitHub?');
+            if (!answer1 || answer1.toLowerCase() !== 'p1pp89') {
+                showLoginError('❌ Risposta errata alla domanda 1');
                 return;
             }
             
-            // Chiave sicura generata con hash del tuo nome + data + segreto
-            const validKey = 'P1pp89_MGcontrolli_2024_SecureKey_XyZ789';
-            
-            if (secureKey === validKey) {
-                // ACCESSO AUTORIZZATO
-                currentUser = 'P1pp89';
-                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Secure Key)`;
-                
-                // Nascondi login, mostra dashboard
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                
-                // Inizializza dashboard
-                initDashboard();
-                
-                alert(`✅ Accesso con chiave sicura!\n\n👤 Benvenuto P1pp89!\n🔑 Autenticazione tramite chiave personale`);
-                
-            } else {
-                showLoginError(`❌ Chiave sicura non valida!\n\nLa chiave inserita non corrisponde.\nSolo il proprietario conosce la chiave corretta.`);
+            const answer2 = prompt('🔑 DOMANDA 2: Come si chiama il tuo progetto? (controlli-...)');
+            if (!answer2 || answer2.toLowerCase() !== 'controlli-industriali') {
+                showLoginError('❌ Risposta errata alla domanda 2');
+                return;
             }
+            
+            const answer3 = prompt('🔑 DOMANDA 3: Inserisci il codice che hai usato come password prima (MG...)');
+            if (!answer3 || answer3 !== 'MGcontrolli26') {
+                showLoginError('❌ Risposta errata alla domanda 3');
+                return;
+            }
+            
+            // TUTTE LE RISPOSTE CORRETTE - ACCESSO AUTORIZZATO
+            currentUser = 'P1pp89';
+            document.getElementById('userDisplay').textContent = `👤 P1pp89 (Verified)`;
+            
+            // Nascondi login, mostra dashboard
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            // Inizializza dashboard
+            initDashboard();
+            
+            alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!\n🔐 Autenticazione completata con successo`);
         }
         
         function showLoginError(message) {
