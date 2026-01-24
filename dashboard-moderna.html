@@ -1479,21 +1479,25 @@
                                     <div class="stat-label">Controlli Totali</div>
                                 </div>
                                 <div class="stat-item">
+                                    <div class="stat-number">${new Set(filteredControls.map(c => c.operators?.name)).size}</div>
+                                    <div class="stat-label">Operatori Coinvolti</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-number">${new Set(filteredControls.map(c => c.technical_rooms?.name)).size}</div>
+                                    <div class="stat-label">Impianti Controllati</div>
+                                </div>
+                                <div class="stat-item">
                                     <div class="stat-number">${filteredControls.filter(c => c.location_valid).length}</div>
-                                    <div class="stat-label">GPS Validi</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">${[...new Set(filteredControls.map(c => c.operators?.name))].filter(Boolean).length}</div>
-                                    <div class="stat-label">Operatori</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">${[...new Set(filteredControls.map(c => new Date(c.timestamp).toDateString()))].length}</div>
-                                    <div class="stat-label">Giorni Attivi</div>
+                                    <div class="stat-label">Controlli Validi</div>
                                 </div>
                             </div>
                         </div>
                         
-                        <h3 style="color: ${color};">📋 Dettaglio Controlli Effettuati</h3>
+                        <div class="no-print" style="text-align: center; margin: 20px 0;">
+                            <button class="print-btn" onclick="window.print()">🖨️ Stampa Registro</button>
+                            <button class="print-btn" onclick="downloadPDF()" style="background: #28a745;">📄 Scarica PDF</button>
+                            <button class="print-btn" onclick="window.close()" style="background: #6c757d;">❌ Chiudi</button>
+                        </div>
                         
                         <table class="table">
                             <thead>
@@ -1503,14 +1507,21 @@
                                     <th>Operatore</th>
                                     <th>Impianto</th>
                                     <th>Categoria</th>
-                                    <th>GPS</th>
+                                    <th>Stato GPS</th>
                                     <th>Note</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${controlsTable || '<tr><td colspan="7" style="text-align: center; color: #666; padding: 2rem;">Nessun controllo trovato per i filtri selezionati</td></tr>'}
+                                ${controlsTable}
                             </tbody>
                         </table>
+                        
+                        ${filteredControls.length === 0 ? `
+                            <div style="text-align: center; padding: 3rem; color: #666;">
+                                <h3>📋 Nessun controllo trovato</h3>
+                                <p>Non sono stati trovati controlli per il periodo e i filtri selezionati.</p>
+                            </div>
+                        ` : ''}
                         
                         <div class="signatures">
                             <div class="signature-box">
@@ -1522,31 +1533,19 @@
                                 ${maintenanceManager}
                             </div>
                             <div class="signature-box">
-                                <strong>Timbro e Firma Azienda</strong><br>
-                                ${companyName}
+                                <strong>Data e Timbro</strong><br>
+                                ${new Date().toLocaleDateString('it-IT')}
                             </div>
                         </div>
                         
                         <div class="footer">
-                            <p><strong>${companyName}</strong></p>
-                            <p>Sistema di Controllo Impianti Tecnici - Documento generato automaticamente</p>
-                            <p>Conforme alle normative vigenti per la manutenzione degli impianti tecnici industriali</p>
-                            <p style="margin-top: 10px; font-size: 10px;">Documento non valido senza firma e timbro aziendale</p>
-                        </div>
-                        
-                        <div class="no-print" style="text-align: center; margin-top: 30px;">
-                            <button class="print-btn" onclick="window.print()">🖨️ Stampa Registro</button>
-                            <button class="print-btn" onclick="downloadPDF()" style="background: #28a745;">📄 Scarica PDF</button>
-                            <button class="print-btn" onclick="window.close()" style="background: #6c757d;">❌ Chiudi</button>
+                            <p><strong>${companyName}</strong> - ${address}</p>
+                            <p>Tel: ${phone} | Email: ${email}</p>
+                            <p style="margin-top: 10px; font-size: 10px;">
+                                Documento generato automaticamente dal Sistema di Controlli Industriali - ${new Date().toLocaleString('it-IT')}
+                            </p>
                         </div>
                     </div>
-                    
-                    <script>
-                        function downloadPDF() {
-                            alert('💡 Per scaricare come PDF:\\n\\n1. Clicca "Stampa"\\n2. Seleziona "Salva come PDF"\\n3. Scegli la destinazione');
-                            window.print();
-                        }
-                    </script>
                 </body>
                 </html>
             `;
@@ -1557,6 +1556,12 @@
             if (newWindow) {
                 newWindow.document.write(html);
                 newWindow.document.close();
+                
+                // Add downloadPDF function to the new window
+                newWindow.downloadPDF = function() {
+                    alert('💡 Per scaricare come PDF:\n\n1. Clicca "Stampa"\n2. Seleziona "Salva come PDF"\n3. Scegli la destinazione');
+                    newWindow.print();
+                };
             } else {
                 alert('⚠️ Popup bloccato! Consenti i popup per visualizzare il registro.');
             }
