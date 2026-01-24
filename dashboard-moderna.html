@@ -451,10 +451,10 @@
         // CONFIGURAZIONE LOGIN
         const LOGIN_CONFIG = {
             users: {
-                // CREDENZIALI SEMPLIFICATE PER ACCESSO FACILE
+                // CREDENZIALI TEST SEMPLIFICATE
+                'P1pp89': 'MGcontrolli26',
                 'admin': 'admin',
-                'user': '123',
-                'test': 'test'
+                'test': '123'
                 // Aggiungi altri utenti se necessario
             },
             sessionDuration: 8 * 60 * 60 * 1000,
@@ -557,15 +557,24 @@
                 const cleanUsername = username.toLowerCase().trim();
                 const cleanPassword = password.trim();
                 
+                // DEBUG: Mostra cosa stiamo confrontando
+                console.log('🔍 DEBUG LOGIN:');
+                console.log('Username inserito:', username);
+                console.log('Password inserita:', password);
+                console.log('Username pulito:', cleanUsername);
+                console.log('Password pulita:', cleanPassword);
+                console.log('Credenziali disponibili:', Object.keys(LOGIN_CONFIG.users));
+                
                 let isValidLogin = false;
                 let matchedUser = null;
                 
-                for (const [user, pass] of Object.entries(LOGIN_CONFIG.users)) {
-                    if ((user === username || user === cleanUsername) && pass === cleanPassword) {
-                        isValidLogin = true;
-                        matchedUser = user;
-                        break;
-                    }
+                // Controllo credenziali semplificato
+                if (LOGIN_CONFIG.users[username] === password) {
+                    isValidLogin = true;
+                    matchedUser = username;
+                } else if (LOGIN_CONFIG.users[cleanUsername] === cleanPassword) {
+                    isValidLogin = true;
+                    matchedUser = cleanUsername;
                 }
                 
                 if (isValidLogin) {
