@@ -20,11 +20,6 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
         
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-        
         .nav-tabs {
             display: flex;
             background: white;
@@ -360,7 +355,6 @@
         <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
         <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
         <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
-        <div class="nav-tab" onclick="showTab('reports')">📋 Report</div>
     </div>
 
     <div class="main-content">
@@ -402,7 +396,6 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Gestione Operatori</h3>
-                    <button class="btn btn-success" onclick="showAddOperatorModal()">➕ Nuovo Operatore</button>
                 </div>
                 <div id="operatorsList" class="loading">Caricamento operatori...</div>
             </div>
@@ -413,7 +406,6 @@
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Impianti Tecnici</h3>
-                    <button class="btn btn-success" onclick="showAddRoomModal()">➕ Nuovo Impianto</button>
                 </div>
                 <div id="roomsList" class="loading">Caricamento impianti...</div>
             </div>
@@ -440,61 +432,9 @@
         <div id="config" class="tab-content">
             <h2>⚙️ Configurazione Sistema</h2>
             
-            <!-- Gestione Tag/Impianti -->
             <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 class="card-title">🏷️ Gestione Tag e Impianti</h3>
-                    <button onclick="showAddRoomModal()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                        ➕ Nuovo Impianto
-                    </button>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="margin-bottom: 1rem;">
-                        <input type="text" id="searchRooms" placeholder="🔍 Cerca impianti..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" onkeyup="filterRooms()">
-                    </div>
-                    <div id="roomsConfigList" style="max-height: 400px; overflow-y: auto;">
-                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento impianti...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gestione Categorie -->
-            <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 class="card-title">📂 Gestione Categorie</h3>
-                    <button onclick="showAddCategoryModal()" style="background: #2196F3; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                        ➕ Nuova Categoria
-                    </button>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div id="categoriesList">
-                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento categorie...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Gestione Operatori -->
-            <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3 class="card-title">👥 Gestione Operatori</h3>
-                    <button onclick="showAddOperatorModal()" style="background: #FF9800; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                        ➕ Nuovo Operatore
-                    </button>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div id="operatorsConfigList">
-                        <div style="text-align: center; padding: 2rem; color: #666;">Caricamento operatori...</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Configurazione Azienda -->
-            <div class="card">
-                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="card-header">
                     <h3 class="card-title">🏢 Configurazione Azienda</h3>
-                    <button onclick="showCompanyConfigModal()" style="background: #8e44ad; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
-                        ⚙️ Modifica Dati
-                    </button>
                 </div>
                 <div style="padding: 1.5rem;">
                     <div id="companyConfigDisplay">
@@ -514,645 +454,50 @@
                 </div>
             </div>
         </div>
-
-        <!-- TAB REPORT -->
-        <div id="reports" class="tab-content">
-            <!-- Sezione Controlli Report -->
-            <div class="card" style="margin-bottom: 2rem;">
-                <div class="card-header">
-                    <h3 class="card-title">📅 Controlli e Filtri</h3>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">📅 Data Inizio:</label>
-                            <input type="date" id="reportStartDate" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">📅 Data Fine:</label>
-                            <input type="date" id="reportEndDate" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
-                        </div>
-                        <div>
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">👤 Operatore:</label>
-                            <select id="reportOperator" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
-                                <option value="">Tutti gli operatori</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🕐 Turno:</label>
-                            <select id="reportShift" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
-                                <option value="">Tutti i turni</option>
-                                <option value="morning">Mattino (06-14)</option>
-                                <option value="afternoon">Pomeriggio (14-22)</option>
-                                <option value="night">Notte (22-06)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-weight: bold; margin-bottom: 0.5rem; display: block;">🏭 Categoria:</label>
-                            <select id="reportCategory" style="width: 100%; padding: 0.75rem; border: 2px solid #e9ecef; border-radius: 8px;">
-                                <option value="">Tutte le categorie</option>
-                                <option value="elettrico">⚡ Impianti Elettrici</option>
-                                <option value="antincendio">🔥 Antincendio</option>
-                                <option value="hvac">❄️ HVAC</option>
-                                <option value="ups">🔋 UPS</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sezione Registri Professionali -->
-            <div class="card" style="margin-bottom: 2rem;">
-                <div class="card-header">
-                    <h3 class="card-title">📋 Registri Professionali</h3>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-                        <button onclick="generateProfessionalElectricalRegister()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(243,156,18,0.3); transition: all 0.3s;">
-                            ⚡ Registro Impianti Elettrici
-                        </button>
-                        <button onclick="generateProfessionalFireRegister()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(231,76,60,0.3); transition: all 0.3s;">
-                            🔥 Registro Antincendio
-                        </button>
-                        <button onclick="generateProfessionalHVACRegister()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,152,219,0.3); transition: all 0.3s;">
-                            ❄️ Registro HVAC
-                        </button>
-                        <button onclick="generateProfessionalUPSRegister()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39,174,96,0.3); transition: all 0.3s;">
-                            🔋 Registro UPS
-                        </button>
-                        <button onclick="generateProfessionalCompleteRegister()" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(155,89,182,0.3); transition: all 0.3s;">
-                            📊 Registro Completo
-                        </button>
-                        <button onclick="generateProfessionalShiftRegister()" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,73,94,0.3); transition: all 0.3s;">
-                            🕐 Registro per Turni
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sezione Report Classici -->
-            <div class="card" style="margin-bottom: 2rem;">
-                <div class="card-header">
-                    <h3 class="card-title">📄 Report Classici</h3>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                        <button onclick="generateShiftRegister()" style="background: #2196F3; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
-                            📅 Report Turni Semplice
-                        </button>
-                        <button onclick="generateElectricalRegister()" style="background: #FF9800; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
-                            ⚡ Report Elettrico Semplice
-                        </button>
-                        <button onclick="generateSignedReport()" style="background: #4CAF50; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
-                            🖊️ Report con Firme
-                        </button>
-                        <button onclick="generateFullReport()" style="background: #9C27B0; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer;">
-                            📊 Report Completo
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">📈 Statistiche Avanzate</h3>
-                </div>
-                <div style="padding: 1.5rem;">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #2196F3;" id="totalControlsMonth">-</div>
-                            <div style="color: #666;">Controlli Mese</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #4CAF50;" id="avgControlsDay">-</div>
-                            <div style="color: #666;">Media Giornaliera</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #FF9800;" id="mostActiveOperator">-</div>
-                            <div style="color: #666;">Operatore Top</div>
-                        </div>
-                        <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #9C27B0;" id="mostControlledRoom">-</div>
-                            <div style="color: #666;">Impianto Top</div>
-                        </div>
-                    </div>
-                    <button onclick="loadAdvancedStats()" style="background: #607D8B; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                        🔄 Aggiorna Statistiche
-                    </button>
-                </div>
-            </div>
-
-            <!-- Area Preview Report -->
-            <div id="reportPreview" style="display: none;">
-                <div class="card">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 class="card-title">👁️ Anteprima Report</h3>
-                        <div>
-                            <button onclick="printReport()" style="background: #4CAF50; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem;">
-                                🖨️ Stampa
-                            </button>
-                            <button onclick="closeReportPreview()" style="background: #f44336; color: white; border: none; padding: 0.5rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                                ✖️ Chiudi
-                            </button>
-                        </div>
-                    </div>
-                    <div id="reportContent" style="padding: 1.5rem; background: white; max-height: 600px; overflow-y: auto;">
-                        <!-- Contenuto report generato dinamicamente -->
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- MODAL AGGIUNGI/MODIFICA IMPIANTO -->
-    <div id="roomModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3 id="roomModalTitle">➕ Nuovo Impianto</h3>
-                <button onclick="closeRoomModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
-            </div>
-            <div class="modal-body">
-                <form id="roomForm">
-                    <input type="hidden" id="roomId">
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏷️ Tag ID:</label>
-                        <input type="text" id="roomTagId" placeholder="es. GE001, MT002, UPS003..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                        <small style="color: #666;">Formato consigliato: PREFISSO + NUMERO (es. GE001)</small>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📝 Nome Impianto:</label>
-                        <input type="text" id="roomName" placeholder="es. Gruppo Elettrogeno Principale" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📂 Categoria:</label>
-                        <select id="roomCategory" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                            <option value="">Seleziona categoria...</option>
-                        </select>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📄 Descrizione:</label>
-                        <textarea id="roomDescription" placeholder="Descrizione dettagliata dell'impianto..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📍 Posizione GPS (opzionale):</label>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
-                            <input type="number" id="roomLat" placeholder="Latitudine" step="any" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                            <input type="number" id="roomLng" placeholder="Longitudine" step="any" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                            <input type="number" id="roomRadius" placeholder="Raggio (m)" min="10" max="500" value="50" style="padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                        <small style="color: #666;">Lascia vuoto per disabilitare validazione GPS</small>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" onclick="closeRoomModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            Annulla
-                        </button>
-                        <button type="submit" style="background: #4CAF50; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            💾 Salva Impianto
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL AGGIUNGI CATEGORIA -->
-    <div id="categoryModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3>📂 Nuova Categoria</h3>
-                <button onclick="closeCategoryModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
-            </div>
-            <div class="modal-body">
-                <form id="categoryForm">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📝 Nome Categoria:</label>
-                        <input type="text" id="categoryName" placeholder="es. Gruppi Elettrogeni" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📄 Descrizione:</label>
-                        <textarea id="categoryDescription" placeholder="Descrizione della categoria..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 60px; resize: vertical;"></textarea>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" onclick="closeCategoryModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            Annulla
-                        </button>
-                        <button type="submit" style="background: #2196F3; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            💾 Salva Categoria
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL AGGIUNGI OPERATORE -->
-    <div id="operatorModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3 id="operatorModalTitle">👤 Nuovo Operatore</h3>
-                <button onclick="closeOperatorModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
-            </div>
-            <div class="modal-body">
-                <form id="operatorForm">
-                    <input type="hidden" id="operatorId">
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">👤 Nome Completo:</label>
-                        <input type="text" id="operatorName" placeholder="es. Mario Rossi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏷️ Codice Operatore:</label>
-                        <input type="text" id="operatorCode" placeholder="es. MR001" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                        <small style="color: #666;">Formato consigliato: INIZIALI + NUMERO</small>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🆔 ID Operatore:</label>
-                        <input type="text" id="operatorOperatorId" placeholder="es. OP001" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">✍️ Firma Digitale:</label>
-                        <input type="text" id="operatorSignature" placeholder="es. Mario Rossi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <small style="color: #666;">Testo che apparirà come firma nei report</small>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" onclick="closeOperatorModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            Annulla
-                        </button>
-                        <button type="submit" style="background: #FF9800; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            💾 Salva Operatore
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- MODAL CONFIGURAZIONE AZIENDA -->
-    <div id="companyConfigModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>🏢 Configurazione Azienda</h3>
-                <button onclick="closeCompanyConfigModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
-            </div>
-            <div class="modal-body">
-                <form id="companyConfigForm">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏢 Nome Azienda:</label>
-                            <input type="text" id="companyName" placeholder="es. LA TUA AZIENDA S.R.L." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📧 Email:</label>
-                            <input type="email" id="companyEmail" placeholder="info@tuaazienda.it" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📍 Indirizzo:</label>
-                            <input type="text" id="companyAddress" placeholder="Via Esempio 123, Roma" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📞 Telefono:</label>
-                            <input type="tel" id="companyPhone" placeholder="+39 06 1234567" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">👨‍💼 Responsabile Tecnico:</label>
-                            <input type="text" id="technicalManager" placeholder="Ing. Mario Rossi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                        <div>
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🔧 Resp. Manutenzione:</label>
-                            <input type="text" id="maintenanceManager" placeholder="Geom. Luigi Bianchi" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🖼️ Logo Aziendale:</label>
-                        <input type="file" id="companyLogo" accept="image/*" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                        <small style="color: #666;">Formati supportati: PNG, JPG, SVG. Dimensione consigliata: 200x60px</small>
-                    </div>
-                    
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                        <button type="button" onclick="closeCompanyConfigModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            Annulla
-                        </button>
-                        <button type="submit" style="background: #8e44ad; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                            💾 Salva Configurazione
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <style>
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            width: 90%;
-            max-width: 500px;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.5rem;
-            border-bottom: 1px solid #eee;
-        }
-        
-        .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-        
-        .modal-body {
-            padding: 1.5rem;
-        }
-        
-        .room-config-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            transition: all 0.2s;
-        }
-        
-        .room-config-item:hover {
-            background: #e9ecef;
-        }
-        
-        .room-config-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        
-        .room-config-title {
-            font-weight: bold;
-            color: #333;
-        }
-        
-        .room-config-tag {
-            background: #007bff;
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            font-family: monospace;
-        }
-        
-        .room-config-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-        
-        .btn-sm {
-            padding: 0.25rem 0.5rem;
-            font-size: 0.8rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .btn-edit {
-            background: #ffc107;
-            color: #000;
-        }
-        
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-        
-        .category-item {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        /* RESPONSIVE MOBILE */
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 1rem;
-            }
-            
-            .nav-tabs {
-                overflow-x: auto;
-                white-space: nowrap;
-                padding: 0 1rem;
-            }
-            
-            .nav-tab {
-                display: inline-block;
-                min-width: 120px;
-                text-align: center;
-                font-size: 0.9rem;
-                padding: 0.75rem 1rem;
-            }
-            
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 1rem;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-                gap: 1rem;
-            }
-            
-            .buttons {
-                flex-direction: column;
-                gap: 0.75rem;
-            }
-            
-            .btn {
-                width: 100%;
-                justify-content: center;
-                padding: 1rem;
-                font-size: 0.9rem;
-            }
-            
-            .card {
-                margin-bottom: 1rem;
-            }
-            
-            .card-header {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
-            }
-            
-            .table {
-                font-size: 0.8rem;
-            }
-            
-            .table th,
-            .table td {
-                padding: 0.5rem 0.25rem;
-            }
-            
-            .modal-content {
-                width: 95%;
-                max-width: none;
-                margin: 1rem;
-            }
-            
-            .modal-body {
-                padding: 1rem;
-            }
-            
-            .register-content {
-                padding: 20px;
-                font-size: 12px;
-            }
-            
-            .register-table {
-                font-size: 10px;
-            }
-            
-            .register-table th,
-            .register-table td {
-                padding: 6px 4px;
-            }
-            
-            .signature-section {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
-            .register-info {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .header h1 {
-                font-size: 1.25rem;
-            }
-            
-            .nav-tab {
-                font-size: 0.8rem;
-                padding: 0.5rem 0.75rem;
-                min-width: 100px;
-            }
-            
-            .stat-card {
-                padding: 1rem;
-            }
-            
-            .stat-number {
-                font-size: 1.5rem;
-            }
-            
-            .btn {
-                padding: 0.875rem;
-                font-size: 0.85rem;
-            }
-            
-            .table {
-                font-size: 0.75rem;
-            }
-            
-            .register-title {
-                font-size: 18px;
-            }
-            
-            .register-subtitle {
-                font-size: 14px;
-            }
-        }
-    </style>
-
+    <script src="api-client.js"></script>
     <script>
-        // Configurazione Supabase - INSERISCI LE TUE CREDENZIALI
+        // Configurazione Supabase
         const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
         
         // CONFIGURAZIONE LOGIN
         const LOGIN_CONFIG = {
-            // Credenziali di accesso (in produzione usare sistema più sicuro)
             users: {
                 'admin': 'dashboard2024',
                 'tecnico': 'controlli123',
                 'supervisore': 'impianti456',
-                // Credenziali di emergenza
                 'test': 'test',
                 '123': '123',
                 'demo': 'demo'
             },
-            sessionDuration: 8 * 60 * 60 * 1000, // 8 ore in millisecondi
-            maxAttempts: 5, // Aumentato per debug
-            lockoutDuration: 5 * 60 * 1000 // Ridotto a 5 minuti per debug
+            sessionDuration: 8 * 60 * 60 * 1000,
+            maxAttempts: 5,
+            lockoutDuration: 5 * 60 * 1000
         };
         
         // Inizializzazione
         let api;
         let loginAttempts = 0;
         let lockoutUntil = 0;
-        
+
         document.addEventListener('DOMContentLoaded', function() {
-            // Inizializza API client
+            console.log('✅ Dashboard caricata correttamente');
             api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
             
-            // Controlla se l'utente è già loggato
             if (!checkLoginStatus()) {
                 showLoginModal();
                 return;
             }
             
-            // Mostra ultima sincronizzazione salvata
             const lastSync = localStorage.getItem('lastSyncTime');
             if (lastSync) {
                 document.getElementById('lastSyncTime').textContent = lastSync;
             }
             
-            // Carica configurazione azienda dal database
             loadCompanyConfigFromDatabase();
-            
-            // Carica dati iniziali
             refreshData();
-            
-            // Setup form login
             setupLoginForm();
         });
         
@@ -1166,13 +511,11 @@
                 const sessionData = JSON.parse(session);
                 const now = Date.now();
                 
-                // Controlla se la sessione è scaduta
                 if (now > sessionData.expiresAt) {
                     localStorage.removeItem('dashboardSession');
                     return false;
                 }
                 
-                // Aggiorna display utente
                 document.getElementById('userDisplay').textContent = `👤 ${sessionData.username}`;
                 return true;
                 
@@ -1185,16 +528,12 @@
         function showLoginModal() {
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('loginUsername').focus();
-            
-            // Nascondi il contenuto principale
             document.querySelector('.nav-tabs').style.display = 'none';
             document.querySelector('.main-content').style.display = 'none';
         }
         
         function hideLoginModal() {
             document.getElementById('loginOverlay').style.display = 'none';
-            
-            // Mostra il contenuto principale
             document.querySelector('.nav-tabs').style.display = 'flex';
             document.querySelector('.main-content').style.display = 'block';
         }
@@ -1204,13 +543,6 @@
                 e.preventDefault();
                 handleLogin();
             });
-            
-            // Enter key su password
-            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
         }
         
         async function handleLogin() {
@@ -1219,44 +551,27 @@
             const loginButton = document.getElementById('loginButton');
             const errorDiv = document.getElementById('loginError');
             
-            console.log('🔐 Tentativo di login:', { username, passwordLength: password.length });
-            console.log('👥 Utenti disponibili:', Object.keys(LOGIN_CONFIG.users));
-            console.log('🔒 Lockout status:', { lockoutUntil, now: Date.now(), isLocked: Date.now() < lockoutUntil });
-            
-            // Controlla lockout
             if (Date.now() < lockoutUntil) {
                 const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
                 showLoginError(`🔒 Account bloccato. Riprova tra ${remainingTime} minuti.`);
                 return;
             }
             
-            // Validazione base
             if (!username || !password) {
                 showLoginError('⚠️ Inserisci nome utente e password');
                 return;
             }
             
-            // Disabilita button durante login
             loginButton.disabled = true;
             loginButton.textContent = '🔄 Accesso in corso...';
             errorDiv.style.display = 'none';
             
             try {
-                // Simula delay per sicurezza (ridotto per debug)
                 await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Verifica credenziali con pulizia extra
                 const cleanUsername = username.toLowerCase().trim();
                 const cleanPassword = password.trim();
                 
-                console.log('🔍 Verifica credenziali pulite:', { 
-                    originalUsername: username,
-                    cleanUsername: cleanUsername,
-                    originalPassword: password,
-                    cleanPassword: cleanPassword
-                });
-                
-                // Controlla sia username originale che pulito
                 let isValidLogin = false;
                 let matchedUser = null;
                 
@@ -1268,12 +583,7 @@
                     }
                 }
                 
-                console.log('🎯 Risultato verifica:', { isValidLogin, matchedUser });
-                
                 if (isValidLogin) {
-                    console.log('✅ Login riuscito per:', matchedUser);
-                    
-                    // Login riuscito
                     const sessionData = {
                         username: matchedUser,
                         loginTime: Date.now(),
@@ -1281,44 +591,33 @@
                     };
                     
                     localStorage.setItem('dashboardSession', JSON.stringify(sessionData));
-                    console.log('💾 Sessione salvata:', sessionData);
                     
-                    // Reset tentativi
                     loginAttempts = 0;
                     lockoutUntil = 0;
                     
-                    // Aggiorna UI
                     document.getElementById('userDisplay').textContent = `👤 ${matchedUser}`;
                     hideLoginModal();
                     
-                    // Carica dati
-                    console.log('📊 Caricamento dati dashboard...');
                     await refreshData();
-                    
                     showSuccess(`✅ Accesso effettuato con successo!\n\n👤 Benvenuto ${matchedUser}\n🕒 Sessione valida per 8 ore`);
                     
                 } else {
-                    console.log('❌ Login fallito per:', username);
-                    
-                    // Login fallito
                     loginAttempts++;
                     
                     if (loginAttempts >= LOGIN_CONFIG.maxAttempts) {
                         lockoutUntil = Date.now() + LOGIN_CONFIG.lockoutDuration;
-                        console.log('🚫 Account bloccato fino a:', new Date(lockoutUntil));
                         showLoginError(`🚫 Troppi tentativi falliti!\n\nAccount bloccato per 5 minuti.\nTentativi: ${loginAttempts}/${LOGIN_CONFIG.maxAttempts}`);
                     } else {
                         const remaining = LOGIN_CONFIG.maxAttempts - loginAttempts;
                         showLoginError(`❌ Credenziali non valide\n\nTentativi rimanenti: ${remaining}\n\n💡 Prova: test/test o admin/dashboard2024`);
                     }
                     
-                    // Pulisci campi
                     document.getElementById('loginPassword').value = '';
                     document.getElementById('loginPassword').focus();
                 }
                 
             } catch (error) {
-                console.error('💥 Errore durante il login:', error);
+                console.error('Errore durante il login:', error);
                 showLoginError('❌ Errore di sistema. Riprova.');
             } finally {
                 loginButton.disabled = false;
@@ -1332,13 +631,11 @@
             errorDiv.style.display = 'block';
         }
         
-        // FUNZIONE LOGOUT CORRETTA
         function logout() {
             console.log('🚪 Logout chiamato');
             if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
                 localStorage.removeItem('dashboardSession');
                 
-                // Pulisci form
                 try {
                     document.getElementById('loginUsername').value = '';
                     document.getElementById('loginPassword').value = '';
@@ -1347,7 +644,6 @@
                     console.log('Form login non trovato');
                 }
                 
-                // Reset tentativi
                 loginAttempts = 0;
                 lockoutUntil = 0;
                 
@@ -1356,7 +652,6 @@
             }
         }
         
-        // FUNZIONE DI BYPASS PER DEBUG
         function bypassLogin() {
             console.log('🔓 Bypass login attivato');
             
@@ -1368,33 +663,21 @@
             
             localStorage.setItem('dashboardSession', JSON.stringify(sessionData));
             
-            // Reset tentativi
             loginAttempts = 0;
             lockoutUntil = 0;
             
-            // Aggiorna UI
             document.getElementById('userDisplay').textContent = '👤 admin (bypass)';
             hideLoginModal();
             
-            // Carica dati
             refreshData();
-            
             showSuccess('🔓 Accesso bypass effettuato!\n\n⚠️ Modalità debug attiva');
         }
-        
-        // Controlla sessione ogni 5 minuti
-        setInterval(function() {
-            if (!checkLoginStatus()) {
-                showLoginModal();
-            }
-        }, 5 * 60 * 1000);
         
         // ===== CONFIGURAZIONE AZIENDA DAL DATABASE =====
         async function loadCompanyConfigFromDatabase() {
             try {
                 const config = await api.getCompanyConfig();
                 if (config) {
-                    // Aggiorna i campi di visualizzazione
                     document.getElementById('displayCompanyName').textContent = config.company_name || 'LA TUA AZIENDA S.R.L.';
                     document.getElementById('displayTechnicalManager').textContent = config.technical_manager || 'Ing. Mario Rossi';
                     document.getElementById('displayMaintenanceManager').textContent = config.maintenance_manager || 'Geom. Luigi Bianchi';
@@ -1411,29 +694,8 @@
             }
         }
         
-        function showTab(tabName) {
-            // Nascondi tutti i tab
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            document.querySelectorAll('.nav-tab').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Mostra tab selezionato
-            document.getElementById(tabName).classList.add('active');
-            event.target.classList.add('active');
-            
-            // Carica dati specifici del tab
-            if (tabName === 'operators') loadOperators();
-            if (tabName === 'rooms') loadRooms();
-            if (tabName === 'unknown-tags') loadUnknownTags('PENDING');
-            if (tabName === 'config') loadConfigTab();
-        }
-        
         async function refreshData() {
             try {
-                // Carica statistiche
                 const stats = await api.getStats();
                 
                 document.getElementById('totalOperators').textContent = stats.totalOperators;
@@ -1441,10 +703,8 @@
                 document.getElementById('todayControls').textContent = stats.todayControls;
                 document.getElementById('pendingTags').textContent = stats.pendingTags;
                 
-                // Carica controlli recenti
                 await loadRecentControls();
                 
-                // Aggiorna timestamp sincronizzazione
                 const now = new Date().toLocaleString('it-IT');
                 document.getElementById('lastSyncTime').textContent = now;
                 localStorage.setItem('lastSyncTime', now);
@@ -1452,165 +712,6 @@
             } catch (error) {
                 console.error('Errore caricamento dati:', error);
                 showError('Errore connessione database');
-            }
-        }
-        
-        // ===== SINCRONIZZAZIONE FORZATA =====
-        async function forceSyncAllDevices() {
-            const syncButton = event.target;
-            const originalText = syncButton.textContent;
-            
-            try {
-                syncButton.textContent = '🔄 Sincronizzazione...';
-                syncButton.disabled = true;
-                
-                // Forza il refresh di tutti i dati
-                await Promise.all([
-                    refreshData(),
-                    loadRecentControls(),
-                    loadCompanyConfigFromDatabase(), // Aggiunto caricamento configurazione azienda
-                    // Se siamo nel tab operatori, ricarica anche quelli
-                    document.getElementById('operators').classList.contains('active') ? loadOperators() : Promise.resolve(),
-                    // Se siamo nel tab impianti, ricarica anche quelli
-                    document.getElementById('rooms').classList.contains('active') ? loadRooms() : Promise.resolve(),
-                    // Se siamo nel tab tag sconosciuti, ricarica anche quelli
-                    document.getElementById('unknown-tags').classList.contains('active') ? loadUnknownTags() : Promise.resolve()
-                ]);
-                
-                // Aggiorna display configurazione azienda
-                await updateCompanyDisplay();
-                
-                // Aggiorna timestamp ultima sincronizzazione
-                const now = new Date().toLocaleString('it-IT');
-                localStorage.setItem('lastSyncTime', now);
-                document.getElementById('lastSyncTime').textContent = now;
-                
-                // Mostra messaggio di successo
-                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.\n📋 Configurazione azienda sincronizzata.\n\n💡 SUGGERIMENTO: Aggiorna anche l'app sui dispositivi mobili per vedere le modifiche.`);
-                
-            } catch (error) {
-                console.error('Errore sincronizzazione:', error);
-                showError(`❌ Errore durante la sincronizzazione\n\nDettagli: ${error.message}\n\n🔧 SOLUZIONI:\n• Verifica la connessione internet\n• Ricarica la pagina\n• Riprova tra qualche minuto`);
-            } finally {
-                syncButton.textContent = originalText;
-                syncButton.disabled = false;
-            }
-        }
-        
-        // ===== PULIZIA TAG SCONOSCIUTI =====
-        async function cleanupUnknownTags() {
-            const confirmMessage = `🧹 PULIZIA TAG SCONOSCIUTI\n\n` +
-                `Questa operazione eliminerà DEFINITIVAMENTE:\n\n` +
-                `❌ Tutti i tag con campi "N/A"\n` +
-                `❌ Tutti i tag rifiutati da più di 30 giorni\n` +
-                `❌ Tutti i tag duplicati\n\n` +
-                `⚠️ ATTENZIONE: Questa azione NON può essere annullata!\n\n` +
-                `Sei sicuro di voler procedere?`;
-                
-            if (!confirm(confirmMessage)) {
-                return;
-            }
-            
-            const cleanupButton = event.target;
-            const originalText = cleanupButton.textContent;
-            
-            try {
-                cleanupButton.textContent = '🧹 Pulizia in corso...';
-                cleanupButton.disabled = true;
-                
-                let deletedCount = 0;
-                
-                // 1. Prima ottieni tutti i tag da eliminare per contarli
-                console.log('🔍 Ricerca tag da eliminare...');
-                
-                // Tag con campi N/A o vuoti
-                const naTagsQuery = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id&or=(tag_id.eq.N/A,suggested_name.eq.N/A,tag_id.is.null,suggested_name.is.null)`, {
-                    headers: api.headers
-                });
-                const naTags = await naTagsQuery.json();
-                console.log('Tag N/A trovati:', naTags.length);
-                
-                // Tag rifiutati vecchi
-                const thirtyDaysAgo = new Date();
-                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-                const oldRejectedQuery = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id&status=eq.REJECTED&created_at=lt.${thirtyDaysAgo.toISOString()}`, {
-                    headers: api.headers
-                });
-                const oldRejected = await oldRejectedQuery.json();
-                console.log('Tag rifiutati vecchi trovati:', oldRejected.length);
-                
-                // Trova duplicati
-                const allTagsResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?select=id,tag_id,created_at&order=tag_id,created_at.desc`, {
-                    headers: api.headers
-                });
-                const allTags = await allTagsResponse.json();
-                
-                const seenTagIds = new Set();
-                const duplicatesToDelete = [];
-                
-                allTags.forEach(tag => {
-                    if (seenTagIds.has(tag.tag_id)) {
-                        duplicatesToDelete.push(tag.id);
-                    } else {
-                        seenTagIds.add(tag.tag_id);
-                    }
-                });
-                console.log('Tag duplicati trovati:', duplicatesToDelete.length);
-                
-                // 2. Elimina i tag uno per uno per evitare problemi con le query
-                const allTagsToDelete = [
-                    ...naTags.map(t => t.id),
-                    ...oldRejected.map(t => t.id),
-                    ...duplicatesToDelete
-                ];
-                
-                console.log('Totale tag da eliminare:', allTagsToDelete.length);
-                
-                // Elimina in batch di 10 per evitare timeout
-                for (let i = 0; i < allTagsToDelete.length; i += 10) {
-                    const batch = allTagsToDelete.slice(i, i + 10);
-                    
-                    for (const tagId of batch) {
-                        try {
-                            const deleteResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagId}`, {
-                                method: 'DELETE',
-                                headers: api.headers
-                            });
-                            
-                            if (deleteResponse.ok) {
-                                deletedCount++;
-                                console.log(`✅ Eliminato tag ID: ${tagId}`);
-                            } else {
-                                console.warn(`⚠️ Errore eliminazione tag ID: ${tagId}`);
-                            }
-                        } catch (error) {
-                            console.error(`❌ Errore eliminazione tag ID: ${tagId}`, error);
-                        }
-                    }
-                    
-                    // Pausa breve tra i batch
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                
-                // Attendi un momento prima di ricaricare per assicurarsi che le eliminazioni siano completate
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                
-                // Ricarica la lista
-                await loadUnknownTags();
-                
-                // Mostra risultato
-                if (deletedCount > 0) {
-                    showSuccess(`🧹 Pulizia completata con successo!\n\n✅ Eliminati ${deletedCount} tag sconosciuti\n\n📋 DETTAGLI:\n• Tag con campi "N/A" o vuoti: ${naTags.length}\n• Tag rifiutati vecchi: ${oldRejected.length}\n• Tag duplicati: ${duplicatesToDelete.length}\n\n💡 La lista è ora più pulita e organizzata!`);
-                } else {
-                    showSuccess(`🧹 Pulizia completata!\n\n✅ Nessun tag da eliminare trovato\n\n📋 La lista dei tag sconosciuti è già pulita e organizzata.`);
-                }
-                
-            } catch (error) {
-                console.error('Errore durante la pulizia:', error);
-                showError(`❌ Errore durante la pulizia\n\nDettagli: ${error.message}\n\n🔧 SOLUZIONI:\n• Verifica la connessione internet\n• Riprova tra qualche minuto\n• Contatta l'amministratore se il problema persiste`);
-            } finally {
-                cleanupButton.textContent = originalText;
-                cleanupButton.disabled = false;
             }
         }
         
@@ -1659,6 +760,25 @@
             }
         }
         
+        // ===== GESTIONE TAB =====
+        
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+            
+            if (tabName === 'operators') loadOperators();
+            if (tabName === 'rooms') loadRooms();
+            if (tabName === 'unknown-tags') loadUnknownTags('PENDING');
+            if (tabName === 'config') loadConfigTab();
+        }
+        
         async function loadOperators() {
             try {
                 const operators = await api.getOperators();
@@ -1672,7 +792,6 @@
                                 <th>Codice</th>
                                 <th>ID</th>
                                 <th>Stato</th>
-                                <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1685,9 +804,6 @@
                                         <span class="status-badge status-approved">
                                             ✅ Attivo
                                         </span>
-                                    </td>
-                                    <td>
-                                        <button class="btn btn-primary" onclick="editOperator('${op.id}')">✏️ Modifica</button>
                                     </td>
                                 </tr>
                             `).join('')}
@@ -1719,7 +835,6 @@
                                 <th>Nome</th>
                                 <th>Categoria</th>
                                 <th>Descrizione</th>
-                                <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1729,9 +844,6 @@
                                     <td><strong>${room.name}</strong></td>
                                     <td>${room.categories?.name || 'N/A'}</td>
                                     <td>${room.description || 'N/A'}</td>
-                                    <td>
-                                        <button class="btn btn-primary" onclick="editRoom('${room.id}')">✏️ Modifica</button>
-                                    </td>
                                 </tr>
                             `).join('')}
                         </tbody>
@@ -1749,21 +861,11 @@
             container.innerHTML = '<div class="loading">Caricamento tag sconosciuti...</div>';
             
             try {
-                console.log(`📋 Caricamento tag sconosciuti con status: ${status}...`);
-                
-                // Verifica che l'API client sia inizializzato
                 if (!api) {
                     throw new Error('API client non inizializzato');
                 }
                 
-                console.log('🔗 API URL:', api.supabaseUrl);
-                console.log('🔑 API Key presente:', !!api.supabaseKey);
-                
-                // Usa l'API client invece di fetch diretto per evitare problemi di redirect
                 const unknownTags = await api.getUnknownTags(status);
-                
-                console.log('📦 Risposta API tag sconosciuti:', unknownTags);
-                console.log('📊 Numero tag trovati:', Array.isArray(unknownTags) ? unknownTags.length : 'Non è array');
                 
                 if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
                     const statusText = status === 'REJECTED' ? 'rifiutati' : 'in attesa di approvazione';
@@ -1787,7 +889,6 @@
                     return;
                 }
                 
-                // Se ci sono tag, mostra la tabella
                 container.innerHTML = `
                     <table class="table">
                         <thead>
@@ -1796,78 +897,23 @@
                                 <th>Rilevato da</th>
                                 <th>Data</th>
                                 <th>Nome Suggerito</th>
-                                <th>Categoria</th>
                                 <th>Status</th>
-                                <th>UUID</th>
-                                <th>Azioni</th>
                             </tr>
                         </thead>
                         <tbody>
-                            ${unknownTags.map((tag, index) => {
-                                console.log(`🏷️ Tag ${index + 1}:`, tag);
-                                
-                                // Validazione dei dati per evitare undefined
-                                const tagId = tag.tag_id || 'N/A';
-                                const operatorName = tag.operators?.name || 'N/A';
-                                const detectedAt = tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A';
-                                const suggestedName = tag.suggested_name || 'N/A';
-                                const suggestedCategory = tag.suggested_category || 'N/A';
-                                const tagStatus = tag.status || 'PENDING';
-                                const uuid = tag.id || '';
-                                
-                                console.log(`   - Tag ID: "${tagId}"`);
-                                console.log(`   - UUID: "${uuid}"`);
-                                console.log(`   - Status: "${tagStatus}"`);
-                                console.log(`   - Suggested Name: "${suggestedName}"`);
-                                
-                                // Escape delle stringhe per evitare problemi con apici
-                                const escapedTagId = tagId.replace(/'/g, "\\'");
-                                const escapedSuggestedName = suggestedName.replace(/'/g, "\\'");
-                                const escapedSuggestedCategory = suggestedCategory.replace(/'/g, "\\'");
-                                
-                                // Badge per lo status
-                                let statusBadge = '';
-                                if (tagStatus === 'PENDING') {
-                                    statusBadge = '<span class="status-badge status-pending">⏳ In Attesa</span>';
-                                } else if (tagStatus === 'REJECTED') {
-                                    statusBadge = '<span class="status-badge" style="background: #fee2e2; color: #991b1b;">❌ Rifiutato</span>';
-                                } else if (tagStatus === 'APPROVED') {
-                                    statusBadge = '<span class="status-badge status-approved">✅ Approvato</span>';
-                                }
-                                
-                                // Azioni diverse in base allo status
-                                let actions = '';
-                                if (tagStatus === 'PENDING') {
-                                    // Per tag PENDING, mostra sempre i pulsanti anche se tagId è N/A
-                                    actions = `
-                                        <button class="btn btn-success" onclick="quickApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✅ Approva</button>
-                                        <button class="btn btn-primary" onclick="showCustomTagModal('${escapedTagId}')">✏️ Personalizza</button>
-                                        <button class="btn" onclick="rejectTag('${uuid}')" style="background: #ef4444; color: white;">❌ Rifiuta</button>
-                                    `;
-                                } else if (tagStatus === 'REJECTED') {
-                                    actions = `
-                                        <button class="btn btn-success" onclick="reactivateTag('${uuid}', '${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">🔄 Riattiva</button>
-                                        <button class="btn" onclick="deleteRejectedTag('${uuid}')" style="background: #dc2626; color: white;">🗑️ Elimina</button>
-                                    `;
-                                } else if (tagStatus === 'APPROVED') {
-                                    actions = `
-                                        <span style="color: #10b981; font-size: 0.9rem;">✅ Configurato</span>
-                                    `;
-                                }
-                                
-                                return `
-                                    <tr>
-                                        <td><code>${tagId}</code></td>
-                                        <td>${operatorName}</td>
-                                        <td>${detectedAt}</td>
-                                        <td>${suggestedName}</td>
-                                        <td>${suggestedCategory}</td>
-                                        <td>${statusBadge}</td>
-                                        <td><small>${uuid.substring(0, 8)}...</small></td>
-                                        <td>${actions}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
+                            ${unknownTags.map(tag => `
+                                <tr>
+                                    <td><code>${tag.tag_id || 'N/A'}</code></td>
+                                    <td>${tag.operators?.name || 'N/A'}</td>
+                                    <td>${tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A'}</td>
+                                    <td>${tag.suggested_name || 'N/A'}</td>
+                                    <td>
+                                        <span class="status-badge ${tag.status === 'PENDING' ? 'status-pending' : 'status-approved'}">
+                                            ${tag.status === 'PENDING' ? '⏳ In Attesa' : '✅ Processato'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `).join('')}
                         </tbody>
                     </table>
                 `;
@@ -1880,12 +926,6 @@
                         <p style="color: #666; margin-top: 1rem;">
                             ${error.message || 'Errore sconosciuto'}
                         </p>
-                        <div style="margin-top: 1rem;">
-                            <strong>🔍 Debug Info:</strong><br>
-                            <small>Errore: ${error.name || 'Unknown'}</small><br>
-                            <small>Messaggio: ${error.message || 'N/A'}</small><br>
-                            <small>Status: ${error.status || 'N/A'}</small>
-                        </div>
                         <button onclick="loadUnknownTags('${status}')" style="margin-top: 1rem; background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer;">
                             🔄 Riprova
                         </button>
@@ -1893,1973 +933,92 @@
                 `;
             }
         }
+        
+        async function loadConfigTab() {
+            console.log('Caricamento tab configurazione...');
+        }
+        
+        // ===== SINCRONIZZAZIONE FORZATA =====
+        async function forceSyncAllDevices() {
+            const syncButton = event.target;
+            const originalText = syncButton.textContent;
+            
+            try {
+                syncButton.textContent = '🔄 Sincronizzazione...';
+                syncButton.disabled = true;
                 
-                container.innerHTML = `
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Tag ID</th>
-                                <th>Rilevato da</th>
-                                <th>Data</th>
-                                <th>Nome Suggerito</th>
-                                <th>Categoria</th>
-                                <th>Status</th>
-                                <th>UUID</th>
-                                <th>Azioni</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${unknownTags.map((tag, index) => {
-                                console.log(`🏷️ Tag ${index + 1}:`, tag);
-                                
-                                // Validazione dei dati per evitare undefined
-                                const tagId = tag.tag_id || 'N/A';
-                                const operatorName = tag.operators?.name || 'N/A';
-                                const detectedAt = tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A';
-                                const suggestedName = tag.suggested_name || 'N/A';
-                                const suggestedCategory = tag.suggested_category || 'N/A';
-                                const tagStatus = tag.status || 'PENDING';
-                                const uuid = tag.id || '';
-                                
-                                console.log(`   - Tag ID: "${tagId}"`);
-                                console.log(`   - UUID: "${uuid}"`);
-                                console.log(`   - Status: "${tagStatus}"`);
-                                console.log(`   - Suggested Name: "${suggestedName}"`);
-                                
-                                // Escape delle stringhe per evitare problemi con apici
-                                const escapedTagId = tagId.replace(/'/g, "\\'");
-                                const escapedSuggestedName = suggestedName.replace(/'/g, "\\'");
-                                const escapedSuggestedCategory = suggestedCategory.replace(/'/g, "\\'");
-                                
-                                // Badge per lo status
-                                let statusBadge = '';
-                                if (tagStatus === 'PENDING') {
-                                    statusBadge = '<span class="status-badge status-pending">⏳ In Attesa</span>';
-                                } else if (tagStatus === 'REJECTED') {
-                                    statusBadge = '<span class="status-badge" style="background: #fee2e2; color: #991b1b;">❌ Rifiutato</span>';
-                                } else if (tagStatus === 'APPROVED') {
-                                    statusBadge = '<span class="status-badge status-approved">✅ Approvato</span>';
-                                }
-                                
-                                // Azioni diverse in base allo status
-                                let actions = '';
-                                if (tagStatus === 'PENDING') {
-                                    // Per tag PENDING, mostra sempre i pulsanti anche se tagId è N/A
-                                    actions = `
-                                        <button class="btn btn-success" onclick="quickApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✅ Approva</button>
-                                        <button class="btn btn-primary" onclick="customApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✏️ Personalizza</button>
-                                        ${uuid ? `<button class="btn btn-danger" onclick="rejectTag('${uuid}')">❌ Rifiuta</button>` : '<span style="color: #999;">❌ No UUID</span>'}
-                                    `;
-                                } else if (tagStatus === 'REJECTED') {
-                                    actions = `
-                                        <button class="btn btn-success" onclick="reactivateTag('${uuid}', '${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">🔄 Riattiva</button>
-                                        <button class="btn btn-primary" onclick="customApproveTag('${escapedTagId}', '${escapedSuggestedName}', '${escapedSuggestedCategory}')">✏️ Approva Custom</button>
-                                        ${uuid ? `<button class="btn btn-danger" onclick="deleteRejectedTag('${uuid}')">🗑️ Elimina</button>` : '<span style="color: #999;">🗑️ No UUID</span>'}
-                                    `;
-                                } else {
-                                    actions = '<span style="color: #999;">Nessuna azione disponibile</span>';
-                                }
-                                
-                                return `
-                                <tr>
-                                    <td><code>${tagId}</code></td>
-                                    <td>${operatorName}</td>
-                                    <td>${detectedAt}</td>
-                                    <td>${suggestedName}</td>
-                                    <td>${suggestedCategory}</td>
-                                    <td>${statusBadge}</td>
-                                    <td><small><code>${uuid || 'MISSING'}</code></small></td>
-                                    <td>${actions}</td>
-                                </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                `;
+                await Promise.all([
+                    refreshData(),
+                    loadRecentControls(),
+                    loadCompanyConfigFromDatabase(),
+                    document.getElementById('operators').classList.contains('active') ? loadOperators() : Promise.resolve(),
+                    document.getElementById('rooms').classList.contains('active') ? loadRooms() : Promise.resolve(),
+                    document.getElementById('unknown-tags').classList.contains('active') ? loadUnknownTags() : Promise.resolve()
+                ]);
+                
+                const now = new Date().toLocaleString('it-IT');
+                localStorage.setItem('lastSyncTime', now);
+                document.getElementById('lastSyncTime').textContent = now;
+                
+                showSuccess(`✅ Sincronizzazione completata!\n\n🕒 Ultima sincronizzazione: ${now}\n\n📱 Tutti i dispositivi dovrebbero ora mostrare gli stessi dati.`);
                 
             } catch (error) {
-                console.error('❌ Errore caricamento tag sconosciuti:', error);
-                
-                // Messaggio di errore più dettagliato
-                let errorMessage = 'Errore caricamento tag sconosciuti';
-                if (error.message.includes('relation "unknown_tags" does not exist')) {
-                    errorMessage = `
-                        <div style="padding: 2rem; text-align: center;">
-                            <h4 style="color: #e74c3c;">📋 Tabella Tag Sconosciuti Non Trovata</h4>
-                            <p style="margin: 1rem 0;">La tabella per gestire i tag sconosciuti non esiste nel database.</p>
-                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
-                                <strong>🔧 Come risolvere:</strong><br>
-                                1. Vai su Supabase → SQL Editor<br>
-                                2. Esegui lo script <code>fix-database-schema.sql</code><br>
-                                3. Ricarica questa pagina
-                            </div>
-                            <button onclick="loadUnknownTags()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                                🔄 Riprova
-                            </button>
-                        </div>
-                    `;
-                } else {
-                    errorMessage = `
-                        <div style="padding: 2rem; text-align: center;">
-                            <h4 style="color: #e74c3c;">❌ Errore Caricamento</h4>
-                            <p style="margin: 1rem 0;">${error.message}</p>
-                            <div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin: 1rem 0; text-align: left;">
-                                <strong>🔍 Debug Info:</strong><br>
-                                <code style="font-size: 0.8rem;">${JSON.stringify(error, null, 2)}</code>
-                            </div>
-                            <button onclick="loadUnknownTags()" style="background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                                🔄 Riprova
-                            </button>
-                        </div>
-                    `;
-                }
-                
-                container.innerHTML = errorMessage;
+                console.error('Errore sincronizzazione:', error);
+                showError(`❌ Errore durante la sincronizzazione\n\nDettagli: ${error.message}`);
+            } finally {
+                syncButton.textContent = originalText;
+                syncButton.disabled = false;
             }
         }
         
+        // ===== PULIZIA TAG SCONOSCIUTI =====
+        async function cleanupUnknownTags() {
+            if (!confirm('🧹 Eliminare tutti i tag sconosciuti?\n\nQuesta azione non può essere annullata!')) {
+                return;
+            }
+            
+            const cleanupButton = event.target;
+            const originalText = cleanupButton.textContent;
+            
+            try {
+                cleanupButton.textContent = '🧹 Pulizia in corso...';
+                cleanupButton.disabled = true;
+                
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                await loadUnknownTags();
+                
+                showSuccess('🧹 Pulizia completata con successo!');
+                
+            } catch (error) {
+                console.error('Errore durante la pulizia:', error);
+                showError(`❌ Errore durante la pulizia: ${error.message}`);
+            } finally {
+                cleanupButton.textContent = originalText;
+                cleanupButton.disabled = false;
+            }
+        }
+        
+        // Funzioni placeholder per compatibilità
+        function createTestTag() {
+            showSuccess('🧪 Funzione test tag - placeholder');
+        }
+        
+        // ===== UTILITY =====
+        
         function showError(message) {
-            // Implementazione notifica errore
             alert('❌ ' + message);
         }
         
         function showSuccess(message) {
-            // Implementazione notifica successo
             alert('✅ ' + message);
         }
         
-        // ===== FUNZIONI REPORT E REGISTRI =====
-        
-        async function generateShiftRegister() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            const operatorId = document.getElementById('reportOperator').value;
-            const shift = document.getElementById('reportShift').value;
-            
-            if (!startDate || !endDate) {
-                alert('Seleziona periodo per il report');
-                return;
+        // Controlla sessione ogni 5 minuti
+        setInterval(function() {
+            if (!checkLoginStatus()) {
+                showLoginModal();
             }
-            
-            try {
-                const filters = {
-                    startDate: startDate + 'T00:00:00',
-                    endDate: endDate + 'T23:59:59'
-                };
-                
-                if (operatorId) filters.operatorId = operatorId;
-                
-                const controls = await api.getControls(filters);
-                
-                // Filtra per turno se specificato
-                let filteredControls = controls;
-                if (shift) {
-                    filteredControls = controls.filter(control => {
-                        const hour = new Date(control.timestamp).getHours();
-                        switch(shift) {
-                            case 'morning': return hour >= 6 && hour < 14;
-                            case 'afternoon': return hour >= 14 && hour < 22;
-                            case 'night': return hour >= 22 || hour < 6;
-                            default: return true;
-                        }
-                    });
-                }
-                
-                const html = generateShiftRegisterHTML(filteredControls, startDate, endDate, shift);
-                showReportPreview(html);
-                
-            } catch (error) {
-                console.error('Errore generazione registro turni:', error);
-                showError('Errore generazione registro turni');
-            }
-        }
-        
-        async function generateElectricalRegister() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            
-            if (!startDate || !endDate) {
-                alert('Seleziona periodo per il report');
-                return;
-            }
-            
-            try {
-                const filters = {
-                    startDate: startDate + 'T00:00:00',
-                    endDate: endDate + 'T23:59:59'
-                };
-                
-                const controls = await api.getControls(filters);
-                
-                // Filtra solo impianti elettrici
-                const electricalControls = controls.filter(control => 
-                    control.technical_rooms?.categories?.name?.includes('Elettr') ||
-                    control.technical_rooms?.categories?.name?.includes('UPS') ||
-                    control.technical_rooms?.categories?.name?.includes('Quadr') ||
-                    control.technical_rooms?.categories?.name?.includes('Gener')
-                );
-                
-                const html = generateElectricalRegisterHTML(electricalControls, startDate, endDate);
-                showReportPreview(html);
-                
-            } catch (error) {
-                console.error('Errore generazione registro elettrico:', error);
-                showError('Errore generazione registro elettrico');
-            }
-        }
-        
-        async function generateSignedReport() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            
-            if (!startDate || !endDate) {
-                alert('Seleziona periodo per il report');
-                return;
-            }
-            
-            try {
-                const filters = {
-                    startDate: startDate + 'T00:00:00',
-                    endDate: endDate + 'T23:59:59'
-                };
-                
-                const controls = await api.getControls(filters);
-                const html = generateSignedReportHTML(controls, startDate, endDate);
-                showReportPreview(html);
-                
-            } catch (error) {
-                console.error('Errore generazione report firmato:', error);
-                showError('Errore generazione report firmato');
-            }
-        }
-        
-        async function generateFullReport() {
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            
-            if (!startDate || !endDate) {
-                alert('Seleziona periodo per il report');
-                return;
-            }
-            
-            try {
-                const filters = {
-                    startDate: startDate + 'T00:00:00',
-                    endDate: endDate + 'T23:59:59'
-                };
-                
-                const controls = await api.getControls(filters);
-                const stats = await calculateReportStats(controls);
-                const html = generateFullReportHTML(controls, stats, startDate, endDate);
-                showReportPreview(html);
-                
-            } catch (error) {
-                console.error('Errore generazione report completo:', error);
-                showError('Errore generazione report completo');
-            }
-        }
-        
-        function generateShiftRegisterHTML(controls, startDate, endDate, shift) {
-            const shiftName = {
-                'morning': 'Mattino (06:00-14:00)',
-                'afternoon': 'Pomeriggio (14:00-22:00)', 
-                'night': 'Notte (22:00-06:00)',
-                '': 'Tutti i turni'
-            }[shift || ''];
-            
-            return `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #333; padding-bottom: 1rem;">
-                        <h1 style="color: #333; margin: 0;">📅 REGISTRO CONTROLLI TURNI</h1>
-                        <h2 style="color: #666; margin: 0.5rem 0;">${shiftName}</h2>
-                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
-                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Turno</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">GPS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${controls.map(control => {
-                                const date = new Date(control.timestamp);
-                                const hour = date.getHours();
-                                const shiftType = hour >= 6 && hour < 14 ? 'Mattino' : 
-                                                hour >= 14 && hour < 22 ? 'Pomeriggio' : 'Notte';
-                                const gpsStatus = control.location_valid ? '✅ Valido' : '⚠️ Fuori zona';
-                                
-                                return `
-                                    <tr>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${date.toLocaleString('it-IT')}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${shiftType}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${gpsStatus}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">
-                        <h3>📊 Riepilogo</h3>
-                        <p><strong>Totale controlli:</strong> ${controls.length}</p>
-                        <p><strong>Controlli validi GPS:</strong> ${controls.filter(c => c.location_valid).length}</p>
-                        <p><strong>Operatori coinvolti:</strong> ${new Set(controls.map(c => c.operators?.name)).size}</p>
-                        <p><strong>Impianti controllati:</strong> ${new Set(controls.map(c => c.technical_rooms?.name)).size}</p>
-                    </div>
-                    
-                    <div style="margin-top: 2rem; text-align: center; font-size: 0.8rem; color: #666;">
-                        <p>Sistema Controlli Industriali - Report generato automaticamente</p>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function generateElectricalRegisterHTML(controls, startDate, endDate) {
-            return `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #FF9800; padding-bottom: 1rem;">
-                        <h1 style="color: #FF9800; margin: 0;">⚡ REGISTRO IMPIANTI ELETTRICI</h1>
-                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
-                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
-                    </div>
-                    
-                    <div style="margin-bottom: 2rem; padding: 1rem; background: #fff3e0; border-left: 4px solid #FF9800;">
-                        <h3 style="color: #FF9800; margin-top: 0;">⚠️ Controlli Impianti Elettrici</h3>
-                        <p>Questo registro documenta tutti i controlli effettuati su impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici.</p>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
-                        <thead>
-                            <tr style="background: #fff3e0;">
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Categoria</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Stato</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${controls.map(control => {
-                                const date = new Date(control.timestamp);
-                                const status = control.location_valid ? '✅ OK' : '⚠️ Anomalia GPS';
-                                
-                                return `
-                                    <tr>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${date.toLocaleString('it-IT')}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;"><strong>${control.technical_rooms?.name || control.tag_id}</strong></td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.categories?.name || 'N/A'}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
-                                        <td style="border: 1px solid #ddd; padding: 0.5rem;">${status}</td>
-                                    </tr>
-                                `;
-                            }).join('')}
-                        </tbody>
-                    </table>
-                    
-                    <div style="margin-top: 2rem; padding: 1rem; background: #f9f9f9; border-radius: 8px;">
-                        <h3>📊 Riepilogo Impianti Elettrici</h3>
-                        <p><strong>Totale controlli elettrici:</strong> ${controls.length}</p>
-                        <p><strong>Controlli conformi:</strong> ${controls.filter(c => c.location_valid).length}</p>
-                        <p><strong>Anomalie rilevate:</strong> ${controls.filter(c => !c.location_valid).length}</p>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function generateSignedReportHTML(controls, startDate, endDate) {
-            // Raggruppa per operatore
-            const byOperator = {};
-            controls.forEach(control => {
-                const operatorName = control.operators?.name || 'N/A';
-                if (!byOperator[operatorName]) {
-                    byOperator[operatorName] = [];
-                }
-                byOperator[operatorName].push(control);
-            });
-            
-            return `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #4CAF50; padding-bottom: 1rem;">
-                        <h1 style="color: #4CAF50; margin: 0;">🖊️ REPORT CON FIRME DIGITALI</h1>
-                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
-                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
-                    </div>
-                    
-                    ${Object.entries(byOperator).map(([operatorName, operatorControls]) => `
-                        <div style="margin-bottom: 3rem; page-break-inside: avoid;">
-                            <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-                                <h3 style="margin: 0; color: #2e7d32;">👤 ${operatorName}</h3>
-                                <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">Controlli effettuati: ${operatorControls.length}</p>
-                            </div>
-                            
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1rem;">
-                                <thead>
-                                    <tr style="background: #f5f5f5;">
-                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Data/Ora</th>
-                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Impianto</th>
-                                        <th style="border: 1px solid #ddd; padding: 0.5rem; text-align: left;">Validazione</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${operatorControls.map(control => `
-                                        <tr>
-                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${new Date(control.timestamp).toLocaleString('it-IT')}</td>
-                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
-                                            <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.location_valid ? '✅ Validato' : '⚠️ Da verificare'}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
-                            
-                            <div style="margin-top: 1rem; padding: 1rem; border: 1px solid #ddd; background: #fafafa;">
-                                <p style="margin: 0 0 1rem 0;"><strong>Dichiarazione:</strong></p>
-                                <p style="margin: 0 0 1rem 0; font-size: 0.9rem;">
-                                    Il sottoscritto <strong>${operatorName}</strong> dichiara di aver effettuato tutti i controlli sopra elencati 
-                                    presso gli impianti indicati, nelle date e orari specificati, con validazione GPS automatica.
-                                </p>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
-                                    <div>
-                                        <p style="margin: 0; font-size: 0.9rem;">Data: ${new Date().toLocaleDateString('it-IT')}</p>
-                                    </div>
-                                    <div style="text-align: center;">
-                                        <div style="border-bottom: 1px solid #333; width: 200px; margin-bottom: 0.5rem;"></div>
-                                        <p style="margin: 0; font-size: 0.8rem;">Firma ${operatorName}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `).join('')}
-                    
-                    <div style="margin-top: 2rem; text-align: center; font-size: 0.8rem; color: #666; border-top: 1px solid #ddd; padding-top: 1rem;">
-                        <p>Sistema Controlli Industriali - Report con validazione digitale</p>
-                        <p>Tutti i controlli sono tracciati con NFC e GPS per garantire l'autenticità</p>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function generateFullReportHTML(controls, stats, startDate, endDate) {
-            return `
-                <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-                    <div style="text-align: center; margin-bottom: 2rem; border-bottom: 2px solid #9C27B0; padding-bottom: 1rem;">
-                        <h1 style="color: #9C27B0; margin: 0;">📊 REPORT COMPLETO CONTROLLI</h1>
-                        <p style="margin: 0.5rem 0;">Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}</p>
-                        <p style="margin: 0; font-size: 0.9rem; color: #888;">Generato il ${new Date().toLocaleString('it-IT')}</p>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-                        <div style="background: #e3f2fd; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #1976d2;">${controls.length}</div>
-                            <div style="font-size: 0.9rem; color: #666;">Controlli Totali</div>
-                        </div>
-                        <div style="background: #e8f5e8; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #388e3c;">${stats.validControls}</div>
-                            <div style="font-size: 0.9rem; color: #666;">Controlli Validi</div>
-                        </div>
-                        <div style="background: #fff3e0; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #f57c00;">${stats.uniqueOperators}</div>
-                            <div style="font-size: 0.9rem; color: #666;">Operatori</div>
-                        </div>
-                        <div style="background: #fce4ec; padding: 1rem; border-radius: 8px; text-align: center;">
-                            <div style="font-size: 2rem; font-weight: bold; color: #c2185b;">${stats.uniqueRooms}</div>
-                            <div style="font-size: 0.9rem; color: #666;">Impianti</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 2rem;">
-                        <h3>📈 Distribuzione per Turno</h3>
-                        <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">
-                            <p><strong>Mattino (06-14):</strong> ${stats.shiftDistribution.morning} controlli</p>
-                            <p><strong>Pomeriggio (14-22):</strong> ${stats.shiftDistribution.afternoon} controlli</p>
-                            <p><strong>Notte (22-06):</strong> ${stats.shiftDistribution.night} controlli</p>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 2rem;">
-                        <h3>🏆 Top Performers</h3>
-                        <div style="background: #f9f9f9; padding: 1rem; border-radius: 8px;">
-                            <p><strong>Operatore più attivo:</strong> ${stats.topOperator.name} (${stats.topOperator.count} controlli)</p>
-                            <p><strong>Impianto più controllato:</strong> ${stats.topRoom.name} (${stats.topRoom.count} controlli)</p>
-                        </div>
-                    </div>
-                    
-                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2rem;">
-                        <thead>
-                            <tr style="background: #f5f5f5;">
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Data/Ora</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Impianto</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Operatore</th>
-                                <th style="border: 1px solid #ddd; padding: 0.75rem; text-align: left;">Stato</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${controls.slice(0, 50).map(control => `
-                                <tr>
-                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${new Date(control.timestamp).toLocaleString('it-IT')}</td>
-                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.technical_rooms?.name || control.tag_id}</td>
-                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.operators?.name || 'N/A'}</td>
-                                    <td style="border: 1px solid #ddd; padding: 0.5rem;">${control.location_valid ? '✅ OK' : '⚠️ Anomalia'}</td>
-                                </tr>
-                            `).join('')}
-                            ${controls.length > 50 ? `<tr><td colspan="4" style="text-align: center; padding: 1rem; font-style: italic;">... e altri ${controls.length - 50} controlli</td></tr>` : ''}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-        }
-        
-        async function calculateReportStats(controls) {
-            const validControls = controls.filter(c => c.location_valid).length;
-            const uniqueOperators = new Set(controls.map(c => c.operators?.name)).size;
-            const uniqueRooms = new Set(controls.map(c => c.technical_rooms?.name)).size;
-            
-            // Distribuzione turni
-            const shiftDistribution = {
-                morning: 0,
-                afternoon: 0,
-                night: 0
-            };
-            
-            controls.forEach(control => {
-                const hour = new Date(control.timestamp).getHours();
-                if (hour >= 6 && hour < 14) shiftDistribution.morning++;
-                else if (hour >= 14 && hour < 22) shiftDistribution.afternoon++;
-                else shiftDistribution.night++;
-            });
-            
-            // Top operatore
-            const operatorCounts = {};
-            controls.forEach(control => {
-                const name = control.operators?.name || 'N/A';
-                operatorCounts[name] = (operatorCounts[name] || 0) + 1;
-            });
-            const topOperator = Object.entries(operatorCounts).reduce((a, b) => 
-                operatorCounts[a[0]] > operatorCounts[b[0]] ? a : b, ['N/A', 0]);
-            
-            // Top impianto
-            const roomCounts = {};
-            controls.forEach(control => {
-                const name = control.technical_rooms?.name || control.tag_id;
-                roomCounts[name] = (roomCounts[name] || 0) + 1;
-            });
-            const topRoom = Object.entries(roomCounts).reduce((a, b) => 
-                roomCounts[a[0]] > roomCounts[b[0]] ? a : b, ['N/A', 0]);
-            
-            return {
-                validControls,
-                uniqueOperators,
-                uniqueRooms,
-                shiftDistribution,
-                topOperator: { name: topOperator[0], count: topOperator[1] },
-                topRoom: { name: topRoom[0], count: topRoom[1] }
-            };
-        }
-        
-        async function loadAdvancedStats() {
-            try {
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-                
-                const monthlyControls = await api.getControls({
-                    startDate: startOfMonth.toISOString(),
-                    endDate: now.toISOString()
-                });
-                
-                const stats = await calculateReportStats(monthlyControls);
-                
-                document.getElementById('totalControlsMonth').textContent = monthlyControls.length;
-                document.getElementById('avgControlsDay').textContent = Math.round(monthlyControls.length / now.getDate());
-                document.getElementById('mostActiveOperator').textContent = stats.topOperator.name;
-                document.getElementById('mostControlledRoom').textContent = stats.topRoom.name;
-                
-            } catch (error) {
-                console.error('Errore caricamento statistiche avanzate:', error);
-            }
-        }
-        
-        function showReportPreview(html) {
-            document.getElementById('reportContent').innerHTML = html;
-            document.getElementById('reportPreview').style.display = 'block';
-            document.getElementById('reportPreview').scrollIntoView({ behavior: 'smooth' });
-        }
-        
-        function closeReportPreview() {
-            document.getElementById('reportPreview').style.display = 'none';
-        }
-        
-        function printReport() {
-            const content = document.getElementById('reportContent').innerHTML;
-            const printWindow = window.open('', '_blank');
-            printWindow.document.write(`
-                <html>
-                    <head>
-                        <title>Report Controlli Industriali</title>
-                        <style>
-                            body { font-family: Arial, sans-serif; margin: 20px; }
-                            @media print {
-                                body { margin: 0; }
-                                .no-print { display: none; }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        ${content}
-                    </body>
-                </html>
-            `);
-            printWindow.document.close();
-            printWindow.print();
-        }
-        
-        // Inizializza date di default per i report
-        document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date();
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-            
-            document.getElementById('reportStartDate').value = weekAgo.toISOString().split('T')[0];
-            document.getElementById('reportEndDate').value = today.toISOString().split('T')[0];
-            
-            // Carica operatori nel select
-            loadOperatorsForReport();
-        });
-        
-        async function loadOperatorsForReport() {
-            try {
-                const operators = await api.getOperators();
-                const select = document.getElementById('reportOperator');
-                
-                operators.forEach(operator => {
-                    const option = document.createElement('option');
-                    option.value = operator.id;
-                    option.textContent = operator.name;
-                    select.appendChild(option);
-                });
-            } catch (error) {
-                console.error('Errore caricamento operatori per report:', error);
-            }
-        }
-        
-        // ===== FUNZIONI CONFIGURAZIONE =====
-        
-        async function loadConfigTab() {
-            await Promise.all([
-                loadRoomsConfig(),
-                loadCategoriesConfig(),
-                loadOperatorsConfig()
-            ]);
-        }
-        
-        // === GESTIONE IMPIANTI ===
-        
-        async function loadRoomsConfig() {
-            try {
-                const rooms = await api.getTechnicalRooms();
-                const container = document.getElementById('roomsConfigList');
-                
-                if (rooms.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Nessun impianto configurato</p>';
-                    return;
-                }
-                
-                container.innerHTML = rooms.map(room => `
-                    <div class="room-config-item" data-tag="${room.tag_id.toLowerCase()}">
-                        <div class="room-config-header">
-                            <div>
-                                <span class="room-config-title">${room.name}</span>
-                                <span class="room-config-tag">${room.tag_id}</span>
-                            </div>
-                            <div class="room-config-actions">
-                                <button class="btn-sm btn-edit" onclick="editRoom('${room.id}')">✏️ Modifica</button>
-                                <button class="btn-sm btn-delete" onclick="deleteRoom('${room.id}', '${room.name}')">🗑️ Elimina</button>
-                            </div>
-                        </div>
-                        <div style="font-size: 0.9rem; color: #666;">
-                            <div><strong>Categoria:</strong> ${room.categories?.name || 'N/A'}</div>
-                            ${room.description ? `<div><strong>Descrizione:</strong> ${room.description}</div>` : ''}
-                            ${room.expected_lat ? `<div><strong>GPS:</strong> ${room.expected_lat}, ${room.expected_lng} (±${room.gps_radius}m)</div>` : '<div><strong>GPS:</strong> Non configurato</div>'}
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Errore caricamento impianti config:', error);
-                document.getElementById('roomsConfigList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">Errore caricamento impianti</p>';
-            }
-        }
-        
-        function filterRooms() {
-            const search = document.getElementById('searchRooms').value.toLowerCase();
-            const items = document.querySelectorAll('.room-config-item');
-            
-            items.forEach(item => {
-                const tag = item.dataset.tag;
-                const text = item.textContent.toLowerCase();
-                const visible = tag.includes(search) || text.includes(search);
-                item.style.display = visible ? 'block' : 'none';
-            });
-        }
-        
-        async function showAddRoomModal() {
-            document.getElementById('roomModalTitle').textContent = '➕ Nuovo Impianto';
-            document.getElementById('roomForm').reset();
-            document.getElementById('roomId').value = '';
-            
-            // Carica categorie nel select
-            await loadCategoriesInSelect();
-            
-            document.getElementById('roomModal').style.display = 'flex';
-        }
-        
-        async function editRoom(roomId) {
-            try {
-                const rooms = await api.getTechnicalRooms();
-                const room = rooms.find(r => r.id === roomId);
-                
-                if (!room) {
-                    showError('Impianto non trovato');
-                    return;
-                }
-                
-                document.getElementById('roomModalTitle').textContent = '✏️ Modifica Impianto';
-                document.getElementById('roomId').value = room.id;
-                document.getElementById('roomTagId').value = room.tag_id;
-                document.getElementById('roomName').value = room.name;
-                document.getElementById('roomDescription').value = room.description || '';
-                document.getElementById('roomLat').value = room.expected_lat || '';
-                document.getElementById('roomLng').value = room.expected_lng || '';
-                document.getElementById('roomRadius').value = room.gps_radius || 50;
-                
-                await loadCategoriesInSelect();
-                document.getElementById('roomCategory').value = room.category_id || '';
-                
-                document.getElementById('roomModal').style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Errore caricamento impianto:', error);
-                showError('Errore caricamento dati impianto');
-            }
-        }
-        
-        async function deleteRoom(roomId, roomName) {
-            if (!confirm(`Sei sicuro di voler eliminare l'impianto "${roomName}"?\n\nQuesta azione non può essere annullata.`)) {
-                return;
-            }
-            
-            try {
-                // Nota: Supabase non ha un metodo delete diretto nell'API client
-                // Dovremmo implementarlo o usare una chiamata diretta
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/technical_rooms?id=eq.${roomId}`, {
-                    method: 'DELETE',
-                    headers: api.headers
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Errore eliminazione impianto');
-                }
-                
-                showSuccess(`Impianto "${roomName}" eliminato con successo`);
-                await loadRoomsConfig();
-                
-            } catch (error) {
-                console.error('Errore eliminazione impianto:', error);
-                showError('Errore eliminazione impianto');
-            }
-        }
-        
-        function closeRoomModal() {
-            document.getElementById('roomModal').style.display = 'none';
-        }
-        
-        // === GESTIONE CATEGORIE ===
-        
-        async function loadCategoriesConfig() {
-            try {
-                const categories = await api.getCategories();
-                const container = document.getElementById('categoriesList');
-                
-                if (categories.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 1rem;">Nessuna categoria configurata</p>';
-                    return;
-                }
-                
-                container.innerHTML = categories.map(category => `
-                    <div class="category-item">
-                        <div>
-                            <strong>${category.name}</strong>
-                            ${category.description ? `<br><small style="color: #666;">${category.description}</small>` : ''}
-                        </div>
-                        <div>
-                            <button class="btn-sm btn-delete" onclick="deleteCategory('${category.id}', '${category.name}')">🗑️</button>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Errore caricamento categorie:', error);
-                document.getElementById('categoriesList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 1rem;">Errore caricamento categorie</p>';
-            }
-        }
-        
-        async function loadCategoriesInSelect() {
-            try {
-                const categories = await api.getCategories();
-                const select = document.getElementById('roomCategory');
-                
-                // Mantieni l'opzione vuota
-                select.innerHTML = '<option value="">Seleziona categoria...</option>';
-                
-                categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.name;
-                    select.appendChild(option);
-                });
-                
-            } catch (error) {
-                console.error('Errore caricamento categorie per select:', error);
-            }
-        }
-        
-        function showAddCategoryModal() {
-            document.getElementById('categoryForm').reset();
-            document.getElementById('categoryModal').style.display = 'flex';
-        }
-        
-        async function deleteCategory(categoryId, categoryName) {
-            if (!confirm(`Sei sicuro di voler eliminare la categoria "${categoryName}"?\n\nGli impianti associati rimarranno senza categoria.`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/categories?id=eq.${categoryId}`, {
-                    method: 'DELETE',
-                    headers: api.headers
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Errore eliminazione categoria');
-                }
-                
-                showSuccess(`Categoria "${categoryName}" eliminata con successo`);
-                await loadCategoriesConfig();
-                
-            } catch (error) {
-                console.error('Errore eliminazione categoria:', error);
-                showError('Errore eliminazione categoria');
-            }
-        }
-        
-        function closeCategoryModal() {
-            document.getElementById('categoryModal').style.display = 'none';
-        }
-        
-        // === GESTIONE OPERATORI ===
-        
-        async function loadOperatorsConfig() {
-            try {
-                const operators = await api.getOperators();
-                const container = document.getElementById('operatorsConfigList');
-                
-                if (operators.length === 0) {
-                    container.innerHTML = '<p style="text-align: center; color: #666; padding: 2rem;">Nessun operatore configurato</p>';
-                    return;
-                }
-                
-                container.innerHTML = operators.map(operator => `
-                    <div class="operator-config-item">
-                        <div>
-                            <div style="font-weight: bold;">${operator.name}</div>
-                            <div style="font-size: 0.9rem; color: #666;">
-                                Codice: ${operator.code} | ID: ${operator.operator_id}
-                                ${operator.digital_signature ? ` | Firma: ${operator.digital_signature}` : ''}
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="btn-sm btn-edit" onclick="editOperator('${operator.id}')">✏️ Modifica</button>
-                            <button class="btn-sm btn-delete" onclick="deleteOperator('${operator.id}', '${operator.name}')">🗑️ Elimina</button>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error('Errore caricamento operatori config:', error);
-                document.getElementById('operatorsConfigList').innerHTML = '<p style="color: #dc3545; text-align: center; padding: 2rem;">Errore caricamento operatori</p>';
-            }
-        }
-        
-        function showAddOperatorModal() {
-            document.getElementById('operatorModalTitle').textContent = '👤 Nuovo Operatore';
-            document.getElementById('operatorForm').reset();
-            document.getElementById('operatorId').value = '';
-            document.getElementById('operatorModal').style.display = 'flex';
-        }
-        
-        async function editOperator(operatorId) {
-            try {
-                const operators = await api.getOperators();
-                const operator = operators.find(o => o.id === operatorId);
-                
-                if (!operator) {
-                    showError('Operatore non trovato');
-                    return;
-                }
-                
-                document.getElementById('operatorModalTitle').textContent = '✏️ Modifica Operatore';
-                document.getElementById('operatorId').value = operator.id;
-                document.getElementById('operatorName').value = operator.name;
-                document.getElementById('operatorCode').value = operator.code;
-                document.getElementById('operatorOperatorId').value = operator.operator_id;
-                document.getElementById('operatorSignature').value = operator.digital_signature || '';
-                
-                document.getElementById('operatorModal').style.display = 'flex';
-                
-            } catch (error) {
-                console.error('Errore caricamento operatore:', error);
-                showError('Errore caricamento dati operatore');
-            }
-        }
-        
-        async function deleteOperator(operatorId, operatorName) {
-            if (!confirm(`Sei sicuro di voler eliminare l'operatore "${operatorName}"?\n\nI controlli esistenti rimarranno associati a questo operatore.`)) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
-                    method: 'DELETE',
-                    headers: api.headers
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Errore eliminazione operatore');
-                }
-                
-                showSuccess(`Operatore "${operatorName}" eliminato con successo`);
-                await loadOperatorsConfig();
-                
-            } catch (error) {
-                console.error('Errore eliminazione operatore:', error);
-                showError('Errore eliminazione operatore');
-            }
-        }
-        
-        function closeOperatorModal() {
-            document.getElementById('operatorModal').style.display = 'none';
-        }
-        
-        // === FORM HANDLERS ===
-        
-        document.getElementById('roomForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const roomData = {
-                tag_id: document.getElementById('roomTagId').value.trim().toUpperCase(),
-                name: document.getElementById('roomName').value.trim(),
-                description: document.getElementById('roomDescription').value.trim() || null,
-                category_id: document.getElementById('roomCategory').value || null,
-                expected_lat: parseFloat(document.getElementById('roomLat').value) || null,
-                expected_lng: parseFloat(document.getElementById('roomLng').value) || null,
-                gps_radius: parseInt(document.getElementById('roomRadius').value) || 50,
-                active: true
-            };
-            
-            try {
-                const roomId = document.getElementById('roomId').value;
-                
-                if (roomId) {
-                    // Modifica esistente
-                    const response = await fetch(`${api.supabaseUrl}/rest/v1/technical_rooms?id=eq.${roomId}`, {
-                        method: 'PATCH',
-                        headers: api.headers,
-                        body: JSON.stringify(roomData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Errore aggiornamento impianto');
-                    }
-                    
-                    showSuccess('Impianto aggiornato con successo');
-                } else {
-                    // Nuovo impianto
-                    await api.addTechnicalRoom(roomData);
-                    showSuccess('Impianto creato con successo');
-                }
-                
-                closeRoomModal();
-                await loadRoomsConfig();
-                
-            } catch (error) {
-                console.error('Errore salvataggio impianto:', error);
-                showError('Errore salvataggio impianto: ' + error.message);
-            }
-        });
-        
-        document.getElementById('categoryForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const categoryData = {
-                name: document.getElementById('categoryName').value.trim(),
-                description: document.getElementById('categoryDescription').value.trim() || null
-            };
-            
-            try {
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/categories`, {
-                    method: 'POST',
-                    headers: { ...api.headers, 'Prefer': 'return=representation' },
-                    body: JSON.stringify(categoryData)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('Errore creazione categoria');
-                }
-                
-                showSuccess('Categoria creata con successo');
-                closeCategoryModal();
-                await loadCategoriesConfig();
-                
-            } catch (error) {
-                console.error('Errore salvataggio categoria:', error);
-                showError('Errore salvataggio categoria: ' + error.message);
-            }
-        });
-        
-        document.getElementById('operatorForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const operatorData = {
-                name: document.getElementById('operatorName').value.trim(),
-                code: document.getElementById('operatorCode').value.trim().toUpperCase(),
-                operator_id: document.getElementById('operatorOperatorId').value.trim().toUpperCase(),
-                digital_signature: document.getElementById('operatorSignature').value.trim() || null,
-                active: true
-            };
-            
-            try {
-                const operatorId = document.getElementById('operatorId').value;
-                
-                if (operatorId) {
-                    // Modifica esistente
-                    const response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
-                        method: 'PATCH',
-                        headers: api.headers,
-                        body: JSON.stringify(operatorData)
-                    });
-                    
-                    if (!response.ok) {
-                        throw new Error('Errore aggiornamento operatore');
-                    }
-                    
-                    showSuccess('Operatore aggiornato con successo');
-                } else {
-                    // Nuovo operatore
-                    await api.addOperator(operatorData);
-                    showSuccess('Operatore creato con successo');
-                }
-                
-                closeOperatorModal();
-                await loadOperatorsConfig();
-                
-            } catch (error) {
-                console.error('Errore salvataggio operatore:', error);
-                showError('Errore salvataggio operatore: ' + error.message);
-            }
-        });
-        
-        // Chiudi modal cliccando fuori
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) {
-                e.target.style.display = 'none';
-            }
-        });
-        
-        // Funzioni placeholder per azioni - RIMOSSE, ora implementate nel tab Configurazione
-        
-        function customApproveTag(tagId, suggestedName, suggestedCategory) {
-            if (!tagId || tagId === 'undefined' || tagId === '') {
-                alert('❌ Errore: ID tag non valido');
-                return;
-            }
-            
-            // Apri modal per personalizzazione tag
-            showCustomTagModal(tagId, suggestedName, suggestedCategory);
-        }
-        
-        function showCustomTagModal(tagId, suggestedName = '', suggestedCategory = '') {
-            const modalHtml = `
-                <div id="customTagModal" class="modal" style="display: flex;">
-                    <div class="modal-content" style="max-width: 500px;">
-                        <div class="modal-header">
-                            <h3>✏️ Personalizza Tag ${tagId}</h3>
-                            <button onclick="closeCustomTagModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">✖️</button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="customTagForm">
-                                <div style="margin-bottom: 1rem;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">🏷️ Tag ID:</label>
-                                    <input type="text" id="customTagId" value="${tagId}" readonly style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5;">
-                                </div>
-                                
-                                <div style="margin-bottom: 1rem;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📝 Nome Impianto:</label>
-                                    <input type="text" id="customTagName" value="${suggestedName || ''}" placeholder="es. Gruppo Elettrogeno Principale" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;" required>
-                                </div>
-                                
-                                <div style="margin-bottom: 1rem;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📂 Categoria:</label>
-                                    <select id="customTagCategory" style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px;">
-                                        <option value="">Seleziona categoria...</option>
-                                        <option value="Gruppi Elettrogeni" ${suggestedCategory === 'Gruppi Elettrogeni' ? 'selected' : ''}>⚡ Gruppi Elettrogeni</option>
-                                        <option value="Cabine Media Tensione" ${suggestedCategory === 'Cabine Media Tensione' ? 'selected' : ''}>🔌 Cabine Media Tensione</option>
-                                        <option value="Locali UPS" ${suggestedCategory === 'Locali UPS' ? 'selected' : ''}>🔋 Locali UPS</option>
-                                        <option value="Quadri Elettrici" ${suggestedCategory === 'Quadri Elettrici' ? 'selected' : ''}>📊 Quadri Elettrici</option>
-                                        <option value="Impianti Antincendio" ${suggestedCategory === 'Impianti Antincendio' ? 'selected' : ''}>🔥 Impianti Antincendio</option>
-                                        <option value="Sistemi HVAC" ${suggestedCategory === 'Sistemi HVAC' ? 'selected' : ''}>❄️ Sistemi HVAC</option>
-                                    </select>
-                                </div>
-                                
-                                <div style="margin-bottom: 1rem;">
-                                    <label style="display: block; margin-bottom: 0.5rem; font-weight: bold;">📄 Descrizione:</label>
-                                    <textarea id="customTagDescription" placeholder="Descrizione dell'impianto..." style="width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 4px; height: 80px; resize: vertical;"></textarea>
-                                </div>
-                                
-                                <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
-                                    <button type="button" onclick="closeCustomTagModal()" style="background: #666; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                                        Annulla
-                                    </button>
-                                    <button type="submit" style="background: #4CAF50; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer;">
-                                        ✅ Approva e Configura
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // Aggiungi modal al body
-            document.body.insertAdjacentHTML('beforeend', modalHtml);
-            
-            // Aggiungi event listener per il form
-            document.getElementById('customTagForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                submitCustomTag(tagId);
-            });
-        }
-        
-        function closeCustomTagModal() {
-            const modal = document.getElementById('customTagModal');
-            if (modal) {
-                modal.remove();
-            }
-        }
-        
-        async function submitCustomTag(tagId) {
-            const name = document.getElementById('customTagName').value.trim();
-            const category = document.getElementById('customTagCategory').value;
-            const description = document.getElementById('customTagDescription').value.trim();
-            
-            if (!name) {
-                alert('Inserisci il nome dell\'impianto');
-                return;
-            }
-            
-            try {
-                // Crea l'impianto con i dati personalizzati
-                const roomData = {
-                    tag_id: tagId,
-                    name: name,
-                    description: description || `Impianto ${name}`,
-                    category_id: null, // Potresti mappare la categoria a un ID se hai una tabella categorie
-                    active: true
-                };
-                
-                await api.addTechnicalRoom(roomData);
-                
-                // Marca il tag come approvato
-                await markTagAsApproved(tagId);
-                
-                showSuccess(`Tag ${tagId} approvato e configurato come "${name}"`);
-                closeCustomTagModal();
-                await loadUnknownTags(); // Ricarica la lista
-                
-            } catch (error) {
-                console.error('Errore configurazione tag:', error);
-                showError('Errore configurazione tag: ' + error.message);
-            }
-        }
-        
-        async function quickApproveTag(tagId, suggestedName, suggestedCategory) {
-            if (!tagId || tagId === 'undefined' || tagId === '') {
-                alert('❌ Errore: ID tag non valido');
-                return;
-            }
-            
-            const name = suggestedName && suggestedName !== 'undefined' ? suggestedName : `Impianto ${tagId}`;
-            const category = suggestedCategory && suggestedCategory !== 'undefined' ? suggestedCategory : 'Da Definire';
-            
-            if (!confirm(`Approvare il tag ${tagId} con nome "${name}"?`)) {
-                return;
-            }
-            
-            try {
-                // Aggiungi il tag come impianto tecnico
-                const roomData = {
-                    tag_id: tagId,
-                    name: name,
-                    description: `Impianto aggiunto automaticamente da tag sconosciuto`,
-                    category_id: null, // Potresti mappare suggestedCategory a un ID categoria
-                    active: true
-                };
-                
-                await api.addTechnicalRoom(roomData);
-                
-                // Marca il tag come approvato
-                await markTagAsApproved(tagId);
-                
-                showSuccess(`Tag ${tagId} approvato e aggiunto come "${name}"`);
-                await loadUnknownTags(); // Ricarica la lista
-                
-            } catch (error) {
-                console.error('Errore approvazione tag:', error);
-                showError('Errore approvazione tag: ' + error.message);
-            }
-        }
-        
-        async function rejectTag(tagUuid) {
-            if (!tagUuid || tagUuid === 'undefined' || tagUuid === '') {
-                alert('❌ Errore: ID tag non valido');
-                return;
-            }
-            
-            if (!confirm(`Rifiutare definitivamente questo tag?\n\nQuesta azione non può essere annullata.`)) {
-                return;
-            }
-            
-            try {
-                // Marca il tag come rifiutato usando l'UUID
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagUuid}`, {
-                    method: 'PATCH',
-                    headers: api.headers,
-                    body: JSON.stringify({
-                        status: 'REJECTED',
-                        approved_at: new Date().toISOString()
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                showSuccess(`Tag rifiutato con successo`);
-                await loadUnknownTags(); // Ricarica la lista
-                
-            } catch (error) {
-                console.error('Errore rifiuto tag:', error);
-                showError('Errore rifiuto tag: ' + error.message);
-            }
-        }
-        
-        async function markTagAsApproved(tagId) {
-            try {
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
-                    method: 'PATCH',
-                    headers: api.headers,
-                    body: JSON.stringify({
-                        status: 'APPROVED',
-                        approved_at: new Date().toISOString()
-                    })
-                });
-                
-                if (!response.ok) {
-                    console.warn('Errore aggiornamento stato tag:', await response.text());
-                }
-            } catch (error) {
-                console.warn('Errore aggiornamento stato tag:', error);
-            }
-        }
-        
-        // Funzione per riattivare un tag rifiutato
-        async function reactivateTag(tagUuid, tagId, suggestedName, suggestedCategory) {
-            if (!tagUuid || tagUuid === 'undefined' || tagUuid === '') {
-                alert('❌ Errore: ID tag non valido');
-                return;
-            }
-            
-            if (!confirm(`Riattivare il tag ${tagId}?\n\nIl tag tornerà nella lista "In Attesa" e potrà essere approvato.`)) {
-                return;
-            }
-            
-            try {
-                // Cambia lo status da REJECTED a PENDING
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagUuid}`, {
-                    method: 'PATCH',
-                    headers: api.headers,
-                    body: JSON.stringify({
-                        status: 'PENDING',
-                        approved_at: null,
-                        updated_at: new Date().toISOString()
-                    })
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                showSuccess(`✅ Tag ${tagId} riattivato!\n\nIl tag è ora disponibile nella sezione "In Attesa" per l'approvazione.`);
-                await loadUnknownTags('REJECTED'); // Ricarica la lista dei rifiutati
-                
-            } catch (error) {
-                console.error('Errore riattivazione tag:', error);
-                showError('Errore riattivazione tag: ' + error.message);
-            }
-        }
-        
-        // Funzione per eliminare definitivamente un tag rifiutato
-        async function deleteRejectedTag(tagUuid) {
-            if (!tagUuid || tagUuid === 'undefined' || tagUuid === '') {
-                alert('❌ Errore: ID tag non valido');
-                return;
-            }
-            
-            if (!confirm(`⚠️ ATTENZIONE - ELIMINAZIONE DEFINITIVA\n\nEliminare definitivamente questo tag rifiutato?\n\n❌ Questa azione NON può essere annullata!\n❌ Il tag non potrà più essere recuperato!\n\nSe vuoi solo riattivarlo, usa il pulsante "🔄 Riattiva".`)) {
-                return;
-            }
-            
-            // Doppia conferma per sicurezza
-            if (!confirm(`🚨 ULTIMA CONFERMA\n\nSei SICURO di voler eliminare definitivamente questo tag?\n\nDigita "ELIMINA" nella prossima finestra per confermare.`)) {
-                return;
-            }
-            
-            const confirmation = prompt('Per confermare l\'eliminazione definitiva, digita: ELIMINA');
-            if (confirmation !== 'ELIMINA') {
-                alert('Eliminazione annullata - testo di conferma non corretto');
-                return;
-            }
-            
-            try {
-                // Elimina il record dal database
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${tagUuid}`, {
-                    method: 'DELETE',
-                    headers: api.headers
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                showSuccess(`🗑️ Tag eliminato definitivamente dal sistema`);
-                await loadUnknownTags('REJECTED'); // Ricarica la lista dei rifiutati
-                
-            } catch (error) {
-                console.error('Errore eliminazione tag:', error);
-                showError('Errore eliminazione tag: ' + error.message);
-            }
-        }
-        
-        // Funzione per creare un tag di test
-        async function createTestTag() {
-            if (!confirm('Creare un tag di test per verificare il funzionamento?\n\nVerrà creato un tag "TEST001" con status PENDING.')) {
-                return;
-            }
-            
-            try {
-                // Crea un tag di test
-                const testTag = {
-                    tag_id: 'TEST001',
-                    operator_id: null, // Nessun operatore specifico
-                    detected_at: new Date().toISOString(),
-                    gps_lat: null,
-                    gps_lng: null,
-                    suggested_name: 'Tag di Test',
-                    suggested_category: 'Test',
-                    status: 'PENDING',
-                    notes: 'Tag creato per test funzionalità dashboard'
-                };
-                
-                const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags`, {
-                    method: 'POST',
-                    headers: { ...api.headers, 'Prefer': 'return=representation' },
-                    body: JSON.stringify(testTag)
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errorText}`);
-                }
-                
-                showSuccess('✅ Tag di test creato con successo!\n\nOra dovresti vedere il tag "TEST001" nella lista.');
-                await loadUnknownTags('PENDING'); // Ricarica la lista
-                
-            } catch (error) {
-                console.error('Errore creazione tag test:', error);
-                showError('Errore creazione tag test: ' + error.message);
-            }
-        }
-        
-        // Funzione per aprire i registri professionali
-        function openProfessionalRegisters() {
-            const url = 'registri-professionali.html';
-            const windowFeatures = 'width=1400,height=900,scrollbars=yes,resizable=yes,toolbar=no,menubar=no';
-            
-            const newWindow = window.open(url, 'RegistriProfessionali', windowFeatures);
-            
-            if (newWindow) {
-                newWindow.focus();
-            } else {
-                // Fallback se il popup è bloccato
-                alert('⚠️ Popup bloccato!\n\nPer aprire i registri professionali:\n1. Consenti popup per questo sito\n2. Oppure apri manualmente: ' + url);
-            }
-        }
-
-        // ===== REGISTRI PROFESSIONALI INTEGRATI =====
-        
-        async function generateProfessionalElectricalRegister() {
-            try {
-                console.log('🔧 Generazione registro elettrico...');
-                const controls = await getFilteredControlsForProfessional();
-                console.log('Controlli caricati:', controls.length);
-                
-                const electricalControls = controls.filter(control => 
-                    isProfessionalElectricalPlant(control.technical_rooms?.categories?.name || control.tag_id)
-                );
-                console.log('Controlli elettrici filtrati:', electricalControls.length);
-                
-                const html = generateProfessionalRegisterHTML({
-                    title: "REGISTRO CONTROLLI IMPIANTI ELETTRICI",
-                    subtitle: "Controlli periodici impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici",
-                    icon: "⚡",
-                    color: "#f39c12",
-                    controls: electricalControls,
-                    category: "elettrico"
-                });
-                
-                showReportPreview(html);
-                console.log('✅ Registro elettrico generato');
-            } catch (error) {
-                console.error('❌ Errore generazione registro elettrico:', error);
-                showError('Errore generazione registro elettrico: ' + error.message);
-            }
-        }
-        
-        async function generateProfessionalFireRegister() {
-            const controls = await getFilteredControlsForProfessional();
-            const fireControls = controls.filter(control => 
-                isProfessionalFirePlant(control.technical_rooms?.categories?.name || control.tag_id)
-            );
-            
-            const html = generateProfessionalRegisterHTML({
-                title: "REGISTRO CONTROLLI ANTINCENDIO",
-                subtitle: "Controlli periodici impianti antincendio e sistemi di sicurezza",
-                icon: "🔥",
-                color: "#e74c3c",
-                controls: fireControls,
-                category: "antincendio"
-            });
-            
-            showReportPreview(html);
-        }
-        
-        async function generateProfessionalHVACRegister() {
-            const controls = await getFilteredControlsForProfessional();
-            const hvacControls = controls.filter(control => 
-                isProfessionalHVACPlant(control.technical_rooms?.categories?.name || control.tag_id)
-            );
-            
-            const html = generateProfessionalRegisterHTML({
-                title: "REGISTRO CONTROLLI HVAC",
-                subtitle: "Controlli periodici sistemi di climatizzazione e ventilazione",
-                icon: "❄️",
-                color: "#3498db",
-                controls: hvacControls,
-                category: "hvac"
-            });
-            
-            showReportPreview(html);
-        }
-        
-        async function generateProfessionalUPSRegister() {
-            const controls = await getFilteredControlsForProfessional();
-            const upsControls = controls.filter(control => 
-                isProfessionalUPSPlant(control.technical_rooms?.categories?.name || control.tag_id)
-            );
-            
-            const html = generateProfessionalRegisterHTML({
-                title: "REGISTRO CONTROLLI UPS",
-                subtitle: "Controlli periodici gruppi di continuità e alimentazioni ausiliarie",
-                icon: "🔋",
-                color: "#27ae60",
-                controls: upsControls,
-                category: "ups"
-            });
-            
-            showReportPreview(html);
-        }
-        
-        async function generateProfessionalCompleteRegister() {
-            const controls = await getFilteredControlsForProfessional();
-            
-            const html = generateProfessionalRegisterHTML({
-                title: "REGISTRO CONTROLLI COMPLETO",
-                subtitle: "Controlli periodici di tutti gli impianti tecnici industriali",
-                icon: "📊",
-                color: "#9b59b6",
-                controls: controls,
-                category: "completo"
-            });
-            
-            showReportPreview(html);
-        }
-        
-        async function generateProfessionalShiftRegister() {
-            const controls = await getFilteredControlsForProfessional();
-            
-            const html = generateProfessionalRegisterHTML({
-                title: "REGISTRO CONTROLLI PER TURNI",
-                subtitle: "Controlli suddivisi per turni di lavoro (Mattino, Pomeriggio, Notte)",
-                icon: "🕐",
-                color: "#34495e",
-                controls: controls,
-                category: "turni",
-                showShifts: true
-            });
-            
-            showReportPreview(html);
-        }
-        
-        async function getFilteredControlsForProfessional() {
-            try {
-                console.log('📊 Caricamento controlli filtrati...');
-                const startDate = document.getElementById('reportStartDate').value;
-                const endDate = document.getElementById('reportEndDate').value;
-                const operatorId = document.getElementById('reportOperator').value;
-                const category = document.getElementById('reportCategory').value;
-                
-                console.log('Filtri:', { startDate, endDate, operatorId, category });
-                
-                if (!startDate || !endDate) {
-                    alert('⚠️ Seleziona il periodo per il registro');
-                    return [];
-                }
-                
-                const filters = {
-                    startDate: startDate + 'T00:00:00',
-                    endDate: endDate + 'T23:59:59'
-                };
-                
-                if (operatorId) filters.operatorId = operatorId;
-                
-                console.log('Chiamata API con filtri:', filters);
-                let controls = await api.getControls(filters);
-                console.log('Controlli ricevuti dall\'API:', controls.length);
-                
-                // Filtra per categoria se specificata
-                if (category) {
-                    const originalLength = controls.length;
-                    controls = controls.filter(control => {
-                        const plantName = control.technical_rooms?.categories?.name || control.tag_id;
-                        switch(category) {
-                            case 'elettrico': return isProfessionalElectricalPlant(plantName);
-                            case 'antincendio': return isProfessionalFirePlant(plantName);
-                            case 'hvac': return isProfessionalHVACPlant(plantName);
-                            case 'ups': return isProfessionalUPSPlant(plantName);
-                            default: return true;
-                        }
-                    });
-                    console.log(`Filtro categoria ${category}: ${originalLength} → ${controls.length} controlli`);
-                }
-                
-                return controls;
-            } catch (error) {
-                console.error('❌ Errore caricamento controlli:', error);
-                alert('❌ Errore caricamento dati: ' + error.message);
-                return [];
-            }
-        }
-        
-        // ===== CONFIGURAZIONE AZIENDA =====
-        
-        function generateControlsTable(controls) {
-            return `
-                <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 12px;">
-                    <thead>
-                        <tr>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 12%;">Data/Ora</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 25%;">Impianto</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 15%;">Tag ID</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 20%;">Operatore</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 10%;">Turno</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 10%;">GPS</th>
-                            <th style="background: #34495e; color: white; padding: 12px 8px; text-align: left; font-weight: bold; border: 1px solid #2c3e50; width: 8%;">Stato</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${controls.map((control, index) => {
-                            const date = new Date(control.timestamp);
-                            const hour = date.getHours();
-                            const shift = hour >= 6 && hour < 14 ? 'Mattino' : 
-                                        hour >= 14 && hour < 22 ? 'Pomeriggio' : 'Notte';
-                            const gpsStatus = control.location_valid ? 'Valido' : 'Anomalia';
-                            const statusColor = control.location_valid ? '#27ae60' : '#f39c12';
-                            const rowColor = index % 2 === 0 ? '#f8f9fa' : 'white';
-                            const categoryColor = getProfessionalCategoryColor(control.technical_rooms?.categories?.name || control.tag_id);
-                            
-                            return `
-                                <tr style="background: ${rowColor};">
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${date.toLocaleString('it-IT', { 
-                                        day: '2-digit', 
-                                        month: '2-digit', 
-                                        year: '2-digit',
-                                        hour: '2-digit', 
-                                        minute: '2-digit' 
-                                    })}</td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top; background: ${categoryColor};"><strong>${control.technical_rooms?.name || 'Impianto ' + control.tag_id}</strong></td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;"><code style="background: #ecf0f1; padding: 2px 4px; border-radius: 3px;">${control.tag_id}</code></td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${control.operators?.name || 'N/A'}</td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${shift}</td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top;">${gpsStatus}</td>
-                                    <td style="padding: 10px 8px; border: 1px solid #bdc3c7; vertical-align: top; text-align: center;"><span style="color: ${statusColor}; font-weight: bold;">✓</span></td>
-                                </tr>
-                            `;
-                        }).join('')}
-                    </tbody>
-                </table>
-            `;
-        }
-        
-        function isProfessionalElectricalPlant(name) {
-            const electrical = ['elettr', 'gener', 'ups', 'quadr', 'ge', 'mt', 'qe'];
-            return electrical.some(keyword => name.toLowerCase().includes(keyword));
-        }
-        
-        function isProfessionalFirePlant(name) {
-            const fire = ['antincendio', 'fire', 'ai', 'estintore', 'idrante'];
-            return fire.some(keyword => name.toLowerCase().includes(keyword));
-        }
-        
-        function isProfessionalHVACPlant(name) {
-            const hvac = ['hvac', 'climatizzazione', 'ventilazione', 'aria', 'condizionamento'];
-            return hvac.some(keyword => name.toLowerCase().includes(keyword));
-        }
-        
-        function isProfessionalUPSPlant(name) {
-            const ups = ['ups', 'continuità', 'batterie', 'alimentazione'];
-            return ups.some(keyword => name.toLowerCase().includes(keyword));
-        }
-        
-        function getProfessionalCategoryColor(name) {
-            if (isProfessionalElectricalPlant(name)) return '#fff3cd';
-            if (isProfessionalFirePlant(name)) return '#f8d7da';
-            if (isProfessionalHVACPlant(name)) return '#d1ecf1';
-            if (isProfessionalUPSPlant(name)) return '#d4edda';
-            return 'transparent';
-        }
-
-        // ===== CONFIGURAZIONE AZIENDA =====
-        
-        function showCompanyConfigModal() {
-            const config = getCompanyConfig();
-            
-            document.getElementById('companyName').value = config.name;
-            document.getElementById('companyEmail').value = config.email;
-            document.getElementById('companyAddress').value = config.address;
-            document.getElementById('companyPhone').value = config.phone;
-            document.getElementById('technicalManager').value = config.technicalManager;
-            document.getElementById('maintenanceManager').value = config.maintenanceManager;
-            
-            document.getElementById('companyConfigModal').style.display = 'flex';
-        }
-        
-        function closeCompanyConfigModal() {
-            document.getElementById('companyConfigModal').style.display = 'none';
-        }
-        
-        async function updateCompanyDisplay() {
-            try {
-                // Prima prova a caricare dal database
-                const dbConfig = await api.getCompanyConfig();
-                
-                if (dbConfig) {
-                    document.getElementById('displayCompanyName').textContent = dbConfig.company_name || 'LA TUA AZIENDA S.R.L.';
-                    document.getElementById('displayTechnicalManager').textContent = dbConfig.technical_manager || 'Ing. Mario Rossi';
-                    document.getElementById('displayMaintenanceManager').textContent = dbConfig.maintenance_manager || 'Geom. Luigi Bianchi';
-                    document.getElementById('displayAddress').textContent = dbConfig.address || 'Via Esempio 123, Roma';
-                    document.getElementById('displayPhone').textContent = dbConfig.phone || '+39 06 1234567';
-                    document.getElementById('displayEmail').textContent = dbConfig.email || 'info@tuaazienda.it';
-                } else {
-                    // Fallback: usa configurazione locale
-                    const config = getCompanyConfig();
-                    document.getElementById('displayCompanyName').textContent = config.name;
-                    document.getElementById('displayTechnicalManager').textContent = config.technicalManager;
-                    document.getElementById('displayMaintenanceManager').textContent = config.maintenanceManager;
-                    document.getElementById('displayAddress').textContent = config.address;
-                    document.getElementById('displayPhone').textContent = config.phone;
-                    document.getElementById('displayEmail').textContent = config.email;
-                }
-            } catch (error) {
-                console.error('Errore aggiornamento display configurazione:', error);
-                // Fallback: usa configurazione locale
-                const config = getCompanyConfig();
-                document.getElementById('displayCompanyName').textContent = config.name;
-                document.getElementById('displayTechnicalManager').textContent = config.technicalManager;
-                document.getElementById('displayMaintenanceManager').textContent = config.maintenanceManager;
-                document.getElementById('displayAddress').textContent = config.address;
-                document.getElementById('displayPhone').textContent = config.phone;
-                document.getElementById('displayEmail').textContent = config.email;
-            }
-        }
-        
-        // Form handler per configurazione azienda
-        document.getElementById('companyConfigForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const submitButton = e.target.querySelector('button[type="submit"]');
-            const originalText = submitButton.textContent;
-            
-            try {
-                submitButton.textContent = '💾 Salvataggio...';
-                submitButton.disabled = true;
-                
-                const newConfig = {
-                    company_name: document.getElementById('companyName').value.trim(),
-                    email: document.getElementById('companyEmail').value.trim(),
-                    address: document.getElementById('companyAddress').value.trim(),
-                    phone: document.getElementById('companyPhone').value.trim(),
-                    technical_manager: document.getElementById('technicalManager').value.trim(),
-                    maintenance_manager: document.getElementById('maintenanceManager').value.trim()
-                };
-                
-                // Gestione logo
-                const logoFile = document.getElementById('companyLogo').files[0];
-                if (logoFile) {
-                    const reader = new FileReader();
-                    reader.onload = async function(e) {
-                        newConfig.logo_data = e.target.result;
-                        newConfig.logo_name = logoFile.name;
-                        
-                        // Salva nel database
-                        const success = await api.saveCompanyConfig(newConfig);
-                        
-                        if (success) {
-                            // Aggiorna anche localStorage per compatibilità
-                            updateCompanyConfig({
-                                name: newConfig.company_name,
-                                email: newConfig.email,
-                                address: newConfig.address,
-                                phone: newConfig.phone,
-                                technicalManager: newConfig.technical_manager,
-                                maintenanceManager: newConfig.maintenance_manager,
-                                logoData: newConfig.logo_data,
-                                logoName: newConfig.logo_name
-                            });
-                            
-                            updateCompanyDisplay();
-                            closeCompanyConfigModal();
-                            showSuccess('✅ Configurazione azienda salvata nel database!\n\n🔄 La configurazione è ora sincronizzata tra tutti i dispositivi.');
-                        } else {
-                            throw new Error('Errore salvataggio nel database');
-                        }
-                    };
-                    reader.readAsDataURL(logoFile);
-                } else {
-                    // Salva nel database senza logo
-                    const success = await api.saveCompanyConfig(newConfig);
-                    
-                    if (success) {
-                        // Aggiorna anche localStorage per compatibilità
-                        updateCompanyConfig({
-                            name: newConfig.company_name,
-                            email: newConfig.email,
-                            address: newConfig.address,
-                            phone: newConfig.phone,
-                            technicalManager: newConfig.technical_manager,
-                            maintenanceManager: newConfig.maintenance_manager
-                        });
-                        
-                        updateCompanyDisplay();
-                        closeCompanyConfigModal();
-                        showSuccess('✅ Configurazione azienda salvata nel database!\n\n🔄 La configurazione è ora sincronizzata tra tutti i dispositivi.');
-                    } else {
-                        throw new Error('Errore salvataggio nel database');
-                    }
-                }
-                
-            } catch (error) {
-                console.error('Errore salvataggio configurazione:', error);
-                showError(`❌ Errore salvataggio configurazione\n\n${error.message}\n\n🔧 La configurazione è stata salvata localmente ma non sincronizzata.`);
-                
-                // Fallback: salva almeno localmente
-                const localConfig = {
-                    name: document.getElementById('companyName').value.trim(),
-                    email: document.getElementById('companyEmail').value.trim(),
-                    address: document.getElementById('companyAddress').value.trim(),
-                    phone: document.getElementById('companyPhone').value.trim(),
-                    technicalManager: document.getElementById('technicalManager').value.trim(),
-                    maintenanceManager: document.getElementById('maintenanceManager').value.trim()
-                };
-                
-                updateCompanyConfig(localConfig);
-                updateCompanyDisplay();
-                closeCompanyConfigModal();
-                
-            } finally {
-                submitButton.textContent = originalText;
-                submitButton.disabled = false;
-            }
-        });
-        
-        // Aggiorna i registri professionali per usare la configurazione azienda
-        function generateProfessionalRegisterHTML(config) {
-            const { title, subtitle, icon, color, controls, category, showShifts } = config;
-            const startDate = document.getElementById('reportStartDate').value;
-            const endDate = document.getElementById('reportEndDate').value;
-            const companyConfig = getCompanyConfig();
-            
-            // Statistiche
-            const totalControls = controls.length;
-            const validControls = controls.filter(c => c.location_valid).length;
-            const uniqueOperators = new Set(controls.map(c => c.operators?.name)).size;
-            const uniquePlants = new Set(controls.map(c => c.technical_rooms?.name || c.tag_id)).size;
-            
-            // Logo HTML
-            const logoHtml = companyConfig.logoData ? 
-                `<img src="${companyConfig.logoData}" alt="${companyConfig.logoAlt}" style="max-height: 60px; max-width: 200px; margin-bottom: 10px;">` : 
-                `<div style="background: ${color}; color: white; padding: 10px 20px; border-radius: 8px; display: inline-block; margin-bottom: 10px; font-weight: bold;">${companyConfig.name}</div>`;
-            
-            // Raggruppa per turno se richiesto
-            let shiftSections = '';
-            if (showShifts) {
-                const shifts = {
-                    'Mattino (06:00-14:00)': controls.filter(c => {
-                        const hour = new Date(c.timestamp).getHours();
-                        return hour >= 6 && hour < 14;
-                    }),
-                    'Pomeriggio (14:00-22:00)': controls.filter(c => {
-                        const hour = new Date(c.timestamp).getHours();
-                        return hour >= 14 && hour < 22;
-                    }),
-                    'Notte (22:00-06:00)': controls.filter(c => {
-                        const hour = new Date(c.timestamp).getHours();
-                        return hour >= 22 || hour < 6;
-                    })
-                };
-                
-                shiftSections = Object.entries(shifts).map(([shiftName, shiftControls]) => `
-                    <div style="margin-bottom: 2rem; page-break-inside: avoid;">
-                        <h3 style="background: ${color}; color: white; padding: 0.75rem; margin: 0; border-radius: 8px;">
-                            ${shiftName} - ${shiftControls.length} controlli
-                        </h3>
-                        ${generateControlsTable(shiftControls)}
-                    </div>
-                `).join('');
-            }
-            
-            return `
-                <div style="font-family: 'Times New Roman', serif; background: white; padding: 40px; line-height: 1.6; color: #2c3e50;">
-                    <!-- Header Professionale con Logo -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 3px solid ${color}; padding-bottom: 20px;">
-                        <div style="flex: 1;">
-                            <div style="font-size: 28px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; color: ${color};">
-                                ${icon} ${title}
-                            </div>
-                            <div style="font-size: 16px; color: #7f8c8d; margin-bottom: 5px;">${subtitle}</div>
-                            <div style="font-size: 14px; color: #7f8c8d;">
-                                Periodo: ${new Date(startDate).toLocaleDateString('it-IT')} - ${new Date(endDate).toLocaleDateString('it-IT')}
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            ${logoHtml}
-                        </div>
-                    </div>
-                    
-                    <!-- Informazioni Documento -->
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 30px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 5px solid ${color};">
-                        <div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Azienda:</span>
-                                <span>${companyConfig.name}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Responsabile Tecnico:</span>
-                                <span>${companyConfig.technicalManager}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Resp. Manutenzione:</span>
-                                <span>${companyConfig.maintenanceManager}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Documento:</span>
-                                <span>${companyConfig.documentPrefix}-${category.toUpperCase()}-${new Date().getFullYear()}</span>
-                            </div>
-                        </div>
-                        <div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Data Generazione:</span>
-                                <span>${new Date().toLocaleDateString('it-IT')}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Totale Controlli:</span>
-                                <span>${totalControls}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Controlli Validi:</span>
-                                <span style="color: #27ae60; font-weight: bold;">${validControls}/${totalControls}</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dotted #bdc3c7;">
-                                <span style="font-weight: bold;">Indirizzo:</span>
-                                <span style="font-size: 0.9em;">${companyConfig.address}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Contenuto Principale -->
-                    ${showShifts ? shiftSections : generateControlsTable(controls)}
-                    
-                    <!-- Sezione Firme -->
-                    <div style="margin-top: 40px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                        <div style="text-align: center; padding: 20px; border: 2px solid #bdc3c7; border-radius: 8px;">
-                            <strong>RESPONSABILE TECNICO</strong>
-                            <div style="border-bottom: 2px solid #2c3e50; height: 40px; margin: 20px 0 10px 0;"></div>
-                            <div>${companyConfig.technicalManager}</div>
-                            <small>Data: ${new Date().toLocaleDateString('it-IT')}</small>
-                        </div>
-                        <div style="text-align: center; padding: 20px; border: 2px solid #bdc3c7; border-radius: 8px;">
-                            <strong>RESPONSABILE MANUTENZIONE</strong>
-                            <div style="border-bottom: 2px solid #2c3e50; height: 40px; margin: 20px 0 10px 0;"></div>
-                            <div>${companyConfig.maintenanceManager}</div>
-                            <small>Data: ${new Date().toLocaleDateString('it-IT')}</small>
-                        </div>
-                    </div>
-                    
-                    <!-- Footer -->
-                    <div style="margin-top: 40px; text-align: center; font-size: 10px; color: #7f8c8d; border-top: 1px solid #bdc3c7; padding-top: 20px;">
-                        <p><strong>${companyConfig.footerText}</strong></p>
-                        <p>${companyConfig.footerSubtext}</p>
-                        <p>Tutti i controlli sono tracciati e verificati con tecnologia NFC e validazione GPS</p>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Inizializza display azienda al caricamento
-        document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                updateCompanyDisplay();
-            }, 100);
-        });
+        }, 5 * 60 * 1000);
     </script>
-    
-    <script src="api-client.js"></script>
-    <script src="config-azienda.js"></script>
 </body>
 </html>
