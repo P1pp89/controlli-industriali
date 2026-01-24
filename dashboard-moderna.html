@@ -294,7 +294,7 @@
             </button>
             
             <button onclick="loginWithSecureKey()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 0.5rem;">
-                🔐 Accesso con Dati Personali
+                🔑 Accesso con Password
             </button>
             
             <div class="authorized-user">
@@ -666,31 +666,14 @@
             return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         }
         
-        // SISTEMA ULTRA-SICURO CON HASH DINAMICO
+        // ACCESSO SEMPLIFICATO DI EMERGENZA
         function loginWithSecureKey() {
-            // Sistema basato su hash di informazioni personali
-            // Impossibile da decifrare senza conoscere i tuoi dati
+            const password = prompt('🔑 Inserisci la password di accesso:');
             
-            const info1 = prompt('🔑 INFO 1: Il tuo anno di nascita (4 cifre)');
-            const info2 = prompt('🔑 INFO 2: Le prime 3 lettere del nome della tua città');
-            const info3 = prompt('🔑 INFO 3: Il numero del tuo mese di nascita (1-12)');
-            
-            if (!info1 || !info2 || !info3) {
-                showLoginError('❌ Compila tutti i campi');
-                return;
-            }
-            
-            // Genera hash dalle informazioni
-            const combinedInfo = info1 + info2.toLowerCase() + info3;
-            const hash = simpleHash(combinedInfo);
-            
-            // Calcola l'hash di controllo al volo
-            const controlHash = simpleHash('1989cat8');
-            
-            if (hash === controlHash) {
+            if (password === '1989cat8') {
                 // ACCESSO AUTORIZZATO
                 currentUser = 'P1pp89';
-                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Hash Verified)`;
+                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Verified)`;
                 
                 // Nascondi login, mostra dashboard
                 document.getElementById('loginScreen').style.display = 'none';
@@ -699,22 +682,11 @@
                 // Inizializza dashboard
                 initDashboard();
                 
-                alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!\n🔐 Autenticazione hash completata`);
+                alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!`);
                 
             } else {
-                showLoginError(`❌ Informazioni non valide!\n\nVerifica i tuoi dati personali.`);
+                showLoginError(`❌ Password non valida!`);
             }
-        }
-        
-        // Funzione hash semplice
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return Math.abs(hash).toString(16).substring(0, 8);
         }
         
         function showLoginError(message) {
