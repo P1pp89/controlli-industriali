@@ -177,6 +177,108 @@
             padding: 2rem;
             color: #64748b;
         }
+        
+        /* LOGIN MODAL */
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+        
+        .login-modal {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+        
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .login-input {
+            padding: 0.75rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        
+        .login-button {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .login-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .login-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .login-error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .logout-button {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s;
+        }
+        
+        .logout-button:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
     </style>
 </head>
 <body>
@@ -184,13 +286,56 @@
         <h1>🏭 Dashboard Controlli Industriali</h1>
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <p>Sistema di gestione controlli impianti tecnici</p>
-            <div id="syncStatus" style="font-size: 0.8rem; color: #e2e8f0; text-align: right;">
-                <div>🔄 Ultima sincronizzazione: <span id="lastSyncTime">Mai</span></div>
-                <div style="margin-top: 0.25rem;">
-                    <button onclick="forceSyncAllDevices()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
-                        🔄 Sincronizza Ora
-                    </button>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div id="syncStatus" style="font-size: 0.8rem; color: #e2e8f0; text-align: right;">
+                    <div>🔄 Ultima sincronizzazione: <span id="lastSyncTime">Mai</span></div>
+                    <div style="margin-top: 0.25rem;">
+                        <button onclick="forceSyncAllDevices()" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 0.25rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">
+                            🔄 Sincronizza Ora
+                        </button>
+                    </div>
                 </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span id="userDisplay" style="font-size: 0.8rem; color: #e2e8f0;">👤 Admin</span>
+                    <button class="logout-button" onclick="logout()">🚪 Esci</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginOverlay" class="login-overlay" style="display: none;">
+        <div class="login-modal">
+            <div class="login-title">🔐 Accesso Dashboard</div>
+            <div class="login-subtitle">Inserisci le credenziali per accedere</div>
+            
+            <form class="login-form" id="loginForm">
+                <input 
+                    type="text" 
+                    id="loginUsername" 
+                    class="login-input" 
+                    placeholder="👤 Nome utente" 
+                    required
+                    autocomplete="username"
+                >
+                <input 
+                    type="password" 
+                    id="loginPassword" 
+                    class="login-input" 
+                    placeholder="🔑 Password" 
+                    required
+                    autocomplete="current-password"
+                >
+                <button type="submit" class="login-button" id="loginButton">
+                    🚀 Accedi alla Dashboard
+                </button>
+            </form>
+            
+            <div id="loginError" class="login-error" style="display: none;"></div>
+            
+            <div style="margin-top: 1.5rem; font-size: 0.8rem; color: #64748b;">
+                <p>🔒 Accesso sicuro richiesto</p>
+                <p>Contatta l'amministratore per le credenziali</p>
             </div>
         </div>
     </div>
@@ -949,12 +1094,33 @@
         const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
         
+        // CONFIGURAZIONE LOGIN
+        const LOGIN_CONFIG = {
+            // Credenziali di accesso (in produzione usare sistema più sicuro)
+            users: {
+                'admin': 'dashboard2024',
+                'tecnico': 'controlli123',
+                'supervisore': 'impianti456'
+            },
+            sessionDuration: 8 * 60 * 60 * 1000, // 8 ore in millisecondi
+            maxAttempts: 3,
+            lockoutDuration: 15 * 60 * 1000 // 15 minuti in millisecondi
+        };
+        
         // Inizializzazione
         let api;
+        let loginAttempts = 0;
+        let lockoutUntil = 0;
         
         document.addEventListener('DOMContentLoaded', function() {
             // Inizializza API client
             api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+            
+            // Controlla se l'utente è già loggato
+            if (!checkLoginStatus()) {
+                showLoginModal();
+                return;
+            }
             
             // Mostra ultima sincronizzazione salvata
             const lastSync = localStorage.getItem('lastSyncTime');
@@ -967,7 +1133,176 @@
             
             // Carica dati iniziali
             refreshData();
+            
+            // Setup form login
+            setupLoginForm();
         });
+        
+        // ===== SISTEMA DI LOGIN =====
+        
+        function checkLoginStatus() {
+            const session = localStorage.getItem('dashboardSession');
+            if (!session) return false;
+            
+            try {
+                const sessionData = JSON.parse(session);
+                const now = Date.now();
+                
+                // Controlla se la sessione è scaduta
+                if (now > sessionData.expiresAt) {
+                    localStorage.removeItem('dashboardSession');
+                    return false;
+                }
+                
+                // Aggiorna display utente
+                document.getElementById('userDisplay').textContent = `👤 ${sessionData.username}`;
+                return true;
+                
+            } catch (error) {
+                localStorage.removeItem('dashboardSession');
+                return false;
+            }
+        }
+        
+        function showLoginModal() {
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('loginUsername').focus();
+            
+            // Nascondi il contenuto principale
+            document.querySelector('.nav-tabs').style.display = 'none';
+            document.querySelector('.main-content').style.display = 'none';
+        }
+        
+        function hideLoginModal() {
+            document.getElementById('loginOverlay').style.display = 'none';
+            
+            // Mostra il contenuto principale
+            document.querySelector('.nav-tabs').style.display = 'flex';
+            document.querySelector('.main-content').style.display = 'block';
+        }
+        
+        function setupLoginForm() {
+            document.getElementById('loginForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                handleLogin();
+            });
+            
+            // Enter key su password
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+        }
+        
+        async function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const loginButton = document.getElementById('loginButton');
+            const errorDiv = document.getElementById('loginError');
+            
+            // Controlla lockout
+            if (Date.now() < lockoutUntil) {
+                const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
+                showLoginError(`🔒 Account bloccato. Riprova tra ${remainingTime} minuti.`);
+                return;
+            }
+            
+            // Validazione base
+            if (!username || !password) {
+                showLoginError('⚠️ Inserisci nome utente e password');
+                return;
+            }
+            
+            // Disabilita button durante login
+            loginButton.disabled = true;
+            loginButton.textContent = '🔄 Accesso in corso...';
+            errorDiv.style.display = 'none';
+            
+            try {
+                // Simula delay per sicurezza
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Verifica credenziali
+                if (LOGIN_CONFIG.users[username] === password) {
+                    // Login riuscito
+                    const sessionData = {
+                        username: username,
+                        loginTime: Date.now(),
+                        expiresAt: Date.now() + LOGIN_CONFIG.sessionDuration
+                    };
+                    
+                    localStorage.setItem('dashboardSession', JSON.stringify(sessionData));
+                    
+                    // Reset tentativi
+                    loginAttempts = 0;
+                    lockoutUntil = 0;
+                    
+                    // Aggiorna UI
+                    document.getElementById('userDisplay').textContent = `👤 ${username}`;
+                    hideLoginModal();
+                    
+                    // Carica dati
+                    await refreshData();
+                    
+                    showSuccess(`✅ Accesso effettuato con successo!\n\n👤 Benvenuto ${username}\n🕒 Sessione valida per 8 ore`);
+                    
+                } else {
+                    // Login fallito
+                    loginAttempts++;
+                    
+                    if (loginAttempts >= LOGIN_CONFIG.maxAttempts) {
+                        lockoutUntil = Date.now() + LOGIN_CONFIG.lockoutDuration;
+                        showLoginError(`🚫 Troppi tentativi falliti!\n\nAccount bloccato per 15 minuti.\nTentativi: ${loginAttempts}/${LOGIN_CONFIG.maxAttempts}`);
+                    } else {
+                        const remaining = LOGIN_CONFIG.maxAttempts - loginAttempts;
+                        showLoginError(`❌ Credenziali non valide\n\nTentativi rimanenti: ${remaining}`);
+                    }
+                    
+                    // Pulisci campi
+                    document.getElementById('loginPassword').value = '';
+                    document.getElementById('loginPassword').focus();
+                }
+                
+            } catch (error) {
+                console.error('Errore durante il login:', error);
+                showLoginError('❌ Errore di sistema. Riprova.');
+            } finally {
+                loginButton.disabled = false;
+                loginButton.textContent = '🚀 Accedi alla Dashboard';
+            }
+        }
+        
+        function showLoginError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        function logout() {
+            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
+                localStorage.removeItem('dashboardSession');
+                
+                // Pulisci form
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginError').style.display = 'none';
+                
+                // Reset tentativi
+                loginAttempts = 0;
+                lockoutUntil = 0;
+                
+                showLoginModal();
+                showSuccess('👋 Logout effettuato con successo');
+            }
+        }
+        
+        // Controlla sessione ogni 5 minuti
+        setInterval(function() {
+            if (!checkLoginStatus()) {
+                showLoginModal();
+            }
+        }, 5 * 60 * 1000);
         
         // ===== CONFIGURAZIONE AZIENDA DAL DATABASE =====
         async function loadCompanyConfigFromDatabase() {
@@ -1331,37 +1666,26 @@
             try {
                 console.log(`📋 Caricamento tag sconosciuti con status: ${status}...`);
                 
-                // Debug: mostra URL della richiesta
+                // Forza refresh senza cache
                 const debugUrl = `${api.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`;
                 console.log('🔗 URL richiesta:', debugUrl);
                 
-                const response = await api.getUnknownTags(status);
-                console.log('📦 Risposta API tag sconosciuti:', response);
-                console.log('📊 Tipo risposta:', typeof response);
-                console.log('📏 Lunghezza risposta:', Array.isArray(response) ? response.length : 'Non è array');
+                const response = await fetch(debugUrl, {
+                    headers: {
+                        ...api.headers,
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma': 'no-cache',
+                        'Expires': '0'
+                    }
+                });
                 
-                // Gestisci diversi formati di risposta
-                let unknownTags = [];
-                if (Array.isArray(response)) {
-                    unknownTags = response;
-                } else if (response && Array.isArray(response.data)) {
-                    unknownTags = response.data;
-                } else if (response && typeof response === 'object') {
-                    // Se è un oggetto, prova a convertirlo in array
-                    unknownTags = Object.values(response);
-                } else {
-                    console.warn('Formato risposta inaspettato:', response);
-                    unknownTags = [];
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                console.log('🏷️ Tag sconosciuti processati:', unknownTags);
-                console.log('🔢 Numero tag trovati:', unknownTags.length);
-                
-                // Debug: mostra la struttura del primo tag se presente
-                if (unknownTags.length > 0) {
-                    console.log('🔍 Struttura primo tag:', unknownTags[0]);
-                    console.log('🗝️ Campi disponibili:', Object.keys(unknownTags[0]));
-                }
+                const unknownTags = await response.json();
+                console.log('📦 Risposta API tag sconosciuti:', unknownTags);
+                console.log('📊 Numero tag trovati:', unknownTags.length);
                 
                 if (!Array.isArray(unknownTags) || unknownTags.length === 0) {
                     const statusText = status === 'REJECTED' ? 'rifiutati' : 'in attesa di approvazione';
@@ -1370,14 +1694,15 @@
                             <p style="color: #10b981; font-size: 1.2rem;">✅ Nessun tag ${statusText}</p>
                             <p style="color: #666; margin-top: 1rem;">
                                 ${status === 'PENDING' ? 
-                                    'Per testare la funzionalità, clicca "🧪 Crea Test" per creare un tag di esempio.' : 
+                                    'Database pulito! Per testare la funzionalità, clicca "🧪 Crea Test" per creare un tag di esempio.' : 
                                     'Non ci sono tag rifiutati al momento.'
                                 }
                             </p>
                             <div style="margin-top: 1rem;">
-                                <strong>🔍 Debug Info:</strong><br>
+                                <strong>🔍 Info Database:</strong><br>
                                 <small>Status richiesto: ${status}</small><br>
-                                <small>Risposta API: ${JSON.stringify(response)}</small>
+                                <small>Tag trovati: ${unknownTags.length}</small><br>
+                                <small>Ultimo aggiornamento: ${new Date().toLocaleString('it-IT')}</small>
                             </div>
                         </div>
                     `;
