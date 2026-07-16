@@ -574,6 +574,7 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">Gestione Operatori</h3>
+                        <button class="btn btn-success" onclick="showAddOperatorModal()">➕ Nuovo Operatore</button>
                     </div>
                     <div id="operatorsList" class="loading">Caricamento operatori...</div>
                 </div>
@@ -1033,8 +1034,9 @@
                                 <tr>
                                     <th>Nome</th>
                                     <th>Codice</th>
-                                    <th>ID</th>
+                                    <th>ID Operatore</th>
                                     <th>Stato</th>
+                                    <th>Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -1043,10 +1045,10 @@
                                         <td><strong>${op.name}</strong></td>
                                         <td><code>${op.code}</code></td>
                                         <td><code>${op.operator_id}</code></td>
+                                        <td><span class="status-badge status-approved">✅ Attivo</span></td>
                                         <td>
-                                            <span class="status-badge status-approved">
-                                                ✅ Attivo
-                                            </span>
+                                            <button class="btn btn-primary" onclick="showEditOperatorModal('${op.id}')" style="margin-right: 0.25rem;">✏️ Modifica</button>
+                                            <button class="btn" onclick="deleteOperator('${op.id}', '${op.name.replace(/'/g, "\\'")}')" style="background: #ef4444; color: white;">🗑️ Elimina</button>
                                         </td>
                                     </tr>
                                 `).join('')}
@@ -1057,6 +1059,117 @@
                 
             } catch (error) {
                 console.error('Errore caricamento operatori:', error);
+            }
+        }
+
+        function showAddOperatorModal() {
+            showOperatorModal(null);
+        }
+
+        async function showEditOperatorModal(operatorId) {
+            try {
+                const operators = await api.getOperators();
+                const op = operators.find(o => o.id === operatorId);
+                if (!op) { alert('Operatore non trovato'); return; }
+                showOperatorModal(op);
+            } catch(e) {
+                alert('Errore caricamento operatore: ' + e.message);
+            }
+        }
+
+        function showOperatorModal(op) {
+            const isEdit = op !== null;
+            const existing = document.getElementById('operatorFormModal');
+            if (existing) existing.remove();
+
+            document.body.insertAdjacentHTML('beforeend', `
+                <div id="operatorFormModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;">
+                    <div style="background:white;border-radius:8px;width:90%;max-width:480px;padding:2rem;position:relative;">
+                        <h3 style="margin-bottom:1.5rem;">${isEdit ? '✏️ Modifica Operatore' : '➕ Nuovo Operatore'}</h3>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:bold;">Nome Completo</label>
+                            <input id="opFieldName" type="text" value="${op?.name || ''}" placeholder="es. Mario Rossi" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:4px;">
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:bold;">Codice Operatore</label>
+                            <input id="opFieldCode" type="text" value="${op?.code || ''}" placeholder="es. OP001" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:4px;">
+                        </div>
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;margin-bottom:0.4rem;font-weight:bold;">ID Esterno (badge, matricola...)</label>
+                            <input id="opFieldOpId" type="text" value="${op?.operator_id || ''}" placeholder="es. MAT-0042" style="width:100%;padding:0.75rem;border:1px solid #ddd;border-radius:4px;">
+                        </div>
+                        <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+                            <button onclick="document.getElementById('operatorFormModal').remove()" style="background:#6b7280;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;">Annulla</button>
+                            <button onclick="saveOperator('${op?.id || ''}')" style="background:#3b82f6;color:white;border:none;padding:0.75rem 1.5rem;border-radius:4px;cursor:pointer;">💾 Salva</button>
+                        </div>
+                    </div>
+                </div>
+            `);
+        }
+
+        async function saveOperator(operatorId) {
+            const name = document.getElementById('opFieldName').value.trim();
+            const code = document.getElementById('opFieldCode').value.trim();
+            const operator_id = document.getElementById('opFieldOpId').value.trim();
+
+            if (!name || !code) {
+                alert('Nome e Codice sono obbligatori');
+                return;
+            }
+
+            const data = { name, code, operator_id, signature: name, digital_signature: name };
+
+            try {
+                let response;
+                if (operatorId) {
+                    // Modifica
+                    response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
+                        method: 'PATCH',
+                        headers: { ...api.headers, 'Prefer': 'return=representation' },
+                        body: JSON.stringify(data)
+                    });
+                } else {
+                    // Nuovo
+                    response = await fetch(`${api.supabaseUrl}/rest/v1/operators`, {
+                        method: 'POST',
+                        headers: { ...api.headers, 'Prefer': 'return=representation' },
+                        body: JSON.stringify(data)
+                    });
+                }
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(err);
+                }
+
+                document.getElementById('operatorFormModal').remove();
+                alert(`✅ Operatore ${operatorId ? 'modificato' : 'aggiunto'} con successo!`);
+                await loadOperators();
+
+            } catch(e) {
+                alert('Errore salvataggio: ' + e.message);
+            }
+        }
+
+        async function deleteOperator(operatorId, operatorName) {
+            if (!confirm(`Eliminare l'operatore "${operatorName}"?\n\nQuesta azione non può essere annullata.`)) return;
+
+            try {
+                const response = await fetch(`${api.supabaseUrl}/rest/v1/operators?id=eq.${operatorId}`, {
+                    method: 'DELETE',
+                    headers: api.headers
+                });
+
+                if (!response.ok) {
+                    const err = await response.text();
+                    throw new Error(err);
+                }
+
+                alert(`✅ Operatore "${operatorName}" eliminato`);
+                await loadOperators();
+
+            } catch(e) {
+                alert('Errore eliminazione: ' + e.message);
             }
         }
         
