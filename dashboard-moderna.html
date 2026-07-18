@@ -44,10 +44,8 @@
     </table>
 </div>
 
-<!-- Integrazione API Client Aziendale -->
 <script src="./api-client.js"></script>
 <script>
-    // Istanza di inizializzazione locale per l'interazione asincrona
     const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
     const api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
@@ -56,20 +54,15 @@
         refreshUnknownTagsTable();
     });
 
-    /**
-     * Recupera i record dal cloud ed esegue il rendering protetto contro il crash del ciclo .forEach
-     */
     async function refreshUnknownTagsTable() {
         const container = document.getElementById("nfc-pending-container");
         if (!container) return;
 
         try {
-            // Chiamata asincrona protetta definita nell'api-client riscritta
             const pendingData = await api.getUnknownTags('PENDING');
-            
             container.innerHTML = ""; 
 
-            // --- ENFORCEMENT PREVENTIVO DEL TIPO DI DATO (AZZERAMENTO BUG COMPLETATO) ---
+            // --- DEFENSIVE TYPE ENFORCEMENT ---
             let cleanArray = [];
             if (Array.isArray(pendingData)) {
                 cleanArray = pendingData;
@@ -82,7 +75,6 @@
                 return;
             }
 
-            // Esecuzione iterativa in totale isolamento logico
             cleanArray.forEach(tag => {
                 const row = document.createElement("tr");
                 
@@ -108,14 +100,13 @@
             });
 
         } catch (error) {
-            console.error("[UI EMERGENCY INTERVENTION] Errore critico ciclo rendering:", error);
+            console.error("[UI EXCEPTION INTERVENTION] Errore ciclo rendering:", error);
             container.innerHTML = `<tr><td colspan="6" class="text-center" style="color:#ef4444; font-weight:600;">Eccezione interna nell'elaborazione del tracciato dati.</td></tr>`;
         }
     }
 
     function assegnaAssetLocale(tagId) {
         console.log(`Avvio associazione geometrica per l'apparato: ${tagId}`);
-        // Logica di instradamento al portale amministrativo locale
     }
 
     function escapeHtml(str) {
