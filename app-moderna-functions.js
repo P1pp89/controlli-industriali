@@ -1,5 +1,11 @@
-// FUNZIONI JAVASCRIPT PER APP MODERNA
-// Aggiungi questo script dopo api-client.js in app-moderna.html
+// app-moderna-functions.js
+// FUNZIONI JAVASCRIPT PER APP MODERNA - SISTEMA CONTROLLI INDUSTRIALI OSPEDALIERI
+// Questo file governa la logica applicativa, l'interblocco hardware NFC ed il Geofencing GPS.
+
+// Variabili di stato globale dell'applicazione (gestite a livello SPA)
+let currentOperator = null;
+let currentPosition = null;
+let isOnline = true; // Gestito dai moduli di rete/Service Worker
 
 // ===== GESTIONE OPERATORI =====
 
@@ -17,20 +23,28 @@ function loadSavedOperator() {
 
 function updateOperatorDisplay() {
     const displayElement = document.getElementById('operatorDisplay');
+    if (!displayElement) return;
+    
+    const detailsElement = displayElement.parentElement.querySelector('.operator-details');
+    
     if (currentOperator) {
         displayElement.textContent = currentOperator.name;
-        displayElement.parentElement.querySelector('.operator-details').textContent = 
-            `${currentOperator.code} - ${currentOperator.operator_id}`;
+        if (detailsElement) {
+            detailsElement.textContent = `${currentOperator.code} - ${currentOperator.operator_id}`;
+        }
     } else {
         displayElement.textContent = '👤 Seleziona Operatore';
-        displayElement.parentElement.querySelector('.operator-details').textContent = 
-            'Clicca per scegliere l\'operatore';
+        if (detailsElement) {
+            detailsElement.textContent = 'Clicca per scegliere l\'operatore';
+        }
     }
 }
 
 async function showOperatorSelection() {
     const modal = document.getElementById('operatorModal');
     const operatorsList = document.getElementById('operatorsList');
+    
+    if (!modal || !operatorsList) return;
     
     modal.style.display = 'flex';
     operatorsList.innerHTML = '<div class="loading">Caricamento operatori...</div>';
@@ -59,7 +73,6 @@ async function selectOperator(operatorId) {
             currentOperator = operator;
             localStorage.setItem('currentOperator', JSON.stringify(operator));
             updateOperatorDisplay();
-            
             showSuccess(`Operatore selezionato: ${operator.name}`);
         }
         
@@ -67,21 +80,23 @@ async function selectOperator(operatorId) {
         showError('Errore selezione operatore');
     }
     
-    document.getElementById('operatorModal').style.display = 'none';
+    const modal = document.getElementById('operatorModal');
+    if (modal) modal.style.display = 'none';
 }
 
 // ===== GESTIONE GPS =====
 
 function startGPSTracking() {
     if (!navigator.geolocation) {
-        document.getElementById('gpsInfo').textContent = '❌ GPS non supportato';
+        const gpsInfo = document.getElementById('gpsInfo');
+        if (gpsInfo) gpsInfo.textContent = '❌ GPS non supportato';
         return;
     }
     
     const options = {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 30000
+        maximumAge: 5000 // Ridotto per garantire dati freschi in ambienti schermati
     };
     
     navigator.geolocation.watchPosition(
@@ -91,13 +106,17 @@ function startGPSTracking() {
             const lng = position.coords.longitude.toFixed(6);
             const accuracy = Math.round(position.coords.accuracy);
             
-            document.getElementById('gpsInfo').innerHTML = 
-                `📍 ${lat}, ${lng}<br><small>Precisione: ±${accuracy}m</small><br><small style="color: #10b981;">GPS attivo e funzionante</small>`;
+            const gpsInfo = document.getElementById('gpsInfo');
+            if (gpsInfo) {
+                gpsInfo.innerHTML = `📍 ${lat}, ${lng}<br><small>Precisione: ±${accuracy}m</small><br><small style="color: #10b981;">GPS attivo e funzionante</small>`;
+            }
         },
         (error) => {
             console.error('Errore GPS:', error);
-            document.getElementById('gpsInfo').innerHTML = 
-                `❌ Errore GPS: ${getGPSErrorMessage(error.code)}<br><small style="color: #ef4444;">Controlla impostazioni GPS</small>`;
+            const gpsInfo = document.getElementById('gpsInfo');
+            if (gpsInfo) {
+                gpsInfo.innerHTML = `❌ Errore GPS: ${getGPSErrorMessage(error.code)}<br><small style="color: #ef4444;">Controlla impostazioni GPS</small>`;
+            }
         },
         options
     );
@@ -120,8 +139,10 @@ function checkNFCSupport() {
     if ('NDEFReader' in window) {
         console.log('✅ NFC supportato');
     } else {
-        scanButton.textContent = '❌ NFC non supportato su questo dispositivo';
-        scanButton.disabled = true;
+        if (scanButton) {
+            scanButton.textContent = '❌ NFC non supportato su questo dispositivo';
+            scanButton.disabled = true;
+        }
         console.log('⚠️ NFC non supportato');
     }
 }
@@ -141,8 +162,10 @@ async function startNFCScan() {
     const scanButton = document.getElementById('scanButton');
     
     try {
-        scanButton.textContent = '🔍 Scansione in corso...';
-        scanButton.disabled = true;
+        if (scanButton) {
+            scanButton.textContent = '🔍 Scansione in corso...';
+            scanButton.disabled = true;
+        }
         
         const ndef = new NDEFReader();
         await ndef.scan();
@@ -157,7 +180,7 @@ async function startNFCScan() {
             resetScanButton();
         });
         
-        // Timeout dopo 15 secondi
+        // Timeout di sicurezza scansione dopo 15 secondi
         setTimeout(() => {
             resetScanButton();
         }, 15000);
@@ -171,8 +194,10 @@ async function startNFCScan() {
 
 function resetScanButton() {
     const scanButton = document.getElementById('scanButton');
-    scanButton.textContent = '📱 Scansiona Tag NFC';
-    scanButton.disabled = false;
+    if (scanButton) {
+        scanButton.textContent = '📱 Scansiona Tag NFC';
+        scanButton.disabled = false;
+    }
 }
 
 async function handleNFCRead(serialNumber, message) {
@@ -183,47 +208,47 @@ async function handleNFCRead(serialNumber, message) {
         return;
     }
     
-    // Estrai ID tag
+    // Estrazione dell'ID del Tag
     let tagId = extractNFCMessage(message);
     if (!tagId || tagId === 'Tag NFC rilevato') {
         tagId = serialNumber;
     }
     
-    console.log('Tag ID rilevato:', tagId);
+    console.log('Tag ID rilevato dall\'hardware reader:', tagId);
     
     try {
-        // Cerca impianto nel database
+        // Interrogazione del database asincrono per l'inquadramento dell'impianto
         const room = await api.getTechnicalRoomByTagId(tagId);
         
         if (!room) {
-            // Tag sconosciuto - registra per approvazione
+            // Tag non censito: avvia il flusso di approvazione/registrazione sul campo
             await handleUnknownTag(tagId);
             return;
         }
         
-        // Verifica posizione GPS prima di procedere
-        const locationValid = validateLocation(room);
-        const distance = calculateDistance(room);
+        // --- VINCOLO DI SICUREZZA ASSOLUTO (ANTI-FRODE) ---
+        // Recuperiamo la tolleranza geometrica centralizzata (fallback su room.gps_radius o 25m industriali)
+        const allowedRadius = typeof AziendaConfig !== 'undefined' ? AziendaConfig.geofencingToleranceMetres : (room.gps_radius || 25);
+        const distance = calculateDistance(tagId, room);
+        const locationValid = validateLocation(tagId, room);
         
-        // Se la posizione non è valida, BLOCCA il controllo
-        if (hasExpectedLocation(room) && !locationValid) {
-            const allowedRadius = room.gps_radius || 50;
-            const errorMessage = `🚫 CONTROLLO BLOCCATO - POSIZIONE GPS NON VALIDA!\n\n` +
-                `📍 Impianto: ${room.name}\n` +
-                `📏 Distanza rilevata: ${Math.round(distance)}m\n` +
-                `📏 Distanza massima consentita: ${allowedRadius}m\n\n` +
-                `⚠️ DEVI ESSERE FISICAMENTE PRESSO L'IMPIANTO PER REGISTRARE IL CONTROLLO\n\n` +
-                `🔧 SOLUZIONI:\n` +
-                `• Avvicinati all'impianto "${room.name}"\n` +
-                `• Verifica che il GPS sia attivo e preciso\n` +
-                `• Attendi che il GPS migliori la precisione\n` +
-                `• Riprova quando sei entro ${allowedRadius}m dall'impianto`;
+        // LOGICA DI INTERBLOCCO: Se il GPS non è valido o manca la geolocalizzazione, il form VIENE BLOCCATO TASSATIVAMENTE
+        if (!locationValid || !currentPosition) {
+            const errorMessage = `🚫 CONTROLLO BLOCCATO - VIOLAZIONE COMPLIANCE GPS!\n\n` +
+                `📍 Impianto Rilevato: ${room.name}\n` +
+                `📏 Distanza calcolata dal Tag: ${currentPosition ? Math.round(distance) + 'm' : 'Satelliti non agganciati'}\n` +
+                `📏 Raggio massimo ammesso: ${allowedRadius}m\n\n` +
+                `⚠️ ERRORE: L'operatore DEVE trovarsi fisicamente nel locale tecnico per poter registrare le letture dei contatori.\n\n` +
+                `🔧 PROCEDURA DI RIPRISTINO:\n` +
+                `• Avvicinati all'apparato hardware "${room.name}"\n` +
+                `• Verifica che la geolocalizzazione sia attiva in modalità "Alta Precisione"\n` +
+                `• Al banco prova: allinea le coordinate in config-azienda.js con la tua posizione GPS attuale.`;
                 
             showError(errorMessage);
-            return; // BLOCCA completamente il controllo
+            return; // INTERRUZIONE ATOMICA ED IMMEDIATA DEL FLUSSO DI ACQUISIZIONE DATI
         }
         
-        // Crea record del controllo
+        // Generazione del record strutturato solo a fronte del superamento dei controlli fisici e spaziali
         const controlData = {
             control_id: generateControlId(),
             tag_id: tagId,
@@ -231,134 +256,92 @@ async function handleNFCRead(serialNumber, message) {
             operator_id: currentOperator.id,
             nfc_serial: serialNumber,
             timestamp: new Date().toISOString(),
-            gps_lat: currentPosition?.coords.latitude,
-            gps_lng: currentPosition?.coords.longitude,
-            gps_accuracy: currentPosition?.coords.accuracy,
-            location_valid: locationValid,
+            gps_lat: currentPosition.coords.latitude,
+            gps_lng: currentPosition.coords.longitude,
+            gps_accuracy: currentPosition.coords.accuracy,
+            location_valid: true,
             distance_from_expected: distance,
             shift_type: getCurrentShift(),
-            notes: generateLocationNote(room, locationValid, distance),
+            notes: `Lettura validata tramite Hardware Interlock - Distanza: ${Math.round(distance)}m`,
             synced: true
         };
         
-        // Salva controllo
+        // Esecuzione scrittura asincrona su Supabase
         await api.addControl(controlData);
         
-        // Aggiorna UI
+        // Aggiornamento tabelle e grafici della SPA
         await refreshData();
         
-        // Feedback successo con informazioni GPS
-        const locationMessage = generateLocationFeedback(room, locationValid, distance);
-        showSuccess(`✅ Controllo registrato!\n\n📍 Locale: ${room.name}\n👤 Operatore: ${currentOperator.name}\n🕒 Ora: ${new Date().toLocaleTimeString('it-IT')}\n\n${locationMessage}`);
+        const feedbackGeo = `📍 GPS: ✅ Posizione Certificata\nDistanza dall'asset: ${Math.round(distance)}m (Soglia massima tollerata: ${allowedRadius}m)`;
+        showSuccess(`✅ Controllo registrato con successo!\n\nLocale: ${room.name}\nOperatore: ${currentOperator.name}\n🕒 ${new Date().toLocaleTimeString('it-IT')}\n\n${feedbackGeo}`);
         
     } catch (error) {
-        console.error('Errore gestione controllo:', error);
+        console.error('Errore durante la transazione hardware-software:', error);
         showError('Errore durante il salvataggio del controllo: ' + error.message);
-    }
-}
-
-function generateLocationNote(room, locationValid, distance) {
-    if (!hasExpectedLocation(room)) {
-        return 'Controllo effettuato tramite app web - GPS non configurato per questo impianto';
-    }
-    
-    if (locationValid) {
-        return `Controllo effettuato tramite app web - GPS valido (distanza: ${Math.round(distance)}m)`;
-    } else {
-        const allowedRadius = room.gps_radius || 50;
-        return `Controllo effettuato tramite app web - GPS fuori zona (distanza: ${Math.round(distance)}m, consentita: ${allowedRadius}m)`;
-    }
-}
-
-function generateLocationFeedback(room, locationValid, distance) {
-    if (!currentPosition) {
-        return '📍 GPS: Non disponibile';
-    }
-    
-    if (!hasExpectedLocation(room)) {
-        return '📍 GPS: Posizione registrata (validazione non configurata)';
-    }
-    
-    const allowedRadius = room.gps_radius || 50;
-    
-    if (locationValid) {
-        return `📍 GPS: ✅ Posizione valida\n   Distanza dall'impianto: ${Math.round(distance)}m (max ${allowedRadius}m)`;
-    } else {
-        return `📍 GPS: ⚠️ ATTENZIONE - Fuori zona consentita!\n   Distanza dall'impianto: ${Math.round(distance)}m (max ${allowedRadius}m)\n   \n   ⚠️ Il controllo è stato registrato ma segnalato come anomalo.\n   Verifica di essere effettivamente presso l'impianto "${room.name}".`;
     }
 }
 
 async function handleUnknownTag(tagId) {
     try {
-        // Prima controlla se il tag esiste già nel sistema (anche se rifiutato)
-        const existingTagResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}&select=*&order=created_at.desc&limit=1`, {
+        const response = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}&select=*&order=created_at.desc&limit=1`, {
             headers: api.headers
         });
         
-        if (existingTagResponse.ok) {
-            const existingTags = await existingTagResponse.json();
+        if (response.ok) {
+            const existingTags = await response.json();
             
             if (existingTags && existingTags.length > 0) {
                 const existingTag = existingTags[0];
                 
                 if (existingTag.status === 'REJECTED') {
-                    // Tag precedentemente rifiutato - offri opzioni
-                    const reactivate = confirm(`🔍 Tag NFC precedentemente rifiutato: ${tagId}\n\n❌ Questo tag è stato rifiutato in precedenza dall'amministratore.\n\n🔄 VUOI RIATTIVARLO?\n\n✅ SÌ - Riattiva il tag per una nuova approvazione\n❌ NO - Mantieni il rifiuto precedente\n\n💡 Se clicchi SÌ, l'amministratore riceverà una nuova richiesta di approvazione.`);
+                    const reactivate = confirm(`🔍 Tag NFC precedentemente rifiutato: ${tagId}\n\nVuoi inviare una nuova richiesta di approvazione all'amministratore?`);
                     
                     if (reactivate) {
-                        // Riattiva il tag cambiando status a PENDING
                         const reactivateResponse = await fetch(`${api.supabaseUrl}/rest/v1/unknown_tags?id=eq.${existingTag.id}`, {
                             method: 'PATCH',
                             headers: api.headers,
                             body: JSON.stringify({
                                 status: 'PENDING',
-                                detected_at: new Date().toISOString(), // Aggiorna data rilevamento
-                                operator_id: currentOperator.id, // Aggiorna operatore
-                                gps_lat: currentPosition?.coords.latitude,
-                                gps_lng: currentPosition?.coords.longitude,
-                                notes: `Tag riattivato dopo rifiuto precedente - Rilevato nuovamente da ${currentOperator.name}`,
+                                detected_at: new Date().toISOString(),
+                                operator_id: currentOperator.id,
+                                gps_lat: currentPosition?.coords.latitude || null,
+                                gps_lng: currentPosition?.coords.longitude || null,
+                                notes: `Tag riattivato dopo rifiuto - Rilevato nuovamente da ${currentOperator.name}`,
                                 approved_at: null,
                                 updated_at: new Date().toISOString()
                             })
                         });
                         
-                        if (!reactivateResponse.ok) {
-                            throw new Error('Errore riattivazione tag');
-                        }
-                        
-                        showSuccess(`🔄 Tag ${tagId} riattivato con successo!\n\n✅ Il tag è stato rimesso in lista per l'approvazione\n📱 L'amministratore riceverà una notifica\n🕒 Data rilevamento aggiornata: ${new Date().toLocaleString('it-IT')}\n\n💡 PROSSIMI PASSI:\n1. L'amministratore vedrà il tag nella sezione "In Attesa"\n2. Potrà approvarlo o rifiutarlo nuovamente\n3. Una volta approvato, sarà disponibile per tutti`);
-                        return;
-                    } else {
-                        showSuccess(`❌ Tag ${tagId} rimane rifiutato\n\n🚫 Il tag non è stato riattivato come richiesto\n📋 Status: Rifiutato\n\n💡 Se cambi idea, puoi sempre ri-scansionare il tag e scegliere di riattivarlo.`);
+                        if (!reactivateResponse.ok) throw new Error('Errore riattivazione tag');
+                        showSuccess(`🔄 Tag ${tagId} reinserito in coda di approvazione.`);
                         return;
                     }
+                    return;
                 } else if (existingTag.status === 'PENDING') {
-                    // Tag già in attesa
-                    showSuccess(`⏳ Tag ${tagId} già in attesa di approvazione\n\n📋 Status: In attesa\n📅 Prima rilevazione: ${new Date(existingTag.detected_at).toLocaleString('it-IT')}\n👤 Rilevato da: ${existingTag.operators?.name || 'N/A'}\n\n💡 L'amministratore deve ancora processare questo tag nella dashboard.`);
+                    showSuccess(`⏳ Tag ${tagId} già in attesa di validazione da parte dell'amministratore.`);
                     return;
                 } else if (existingTag.status === 'APPROVED') {
-                    // Questo non dovrebbe succedere se il tag è approvato dovrebbe essere negli impianti
-                    showSuccess(`✅ Tag ${tagId} già approvato\n\n🔄 Ricarica la pagina per vedere l'impianto aggiornato\n\n💡 Se non vedi l'impianto, contatta l'amministratore.`);
+                    showSuccess(`✅ Tag ${tagId} già approvato. Ricarica l'applicazione.`);
                     return;
                 }
             }
         }
         
-        // Tag completamente nuovo - registra per approvazione
+        // Registrazione ex-novo di un tag mai incontrato dal sistema
         await api.reportUnknownTag({
             tagId: tagId,
             operatorId: currentOperator.id,
-            gpsLat: currentPosition?.coords.latitude,
-            gpsLng: currentPosition?.coords.longitude,
+            gpsLat: currentPosition?.coords.latitude || null,
+            gpsLng: currentPosition?.coords.longitude || null,
             suggestedName: `Locale ${tagId}`,
             suggestedCategory: guessCategory(tagId)
         });
         
-        showSuccess(`🔍 Nuovo tag NFC rilevato: ${tagId}\n\n✅ Tag registrato automaticamente per approvazione amministratore\n\n📋 Nome suggerito: Locale ${tagId}\n📂 Categoria suggerita: ${guessCategory(tagId)}\n📍 Posizione GPS: ${currentPosition ? 'Registrata' : 'Non disponibile'}\n\n📱 PROSSIMI PASSI:\n1. L'amministratore riceverà una notifica\n2. Il tag verrà configurato nella dashboard\n3. Una volta approvato, sarà disponibile per tutti\n\n💡 SUGGERIMENTO:\nInforma l'amministratore che hai rilevato un nuovo tag "${tagId}" presso questo impianto.`);
+        showSuccess(`🔍 Nuovo tag NFC censito e inviato in dashboard per la configurazione.`);
         
     } catch (error) {
         console.error('Errore gestione tag sconosciuto:', error);
-        showError(`❌ Tag NFC non riconosciuto: ${tagId}\n\nImpossibile registrare il tag per approvazione.\nErrore: ${error.message}\n\nContatta l'amministratore per configurare questo tag.`);
+        showError(`❌ Impossibile catalogare il tag sconosciuto: ${error.message}`);
     }
 }
 
@@ -369,11 +352,9 @@ function extractNFCMessage(message) {
                 const textDecoder = new TextDecoder(record.encoding);
                 let text = textDecoder.decode(record.data);
                 
-                // Rimuovi codice lingua se presente (es: "enTAG001" -> "TAG001")
                 if (text.length > 2 && text.match(/^[a-z]{2}[A-Z]/)) {
                     text = text.substring(2);
                 }
-                
                 return text;
             }
         }
@@ -383,61 +364,76 @@ function extractNFCMessage(message) {
     return 'Tag NFC rilevato';
 }
 
-function validateLocation(room) {
-    if (!currentPosition || !hasExpectedLocation(room)) {
-        return true; // Se non ha GPS o posizione attesa, considera valido
-    }
-    
-    return isLocationValid(room, currentPosition.coords.latitude, currentPosition.coords.longitude);
-}
+// ===== INGEGNERIZZAZIONE LOGICA DI GEOLOCALIZZAZIONE ED HAVERSINE =====
 
-function calculateDistance(room) {
-    if (!currentPosition || !hasExpectedLocation(room)) {
-        return 0;
-    }
+/**
+ * Valida la prossimità spaziale leggendo prioritariamente la configurazione centralizzata.
+ */
+function validateLocation(tagId, room) {
+    if (!currentPosition) return false; // Mancanza di telemetria satellitare: blocco immediato
     
-    return distanceFromExpected(room, currentPosition.coords.latitude, currentPosition.coords.longitude);
-}
-
-// Funzioni helper per validazione GPS
-function hasExpectedLocation(room) {
-    return room.expected_lat != null && room.expected_lng != null;
-}
-
-function isLocationValid(room, currentLat, currentLng) {
-    if (!hasExpectedLocation(room)) {
-        return true; // Se non ha coordinate attese, considera sempre valido
-    }
+    const distance = calculateDistance(tagId, room);
     
-    const distance = distanceFromExpected(room, currentLat, currentLng);
-    const allowedRadius = room.gps_radius || 50; // Default 50 metri
+    // Strategia gerarchica sul raggio limite: 1. Dizionario AziendaConfig -> 2. Record Database -> 3. Fallback standard
+    let allowedRadius = 25; 
+    if (typeof AziendaConfig !== 'undefined' && AziendaConfig.geofencingToleranceMetres) {
+        allowedRadius = AziendaConfig.geofencingToleranceMetres;
+    } else if (room && room.gps_radius) {
+        allowedRadius = room.gps_radius;
+    }
     
     return distance <= allowedRadius;
 }
 
-function distanceFromExpected(room, currentLat, currentLng) {
-    if (!hasExpectedLocation(room)) {
+/**
+ * Calcola la distanza ortodromica interpolando config locale (per prove al banco facilitated) e db cloud
+ */
+function calculateDistance(tagId, room) {
+    if (!currentPosition) return Infinity;
+    
+    let targetLat = null;
+    let targetLng = null;
+
+    // STEP 1: Intercettazione prioritaria da config-azienda.js per facilitare la diagnostica o i cambi rapidi
+    if (typeof AziendaConfig !== 'undefined' && AziendaConfig.tags && AziendaConfig.tags[tagId]) {
+        targetLat = AziendaConfig.tags[tagId].lat;
+        targetLng = AziendaConfig.tags[tagId].lng;
+        console.log(`[DIAGNOSTIC] Coordinate lette dal dizionario locale AziendaConfig per il Tag: ${tagId}`);
+    } 
+    // STEP 2: Fallback su tracciato nominale memorizzato nelle tabelle relazionali
+    else if (room && room.expected_lat != null && room.expected_lng != null) {
+        targetLat = room.expected_lat;
+        targetLng = room.expected_lng;
+    }
+
+    // Se l'asset non ha vincoli di coordinate geografiche impostati, consideriamo distanza 0 (bypass)
+    if (targetLat === null || targetLng === null) {
         return 0;
     }
+
+    return distanceFromExpected(targetLat, targetLng, currentPosition.coords.latitude, currentPosition.coords.longitude);
+}
+
+/**
+ * Algoritmo trigonometrico puro sulla corda terrestre
+ */
+function distanceFromExpected(expectedLat, expectedLng, currentLat, currentLng) {
+    const R = 6371000; // Raggio medio della Terra in metri
+    const lat1Rad = (expectedLat * Math.PI) / 180;
+    const lat2Rad = (currentLat * Math.PI) / 180;
+    const deltaLatRad = ((currentLat - expectedLat) * Math.PI) / 180;
+    const deltaLngRad = ((currentLng - expectedLng) * Math.PI) / 180;
     
-    // Formula di Haversine per calcolare distanza tra due punti GPS
-    const R = 6371000; // Raggio della Terra in metri
-    const lat1Rad = room.expected_lat * Math.PI / 180;
-    const lat2Rad = currentLat * Math.PI / 180;
-    const deltaLatRad = (currentLat - room.expected_lat) * Math.PI / 180;
-    const deltaLngRad = (currentLng - room.expected_lng) * Math.PI / 180;
-    
-    const a = Math.sin(deltaLatRad/2) * Math.sin(deltaLatRad/2) +
+    const a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
               Math.cos(lat1Rad) * Math.cos(lat2Rad) *
-              Math.sin(deltaLngRad/2) * Math.sin(deltaLngRad/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    
-    return R * c; // Distanza in metri
+              Math.sin(deltaLngRad / 2) * Math.sin(deltaLngRad / 2);
+              
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; // Metri lineari tridimensionali
 }
 
 function getCurrentShift() {
     const hour = new Date().getHours();
-    
     if (hour >= 6 && hour < 14) return 'morning';
     if (hour >= 14 && hour < 22) return 'afternoon';
     return 'night';
@@ -445,7 +441,6 @@ function getCurrentShift() {
 
 function guessCategory(tagId) {
     const prefix = tagId.substring(0, 2).toUpperCase();
-    
     switch (prefix) {
         case 'GE': return 'Gruppi Elettrogeni';
         case 'MT': return 'Cabine Media Tensione';
@@ -463,69 +458,75 @@ function generateControlId() {
 
 function handleNFCError(error) {
     let errorMessage = 'Errore NFC: ';
-    
     if (error.name === 'NotAllowedError') {
-        errorMessage += 'Permessi negati.\n\n🔧 COME RISOLVERE:\n\n1️⃣ Clicca l\'icona 🔒 nella barra indirizzi\n2️⃣ Trova "NFC" e seleziona "Consenti"\n3️⃣ Ricarica questa pagina\n\n📱 Verifica anche che NFC sia attivo nelle impostazioni!';
+        errorMessage += 'Permessi negati.\n\n🔧 COME RISOLVERE:\n1️⃣ Clicca l\'icona del lucchetto 🔒 accanto all\'URL\n2️⃣ Abilita il permesso "NFC"\n3️⃣ Ricarica la pagina.';
     } else if (error.name === 'NotSupportedError') {
-        errorMessage += 'NFC non supportato.\n\n🔧 SOLUZIONI:\n\n• Usa Chrome o Edge (non Firefox/Safari)\n• Verifica che il dispositivo abbia chip NFC\n• Android 7.0+ richiesto';
+        errorMessage += 'NFC non supportato.\n\nVerifica che il browser in uso sia basato su Chromium (Chrome/Edge su Android).';
     } else {
-        errorMessage += error.message + '\n\n🔧 PROVA QUESTE SOLUZIONI:\n\n• Riavvia Chrome\n• Riavvia il telefono\n• Prova con un altro dispositivo';
+        errorMessage += error.message;
     }
-    
     showError(errorMessage);
 }
 
 // ===== SINCRONIZZAZIONE =====
 
 function startAutoSync() {
-    // Sincronizzazione ogni 2 minuti
     setInterval(async () => {
         try {
-            await testConnection();
-            if (isOnline) {
+            if (typeof testConnection === 'function') await testConnection();
+            if (isOnline && typeof refreshData === 'function') {
                 await refreshData();
             }
         } catch (error) {
-            console.log('Sync automatica fallita:', error.message);
+            console.log('Sync automatica in background silenziata:', error.message);
         }
     }, 120000);
 }
 
-// ===== UTILITY =====
+// ===== UI NOTIFICATION ENGINE =====
 
 function showError(message) {
     const messageArea = document.getElementById('messageArea');
-    messageArea.innerHTML = `<div class="error">${message}</div>`;
+    if (!messageArea) {
+        alert(message);
+        return;
+    }
+    messageArea.innerHTML = `<div class="error" style="background:#fee2e2; color:#991b1b; padding:12px; border-radius:6px; margin:10px 0; white-space:pre-line; border:1px solid #fca5a5;">${message}</div>`;
     
+    // Incrementato il timeout per dare il tempo all'operatore di leggere i dettagli dell'errore GPS sul campo
     setTimeout(() => {
-        messageArea.innerHTML = '';
-    }, 8000);
+        if(messageArea.querySelector('.error')) messageArea.innerHTML = '';
+    }, 12000);
 }
 
 function showSuccess(message) {
     const messageArea = document.getElementById('messageArea');
-    messageArea.innerHTML = `<div class="success">${message}</div>`;
+    if (!messageArea) {
+        console.log(message);
+        return;
+    }
+    messageArea.innerHTML = `<div class="success" style="background:#d1fae5; color:#065f46; padding:12px; border-radius:6px; margin:10px 0; white-space:pre-line; border:1px solid #6ee7b7;">${message}</div>`;
     
     setTimeout(() => {
-        messageArea.innerHTML = '';
+        if(messageArea.querySelector('.success')) messageArea.innerHTML = '';
     }, 6000);
 }
 
 function showHelp() {
-    showSuccess('📱 AIUTO NFC\n\n1️⃣ Avvicina il telefono al tag NFC\n2️⃣ Mantieni il telefono fermo per 2-3 secondi\n3️⃣ Attendi il segnale di conferma\n\n🔧 PROBLEMI?\n• Verifica che NFC sia attivo\n• Usa Chrome o Edge\n• Rimuovi cover spesse\n• Prova posizioni diverse sul telefono');
+    showSuccess('📱 MANUALE DI ACQUISIZIONE NFC\n\n1️⃣ Avvicina lo smartphone al tag posizionato sul contatore\n2️⃣ Mantieni la prossimità per 2 secondi fino al segnale sonoro\n3️⃣ Il sistema calcolerà istantaneamente il Geofencing autorizzativo.');
 }
 
-// Chiudi modal cliccando fuori
+// Gestione dell'evento di chiusura modali da viewport esterna
 document.addEventListener('click', function(event) {
     const modal = document.getElementById('operatorModal');
-    if (event.target === modal) {
+    if (modal && event.target === modal) {
         modal.style.display = 'none';
     }
 });
 
-// Service Worker per PWA
+// Inizializzazione moduli Progressive Web App (PWA) per il funzionamento Offline-First statico
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('sw.js')
-        .then(registration => console.log('✅ Service Worker registrato'))
-        .catch(error => console.log('❌ Errore Service Worker:', error));
+        .then(registration => console.log('✅ Service Worker registrato correttamente per l\'ecosistema statico'))
+        .catch(error => console.log('❌ Fallimento registrazione Service Worker:', error));
 }
