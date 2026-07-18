@@ -323,9 +323,8 @@ const ENERGY_STATIONS_FALLBACK = [
         meters: [{ key: 'contatore_generale', label: 'Contatore Generale' }]
     },
     {
-        id: 'CABINA_S', name: 'Cabina Ed. S', icon: '🏢',
-        nfcTag: 'CONT-CAB-S',
-        gps: null,
+        station_id: 'CABINA_S', name: 'Cabina Ed. S', icon: '🏢',
+        nfc_tag: 'CONT-CAB-S', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'contatore_1', label: 'Contatore 1' },
             { key: 'contatore_2', label: 'Contatore 2' },
@@ -713,7 +712,7 @@ async function startNFCScan() {
     }
 }
 
-function handleNFCRead(message, serialNumber) {
+async function handleNFCRead(message, serialNumber) {
     // Estrai testo dal messaggio NDEF
     let tagText = serialNumber;
     try {

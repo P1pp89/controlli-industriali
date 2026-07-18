@@ -76,6 +76,30 @@ class ControlsAPI {
         return await response.json();
     }
 
+    async updateTechnicalRoom(id, updates) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify(updates)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { success: true };
+    }
+
+    // Disattiva un impianto (soft delete, coerente con deleteEnergyStation)
+    async deleteTechnicalRoom(id) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ active: false })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
+    }
+
     async getTechnicalRoomByTagId(tagId) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
             headers: this.headers
@@ -204,6 +228,17 @@ class ControlsAPI {
             headers: this.headers,
             body: JSON.stringify({ status: 'APPROVED', approved_at: new Date().toISOString() })
         });
+        return { success: true };
+    }
+
+    // Riattiva un tag precedentemente rifiutato (torna in PENDING)
+    async reactivateUnknownTag(tagId) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ status: 'PENDING', approved_at: null, notes: 'Riattivato dall\'amministratore' })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return { success: true };
     }
 
