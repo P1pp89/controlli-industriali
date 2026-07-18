@@ -270,6 +270,76 @@ class ControlsAPI {
         return await response.json();
     }
 
+    // ===== POSTAZIONI CONTATORI ENERGIA =====
+
+    async getEnergyStations() {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?active=eq.true&order=name`, {
+            headers: this.headers
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    }
+
+    async getEnergyStationByNfcTag(nfcTag) {
+        const encoded = encodeURIComponent(nfcTag);
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?nfc_tag=eq.${encoded}&active=eq.true`, {
+            headers: this.headers
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const rows = await response.json();
+        return rows.length > 0 ? rows[0] : null;
+    }
+
+    async addEnergyStation(station) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations`, {
+            method: 'POST',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify(station)
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`HTTP ${response.status}: ${err}`);
+        }
+        return { success: true };
+    }
+
+    async updateEnergyStation(id, updates) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify({ ...updates, updated_at: new Date().toISOString() })
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`HTTP ${response.status}: ${err}`);
+        }
+        return { success: true };
+    }
+
+    async deleteEnergyStation(id) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ active: false, updated_at: new Date().toISOString() })
+        });
+        if (!response.ok) {
+            const err = await response.text();
+            throw new Error(`HTTP ${response.status}: ${err}`);
+        }
+        return { success: true };
+    }
+
+    // Aggiorna coordinate GPS dopo prima scansione sul posto
+    async setEnergyStationGPS(id, lat, lng) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ gps_lat: lat, gps_lng: lng, updated_at: new Date().toISOString() })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
+    }
+
     // ===== LETTURE CONTATORI ENERGIA =====
 
     /**

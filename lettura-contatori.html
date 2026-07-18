@@ -310,19 +310,16 @@
 <script src="api-client.js"></script>
 <script>
 // ====================================================================
-// CONFIGURAZIONE POSTAZIONI CONTATORI
-// Ogni postazione ha:
-//   nfcTag   → testo da programmare sul tag NFC fisico
-//   gps      → coordinate GPS del punto + raggio (metri) — opzionale ma consigliato
+// POSTAZIONI CONTATORI — caricate da Supabase (energy_stations)
+// Fallback statico usato solo se Supabase non è raggiungibile
 // ====================================================================
-const ENERGY_STATIONS = [
+let ENERGY_STATIONS = [];   // popolato da loadStationsFromDB()
+
+const ENERGY_STATIONS_FALLBACK = [
     {
-        id: 'CONSEGNA_ENEL', name: 'Consegna Enel', icon: '🏛️',
-        nfcTag: 'CONT-ENEL',
-        gps: null,  // → imposta con { lat: 41.9, lng: 12.5, radius: 30 }
-        meters: [
-            { key: 'contatore_generale', label: 'Contatore Generale' }
-        ]
+        station_id: 'CONSEGNA_ENEL', name: 'Consegna Enel', icon: '🏛️',
+        nfc_tag: 'CONT-ENEL', gps_lat: null, gps_lng: null, gps_radius: 50,
+        meters: [{ key: 'contatore_generale', label: 'Contatore Generale' }]
     },
     {
         id: 'CABINA_S', name: 'Cabina Ed. S', icon: '🏢',
@@ -335,23 +332,23 @@ const ENERGY_STATIONS = [
         ]
     },
     {
-        id: 'CABINA_F3', name: 'Cabina Ed. F3', icon: '🏢',
-        nfcTag: 'CONT-CAB-F3', gps: null,
+        station_id: 'CABINA_F3', name: 'Cabina Ed. F3', icon: '🏢',
+        nfc_tag: 'CONT-CAB-F3', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'CABINA_F1', name: 'Cabina Ed. F1', icon: '🏢',
-        nfcTag: 'CONT-CAB-F1', gps: null,
+        station_id: 'CABINA_F1', name: 'Cabina Ed. F1', icon: '🏢',
+        nfc_tag: 'CONT-CAB-F1', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'contatore_generale', label: 'Contatore Generale' }
         ]
     },
     {
-        id: 'CABINA_F2', name: 'Cabina Ed. F2', icon: '🏢',
-        nfcTag: 'CONT-CAB-F2', gps: null,
+        station_id: 'CABINA_F2', name: 'Cabina Ed. F2', icon: '🏢',
+        nfc_tag: 'CONT-CAB-F2', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale_1',     label: 'Contatore Sez. Normale 1' },
             { key: 'cont_sez_normale_2',     label: 'Contatore Sez. Normale 2' },
@@ -359,48 +356,48 @@ const ENERGY_STATIONS = [
         ]
     },
     {
-        id: 'CABINA_E', name: 'Cabina Ed. E', icon: '🏢',
-        nfcTag: 'CONT-CAB-E', gps: null,
+        station_id: 'CABINA_E', name: 'Cabina Ed. E', icon: '🏢',
+        nfc_tag: 'CONT-CAB-E', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'CABINA_G', name: 'Cabina Ed. G', icon: '🏢',
-        nfcTag: 'CONT-CAB-G', gps: null,
+        station_id: 'CABINA_G', name: 'Cabina Ed. G', icon: '🏢',
+        nfc_tag: 'CONT-CAB-G', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'CABINA_L', name: 'Cabina Ed. L', icon: '🏢',
-        nfcTag: 'CONT-CAB-L', gps: null,
+        station_id: 'CABINA_L', name: 'Cabina Ed. L', icon: '🏢',
+        nfc_tag: 'CONT-CAB-L', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'CABINA_D', name: 'Cabina Ed. D', icon: '🏢',
-        nfcTag: 'CONT-CAB-D', gps: null,
+        station_id: 'CABINA_D', name: 'Cabina Ed. D', icon: '🏢',
+        nfc_tag: 'CONT-CAB-D', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'CABINA_I', name: 'Cabina Ed. I', icon: '🏢',
-        nfcTag: 'CONT-CAB-I', gps: null,
+        station_id: 'CABINA_I', name: 'Cabina Ed. I', icon: '🏢',
+        nfc_tag: 'CONT-CAB-I', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
             { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
         ]
     },
     {
-        id: 'ILL_STRADALE_M1', name: 'Ill. Stradale M (1)', icon: '💡',
-        nfcTag: 'CONT-ILL-M1', gps: null,
+        station_id: 'ILL_STRADALE_M1', name: 'Ill. Stradale M (1)', icon: '💡',
+        nfc_tag: 'CONT-ILL-M1', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_1_2_3', label: 'Contatore 1-2-3' },
             { key: 'cont_4',     label: 'Contatore 4' },
@@ -409,8 +406,8 @@ const ENERGY_STATIONS = [
         ]
     },
     {
-        id: 'ILL_STRADALE_M2', name: 'Ill. Stradale M (2)', icon: '💡',
-        nfcTag: 'CONT-ILL-M2', gps: null,
+        station_id: 'ILL_STRADALE_M2', name: 'Ill. Stradale M (2)', icon: '💡',
+        nfc_tag: 'CONT-ILL-M2', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [
             { key: 'cont_9',  label: 'Contatore 9' },
             { key: 'cont_10', label: 'Contatore 10' },
@@ -419,13 +416,13 @@ const ENERGY_STATIONS = [
         ]
     },
     {
-        id: 'ILL_STRADALE_G', name: 'Ill. Stradale G', icon: '💡',
-        nfcTag: 'CONT-ILL-G', gps: null,
+        station_id: 'ILL_STRADALE_G', name: 'Ill. Stradale G', icon: '💡',
+        nfc_tag: 'CONT-ILL-G', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [ { key: 'contatore', label: 'Contatore' } ]
     },
     {
-        id: 'ILL_STRADALE_F2', name: 'Ill. Stradale F2', icon: '💡',
-        nfcTag: 'CONT-ILL-F2', gps: null,
+        station_id: 'ILL_STRADALE_F2', name: 'Ill. Stradale F2', icon: '💡',
+        nfc_tag: 'CONT-ILL-F2', gps_lat: null, gps_lng: null, gps_radius: 50,
         meters: [ { key: 'contatore', label: 'Contatore' } ]
     }
 ];
@@ -435,10 +432,6 @@ const ENERGY_STATIONS = [
 // ====================================================================
 const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
-
-// Raggio GPS di default se la postazione non ne ha uno configurato (metri)
-// Impostato ampio perché le coordinate GPS non sono ancora configurate.
-// Una volta inserite le coordinate reali, abbassare a 30-50m.
 const DEFAULT_GPS_RADIUS = 100;
 
 // ====================================================================
@@ -455,33 +448,47 @@ let isOnline         = false;
 // ====================================================================
 // INIT
 // ====================================================================
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', async function () {
     api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
     loadSavedOperator();
-    startGPSTracking();       // avvia subito il tracking GPS
-    testConnection();
-    checkNFCSupport();
+    startGPSTracking();
     updateTimestampDisplay();
     setInterval(updateTimestampDisplay, 30000);
+    await loadStationsFromDB();
+    checkNFCSupport();
 });
+
+// Carica postazioni da Supabase; usa fallback statico se offline
+async function loadStationsFromDB() {
+    try {
+        const rows = await api.getEnergyStations();
+        if (rows && rows.length > 0) {
+            // Normalizza: meters può arrivare come stringa JSON da Supabase
+            ENERGY_STATIONS = rows.map(s => ({
+                ...s,
+                meters: typeof s.meters === 'string' ? JSON.parse(s.meters) : (s.meters || [])
+            }));
+            isOnline = true;
+            document.getElementById('connectionStatus').className = 'status online';
+            document.getElementById('connectionStatus').textContent = '🟢 Online';
+            document.getElementById('syncInfo').textContent = `${ENERGY_STATIONS.length} postazioni caricate`;
+        } else {
+            throw new Error('Nessuna postazione in DB');
+        }
+    } catch (e) {
+        console.warn('Fallback postazioni statiche:', e.message);
+        ENERGY_STATIONS = ENERGY_STATIONS_FALLBACK;
+        isOnline = false;
+        document.getElementById('connectionStatus').className = 'status offline';
+        document.getElementById('connectionStatus').textContent = '🔴 Offline';
+        document.getElementById('syncInfo').textContent = 'Postazioni offline (dati locali)';
+    }
+}
 
 function updateTimestampDisplay() {
     const el = document.getElementById('readingTimestamp');
     if (el) el.textContent = new Date().toLocaleString('it-IT',
         { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
-}
-
-async function testConnection() {
-    try {
-        await api.getStats();
-        isOnline = true;
-        document.getElementById('connectionStatus').className = 'status online';
-        document.getElementById('connectionStatus').textContent = '🟢 Online';
-    } catch (e) {
-        isOnline = false;
-        document.getElementById('connectionStatus').className = 'status offline';
-        document.getElementById('connectionStatus').textContent = '🔴 Offline';
-    }
 }
 
 // ====================================================================
@@ -528,17 +535,19 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
 
 /**
  * Controlla se la posizione attuale è valida per la postazione.
+ * Usa i campi Supabase: gps_lat, gps_lng, gps_radius
  * Restituisce { valid, distance, radius, hasCoords }
  */
 function checkGPSForStation(station) {
-    if (!station.gps) return { valid: true, distance: null, radius: null, hasCoords: false };
-    if (!currentPosition)  return { valid: false, distance: null, radius: station.gps.radius || DEFAULT_GPS_RADIUS, hasCoords: true };
+    const hasCoords = station.gps_lat != null && station.gps_lng != null;
+    if (!hasCoords) return { valid: true, distance: null, radius: null, hasCoords: false };
+    if (!currentPosition) return { valid: false, distance: null, radius: station.gps_radius || DEFAULT_GPS_RADIUS, hasCoords: true };
 
     const dist   = haversineDistance(
         currentPosition.coords.latitude, currentPosition.coords.longitude,
-        station.gps.lat, station.gps.lng
+        station.gps_lat, station.gps_lng
     );
-    const radius = station.gps.radius || DEFAULT_GPS_RADIUS;
+    const radius = station.gps_radius || DEFAULT_GPS_RADIUS;
     return { valid: dist <= radius, distance: Math.round(dist), radius, hasCoords: true };
 }
 
@@ -713,16 +722,16 @@ function handleNFCRead(message, serialNumber) {
         }
     } catch (e) { /* usa serialNumber */ }
 
-    // Cerca postazione per tag
+    // Cerca postazione per tag — usa campo nfc_tag (Supabase)
     const station = ENERGY_STATIONS.find(s =>
-        s.nfcTag.toLowerCase() === tagText.toLowerCase() ||
-        tagText.toLowerCase().includes(s.nfcTag.toLowerCase())
+        (s.nfc_tag || '').toLowerCase() === tagText.toLowerCase() ||
+        tagText.toLowerCase().includes((s.nfc_tag || '').toLowerCase())
     );
 
     if (!station) {
         showMessage(
             `Tag NFC "${tagText}" non corrisponde a nessuna postazione contatori.\n` +
-            `Verifica di aver scansionato il tag giusto.`,
+            `Verifica di aver scansionato il tag giusto oppure aggiungi la postazione dalla dashboard.`,
             'error'
         );
         return;
@@ -730,6 +739,19 @@ function handleNFCRead(message, serialNumber) {
 
     // SICUREZZA: segna che la sessione è stata aperta da NFC reale
     nfcTriggered = true;
+
+    // Se la postazione non ha ancora coordinate GPS e siamo sul posto → salvale
+    if (!station.gps_lat && currentPosition && station.id) {
+        api.setEnergyStationGPS(
+            station.id,
+            currentPosition.coords.latitude,
+            currentPosition.coords.longitude
+        ).then(() => {
+            station.gps_lat = currentPosition.coords.latitude;
+            station.gps_lng = currentPosition.coords.longitude;
+            console.log(`📍 GPS salvato per postazione ${station.name}`);
+        }).catch(e => console.warn('GPS save error:', e));
+    }
 
     showMessage(`✅ Tag riconosciuto: ${station.icon} ${station.name}`, 'success');
     openReadingForm(station);
@@ -862,7 +884,7 @@ async function saveReading() {
 
     const reading = {
         reading_id:    generateReadingId(),
-        station_id:    currentStation.id,
+        station_id:    currentStation.station_id,
         station_name:  currentStation.name,
         operator_id:   currentOperator.id,
         operator_name: currentOperator.name,
