@@ -1,9 +1,5 @@
-// api-client.js
-/**
- * CORE API CLIENT PER SUPABASE - SISTEMA CONTROLLI INDUSTRIALI OSPEDALIERI
- * Gestisce l'interfaccia REST serverless cruda con sanitizzazione preventiva dei tipi
- * per azzerare i crash di rendering sui cicli iterativi (.forEach / .map) client-side.
- */
+// API CLIENT PER SUPABASE - SISTEMA CONTROLLI INDUSTRIALI
+// Questo file gestisce tutte le comunicazioni con il database cloud
 
 class ControlsAPI {
     constructor(supabaseUrl, supabaseKey) {
@@ -16,53 +12,12 @@ class ControlsAPI {
         };
     }
 
-    /**
-     * Helper interno per forzare la conversione strutturale in array pulito.
-     * Risolve a monte l'errore: (pending || []).forEach is not a function.
-     * @param {any} data - Risposta grezza della fetch
-     * @returns {Array} Array normalizzato
-     */
-    _safelyCastToArray(data) {
-        if (!data) return [];
-        if (Array.isArray(data)) return data;
-        if (typeof data === 'object') {
-            // Se l'API restituisce un singolo oggetto di errore o un record singolo
-            if (data.code || data.message) return [];
-            return Object.values(data);
-        }
-        return [];
-    }
-
-    /**
-     * Helper per la gestione centralizzata delle risposte Fetch
-     */
-    async _handleResponse(response, fallbackValue = []) {
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[API ERROR] HTTP ${response.status}: ${errorText}`);
-            return fallbackValue;
-        }
-        try {
-            const json = await response.json();
-            return json;
-        } catch (e) {
-            console.error('[API PARSE ERROR] Impossibile decodificare il JSON:', e);
-            return fallbackValue;
-        }
-    }
-
     // ===== OPERATORI =====
     async getOperators() {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/operators?active=eq.true&order=name`, {
-                headers: this.headers
-            });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getOperators:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/operators?active=eq.true&order=name`, {
+            headers: this.headers
+        });
+        return await response.json();
     }
 
     async addOperator(operator) {
@@ -95,16 +50,10 @@ class ControlsAPI {
 
     // ===== IMPIANTI TECNICI =====
     async getTechnicalRooms() {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?active=eq.true&select=*,categories(*)&order=tag_id`, {
-                headers: this.headers
-            });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getTechnicalRooms:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?active=eq.true&select=*,categories(*)&order=tag_id`, {
+            headers: this.headers
+        });
+        return await response.json();
     }
 
     async addTechnicalRoom(room) {
@@ -119,6 +68,7 @@ class ControlsAPI {
             throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
+        // Supabase può restituire 201 senza body se non specificato 'Prefer: return=representation'
         if (response.status === 201) {
             return { success: true, message: 'Impianto creato con successo' };
         }
@@ -139,6 +89,7 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Disattiva un impianto (soft delete, coerente con deleteEnergyStation)
     async deleteTechnicalRoom(id) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?id=eq.${id}`, {
             method: 'PATCH',
@@ -150,34 +101,20 @@ class ControlsAPI {
     }
 
     async getTechnicalRoomByTagId(tagId) {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
-                headers: this.headers
-            });
-            const rawData = await this._handleResponse(response, []);
-            const rooms = this._safelyCastToArray(rawData);
-            return rooms.length > 0 ? rooms[0] : null;
-        } catch (error) {
-            console.error('Errore getTechnicalRoomByTagId:', error);
-            return null;
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
+            headers: this.headers
+        });
+        
+        const rooms = await response.json();
+        return rooms.length > 0 ? rooms[0] : null;
     }
 
-    // ===== TAG SCONOSCIUTI / GESTIONE TAB NFC =====
+    // ===== TAG SCONOSCIUTI =====
     async getUnknownTags(status = 'PENDING') {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`, {
-                headers: this.headers
-            });
-            
-            const data = await this._handleResponse(response, []);
-            
-            // PROTEZIONE AD ALTO SPETTRO: Converte l'output garantendo l'interfaccia Array alla UI
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getUnknownTags:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`, {
+            headers: this.headers
+        });
+        return await response.json();
     }
 
     async reportUnknownTag({ tagId, operatorId, gpsLat, gpsLng, suggestedName, suggestedCategory, tagType = 'control' }) {
@@ -227,22 +164,17 @@ class ControlsAPI {
     }
 
     async getControls(filters = {}) {
-        try {
-            let url = `${this.supabaseUrl}/rest/v1/controls?select=*,technical_rooms(*,categories(*)),operators(*)&order=timestamp.desc`;
-            
-            if (filters.startDate) url += `&timestamp=gte.${filters.startDate}`;
-            if (filters.endDate) url += `&timestamp=lte.${filters.endDate}`;
-            if (filters.operatorId) url += `&operator_id=eq.${filters.operatorId}`;
-            
-            const response = await fetch(url, { headers: this.headers });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getControls:', error);
-            return [];
-        }
+        let url = `${this.supabaseUrl}/rest/v1/controls?select=*,technical_rooms(*,categories(*)),operators(*)&order=timestamp.desc`;
+        
+        if (filters.startDate) url += `&timestamp=gte.${filters.startDate}`;
+        if (filters.endDate) url += `&timestamp=lte.${filters.endDate}`;
+        if (filters.operatorId) url += `&operator_id=eq.${filters.operatorId}`;
+        
+        const response = await fetch(url, { headers: this.headers });
+        return await response.json();
     }
 
+    // Approva tag come IMPIANTO TECNICO normale
     async approveUnknownTag(tagId, tagData) {
         const roomResponse = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms`, {
             method: 'POST',
@@ -268,7 +200,9 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Approva tag come POSTAZIONE CONTATORI ENERGIA
     async approveUnknownTagAsEnergy(tagId, stationData) {
+        // stationData: { name, station_id, nfc_tag, icon, gps_radius, meters[], gps_lat, gps_lng }
         const stationResponse = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations`, {
             method: 'POST',
             headers: { ...this.headers, 'Prefer': 'return=representation' },
@@ -297,6 +231,7 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Riattiva un tag precedentemente rifiutato (torna in PENDING)
     async reactivateUnknownTag(tagId) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
             method: 'PATCH',
@@ -307,6 +242,7 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Rifiuta un tag sconosciuto
     async rejectUnknownTag(tagId, reason = '') {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
             method: 'PATCH',
@@ -319,44 +255,33 @@ class ControlsAPI {
 
     // ===== CATEGORIE =====
     async getCategories() {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/categories?order=name`, {
-                headers: this.headers
-            });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getCategories:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/categories?order=name`, {
+            headers: this.headers
+        });
+        return await response.json();
     }
 
     // ===== STATISTICHE =====
     async getStats() {
-        try {
-            const today = new Date().toISOString().split('T')[0];
-            
-            const [operators, rooms, todayControls, unknownTags] = await Promise.all([
-                this.getOperators(),
-                this.getTechnicalRooms(),
-                fetch(`${this.supabaseUrl}/rest/v1/controls?timestamp=gte.${today}T00:00:00&select=count`, {
-                    headers: { ...this.headers, 'Prefer': 'count=exact' }
-                }).then(r => r.headers.get('content-range')?.split('/')[1] || '0'),
-                fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.PENDING&select=count`, {
-                    headers: { ...this.headers, 'Prefer': 'count=exact' }
-                }).then(r => r.headers.get('content-range')?.split('/')[1] || '0')
-            ]);
+        const today = new Date().toISOString().split('T')[0];
+        
+        const [operators, rooms, todayControls, unknownTags] = await Promise.all([
+            this.getOperators(),
+            this.getTechnicalRooms(),
+            fetch(`${this.supabaseUrl}/rest/v1/controls?timestamp=gte.${today}T00:00:00&select=count`, {
+                headers: { ...this.headers, 'Prefer': 'count=exact' }
+            }).then(r => r.headers.get('content-range')?.split('/')[1] || '0'),
+            fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.PENDING&select=count`, {
+                headers: { ...this.headers, 'Prefer': 'count=exact' }
+            }).then(r => r.headers.get('content-range')?.split('/')[1] || '0')
+        ]);
 
-            return {
-                totalOperators: operators.length,
-                totalRooms: rooms.length,
-                todayControls: parseInt(todayControls) || 0,
-                pendingTags: parseInt(unknownTags) || 0
-            };
-        } catch (error) {
-            console.error('Errore getStats:', error);
-            return { totalOperators: 0, totalRooms: 0, todayControls: 0, pendingTags: 0 };
-        }
+        return {
+            totalOperators: operators.length,
+            totalRooms: rooms.length,
+            todayControls: parseInt(todayControls),
+            pendingTags: parseInt(unknownTags)
+        };
     }
 
     // ===== CONFIGURAZIONE AZIENDA =====
@@ -367,8 +292,7 @@ class ControlsAPI {
             });
             
             if (response.ok) {
-                const rawData = await response.json();
-                const configs = this._safelyCastToArray(rawData);
+                const configs = await response.json();
                 return configs.length > 0 ? configs[0] : null;
             }
         } catch (error) {
@@ -379,9 +303,11 @@ class ControlsAPI {
 
     async saveCompanyConfig(config) {
         try {
+            // Prima controlla se esiste già una configurazione
             const existing = await this.getCompanyConfig();
             
             if (existing) {
+                // Aggiorna configurazione esistente
                 const response = await fetch(`${this.supabaseUrl}/rest/v1/company_config?id=eq.${existing.id}`, {
                     method: 'PATCH',
                     headers: this.headers,
@@ -392,6 +318,7 @@ class ControlsAPI {
                 });
                 return response.ok;
             } else {
+                // Crea nuova configurazione
                 const response = await fetch(`${this.supabaseUrl}/rest/v1/company_config`, {
                     method: 'POST',
                     headers: { ...this.headers, 'Prefer': 'return=representation' },
@@ -411,45 +338,30 @@ class ControlsAPI {
 
     // ===== CONTROLLI RECENTI =====
     async getRecentControls(limit = 10) {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/controls?select=*,operators(name),technical_rooms(name,tag_id)&order=timestamp.desc&limit=${limit}`, {
-                headers: this.headers
-            });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getRecentControls:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/controls?select=*,operators(name),technical_rooms(name,tag_id)&order=timestamp.desc&limit=${limit}`, {
+            headers: this.headers
+        });
+        return await response.json();
     }
 
     // ===== POSTAZIONI CONTATORI ENERGIA =====
+
     async getEnergyStations() {
-        try {
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?active=eq.true&order=name`, {
-                headers: this.headers
-            });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getEnergyStations:', error);
-            return [];
-        }
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?active=eq.true&order=name`, {
+            headers: this.headers
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
     }
 
     async getEnergyStationByNfcTag(nfcTag) {
-        try {
-            const encoded = encodeURIComponent(nfcTag);
-            const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?nfc_tag=eq.${encoded}&active=eq.true`, {
-                headers: this.headers
-            });
-            const rawData = await this._handleResponse(response, []);
-            const rows = this._safelyCastToArray(rawData);
-            return rows.length > 0 ? rows[0] : null;
-        } catch (error) {
-            console.error('Errore getEnergyStationByNfcTag:', error);
-            return null;
-        }
+        const encoded = encodeURIComponent(nfcTag);
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?nfc_tag=eq.${encoded}&active=eq.true`, {
+            headers: this.headers
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const rows = await response.json();
+        return rows.length > 0 ? rows[0] : null;
     }
 
     async addEnergyStation(station) {
@@ -491,6 +403,7 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Aggiorna coordinate GPS dopo prima scansione sul posto
     async setEnergyStationGPS(id, lat, lng) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?id=eq.${id}`, {
             method: 'PATCH',
@@ -502,6 +415,19 @@ class ControlsAPI {
     }
 
     // ===== LETTURE CONTATORI ENERGIA =====
+
+    /**
+     * Salva una lettura contatori energia.
+     * @param {Object} reading - Dati della lettura
+     * @param {string} reading.reading_id     - ID univoco della lettura
+     * @param {string} reading.station_id     - ID della postazione (es. "CONSEGNA_ENEL", "CABINA_S", ...)
+     * @param {string} reading.station_name   - Nome leggibile della postazione
+     * @param {string} reading.operator_id    - FK → operators.id
+     * @param {string} reading.operator_name  - Nome operatore (denormalizzato per report)
+     * @param {string} reading.timestamp      - ISO8601
+     * @param {Object} reading.meters         - Oggetto chiave/valore: { "Contatore Generale": 12345.6, ... }
+     * @param {string} [reading.notes]        - Note libere
+     */
     async addEnergyReading(reading) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_readings`, {
             method: 'POST',
@@ -517,20 +443,22 @@ class ControlsAPI {
         return { success: true, message: 'Lettura contatori registrata con successo' };
     }
 
+    /**
+     * Recupera le letture contatori, con filtri opzionali per periodo e postazione.
+     */
     async getEnergyReadings(filters = {}) {
-        try {
-            let url = `${this.supabaseUrl}/rest/v1/energy_readings?order=timestamp.desc`;
+        let url = `${this.supabaseUrl}/rest/v1/energy_readings?order=timestamp.desc`;
 
-            if (filters.startDate) url += `&timestamp=gte.${filters.startDate}`;
-            if (filters.endDate)   url += `&timestamp=lte.${filters.endDate}`;
-            if (filters.stationId) url += `&station_id=eq.${filters.stationId}`;
+        if (filters.startDate) url += `&timestamp=gte.${filters.startDate}`;
+        if (filters.endDate)   url += `&timestamp=lte.${filters.endDate}`;
+        if (filters.stationId) url += `&station_id=eq.${filters.stationId}`;
 
-            const response = await fetch(url, { headers: this.headers });
-            const data = await this._handleResponse(response, []);
-            return this._safelyCastToArray(data);
-        } catch (error) {
-            console.error('Errore getEnergyReadings:', error);
-            return [];
+        const response = await fetch(url, { headers: this.headers });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
         }
+
+        return await response.json();
     }
 }
