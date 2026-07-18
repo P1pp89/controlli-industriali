@@ -532,6 +532,7 @@
             <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
             <div class="nav-tab" onclick="showTab('unknown-tags')">🔍 Tag Sconosciuti</div>
             <div class="nav-tab" onclick="showTab('registries')">📋 Registri</div>
+            <div class="nav-tab" onclick="showTab('energy')">⚡ Contatori</div>
             <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
         </div>
 
@@ -679,6 +680,30 @@
                             <p style="color: #0c4a6e; margin-bottom: 0;">I registri includono logo aziendale, filtri personalizzabili, firme digitali e conformità normativa. Usa i filtri avanzati per personalizzare periodo, operatori e turni.</p>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTATORI ENERGIA -->
+            <div id="energy" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">⚡ Postazioni Contatori Energia</h3>
+                        <button class="btn btn-success" onclick="showAddEnergyStationModal()">➕ Nuova Postazione</button>
+                    </div>
+                    <div style="padding:1rem 1.5rem 0;">
+                        <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#92400e;">
+                            💡 <strong>Come funziona:</strong> Crea la postazione qui, poi programma il tag NFC con il testo indicato nella colonna "Tag NFC" usando l'app <strong>NFC Tools</strong>. Fissa il tag fisicamente sul contatore. Le coordinate GPS vengono acquisite automaticamente alla prima scansione sul posto.
+                        </div>
+                    </div>
+                    <div id="energyStationsList" class="loading">Caricamento postazioni...</div>
+                </div>
+
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">📋 Ultime Letture Contatori</h3>
+                        <button class="btn btn-primary" onclick="loadRecentEnergyReadings()">🔄 Aggiorna</button>
+                    </div>
+                    <div id="recentEnergyReadingsList" class="loading">Caricamento...</div>
                 </div>
             </div>
 
@@ -1018,6 +1043,7 @@
             if (tabName === 'rooms') loadRooms();
             if (tabName === 'unknown-tags') loadUnknownTags('PENDING');
             if (tabName === 'registries') loadRegistries();
+            if (tabName === 'energy') { loadEnergyStations(); loadRecentEnergyReadings(); }
         }
         
         async function loadOperators() {
@@ -1228,46 +1254,264 @@
                         <div style="padding: 2rem; text-align: center;">
                             <p style="color: #10b981; font-size: 1.2rem;">✅ Nessun tag in attesa</p>
                             <p style="color: #666; margin-top: 1rem;">Database pulito!</p>
-                        </div>
-                    `;
+                        </div>`;
                     return;
                 }
-                
+
+                // Carica categorie per il form di approvazione impianti
+                let categories = [];
+                try { categories = await api.getCategories(); } catch(e) {}
+
                 container.innerHTML = `
                     <div class="table-container">
                         <table class="table">
                             <thead>
                                 <tr>
                                     <th>Tag ID</th>
+                                    <th>Tipo</th>
                                     <th>Rilevato da</th>
                                     <th>Data</th>
                                     <th>Nome Suggerito</th>
+                                    <th>GPS</th>
                                     <th>Status</th>
+                                    <th>Azioni</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${unknownTags.map(tag => `
-                                    <tr>
+                                ${unknownTags.map(tag => {
+                                    const isEnergy = (tag.tag_type === 'energy');
+                                    const typeBadge = isEnergy
+                                        ? '<span style="background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">⚡ Contatore</span>'
+                                        : '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">🏭 Impianto</span>';
+                                    const gps = (tag.gps_lat && tag.gps_lng)
+                                        ? `<small>📍 ${parseFloat(tag.gps_lat).toFixed(4)}, ${parseFloat(tag.gps_lng).toFixed(4)}</small>`
+                                        : '<small style="color:#94a3b8;">—</small>';
+                                    const approveBtn = tag.status === 'PENDING' ? `
+                                        <button class="btn btn-success" onclick="openApproveModal('${tag.tag_id}','${(tag.suggested_name||'').replace(/'/g,"\\'")}','${isEnergy ? 'energy' : 'control'}',${tag.gps_lat||null},${tag.gps_lng||null})" style="margin-bottom:4px;font-size:0.8rem;">✅ Configura</button><br>
+                                        <button class="btn" onclick="rejectTag('${tag.tag_id}')" style="background:#ef4444;color:white;font-size:0.8rem;">❌ Rifiuta</button>` : '';
+                                    return `<tr>
                                         <td><code>${tag.tag_id || 'N/A'}</code></td>
+                                        <td>${typeBadge}</td>
                                         <td>${tag.operators?.name || 'N/A'}</td>
-                                        <td>${tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A'}</td>
+                                        <td style="white-space:nowrap;">${tag.detected_at ? new Date(tag.detected_at).toLocaleString('it-IT') : 'N/A'}</td>
                                         <td>${tag.suggested_name || 'N/A'}</td>
-                                        <td>
-                                            <span class="status-badge ${tag.status === 'PENDING' ? 'status-pending' : 'status-approved'}">
-                                                ${tag.status === 'PENDING' ? '⏳ In Attesa' : '✅ Processato'}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                `).join('')}
+                                        <td>${gps}</td>
+                                        <td><span class="status-badge ${tag.status === 'PENDING' ? 'status-pending' : 'status-approved'}">
+                                            ${tag.status === 'PENDING' ? '⏳ In Attesa' : tag.status === 'APPROVED' ? '✅ Approvato' : '❌ Rifiutato'}
+                                        </span></td>
+                                        <td>${approveBtn}</td>
+                                    </tr>`;
+                                }).join('')}
                             </tbody>
                         </table>
-                    </div>
-                `;
-                
+                    </div>`;
+
+                // Memorizza categorie per uso nei modal
+                window._dashCategories = categories;
+
             } catch (error) {
                 console.error('Errore caricamento tag sconosciuti:', error);
                 container.innerHTML = '<p style="padding: 1.5rem; color: #ef4444;">Errore caricamento</p>';
             }
+        }
+
+        // ===== MODAL UNIFICATO DI APPROVAZIONE TAG =====
+
+        function openApproveModal(tagId, suggestedName, tagType, gpsLat, gpsLng) {
+            const existing = document.getElementById('approveTagModal');
+            if (existing) existing.remove();
+
+            const categories = window._dashCategories || [];
+            const catOptions = categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            const controlForm = `
+                <div id="approveControlForm">
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;">Nome Impianto *</label>
+                        <input id="appName" type="text" value="${suggestedName}" placeholder="es. Gruppo Elettrogeno 1"
+                            style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;">Descrizione</label>
+                        <input id="appDesc" type="text" placeholder="Descrizione breve"
+                            style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                    </div>
+                    <div style="margin-bottom:1rem;">
+                        <label style="font-weight:600;display:block;margin-bottom:4px;">Categoria *</label>
+                        <select id="appCategory" style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            <option value="">— Scegli categoria —</option>
+                            ${catOptions}
+                        </select>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Lat GPS</label>
+                            <input id="appLat" type="number" step="any" value="${gpsLat || ''}" placeholder="41.9000"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Lng GPS</label>
+                            <input id="appLng" type="number" step="any" value="${gpsLng || ''}" placeholder="12.5000"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Raggio (m)</label>
+                            <input id="appRadius" type="number" value="50" min="10" max="500"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                    </div>
+                    <small style="color:#64748b;">💡 Le coordinate GPS sono pre-compilate con la posizione al momento della scansione</small>
+                </div>`;
+
+            const energyForm = `
+                <div id="approveEnergyForm">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Nome Postazione *</label>
+                            <input id="appEsName" type="text" value="${suggestedName}" placeholder="es. Cabina Ed. S"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">ID Postazione *</label>
+                            <input id="appEsId" type="text" value="${tagId.replace(/[^A-Z0-9]/gi,'_').toUpperCase()}" placeholder="es. CABINA_S"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            <small style="color:#64748b;">Maiuscolo, no spazi</small>
+                        </div>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Icona</label>
+                            <input id="appEsIcon" type="text" value="⚡" style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                        <div>
+                            <label style="font-weight:600;display:block;margin-bottom:4px;">Raggio GPS (m)</label>
+                            <input id="appEsRadius" type="number" value="50" min="10" max="500"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                        </div>
+                    </div>
+                    <div style="margin-bottom:0.75rem;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                            <label style="font-weight:600;">Contatori *</label>
+                            <button type="button" onclick="addApproveEnergyMeter()" style="background:#10b981;color:white;border:none;padding:3px 10px;border-radius:4px;cursor:pointer;font-size:0.8rem;">+ Aggiungi</button>
+                        </div>
+                        <div id="approveMetersContainer">
+                            ${approveEnergyMeterRow('', '', 0)}
+                        </div>
+                    </div>
+                    <small style="color:#64748b;">💡 GPS pre-compilato: lat=${gpsLat||'—'}, lng=${gpsLng||'—'}</small>
+                    <input type="hidden" id="appEsLat" value="${gpsLat || ''}">
+                    <input type="hidden" id="appEsLng" value="${gpsLng || ''}">
+                </div>`;
+
+            document.body.insertAdjacentHTML('beforeend', `
+                <div id="approveTagModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:center;justify-content:center;overflow-y:auto;">
+                    <div style="background:white;border-radius:12px;width:95%;max-width:580px;padding:2rem;margin:1rem auto;max-height:92vh;overflow-y:auto;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+                            <h3 style="margin:0;">
+                                ${tagType === 'energy' ? '⚡ Configura Postazione Contatori' : '🏭 Configura Impianto Tecnico'}
+                            </h3>
+                            <span style="background:${tagType==='energy'?'#fef9c3':'#dbeafe'};color:${tagType==='energy'?'#92400e':'#1d4ed8'};padding:3px 10px;border-radius:999px;font-size:0.8rem;font-weight:600;">
+                                Tag: <code>${tagId}</code>
+                            </span>
+                        </div>
+
+                        ${tagType === 'energy' ? energyForm : controlForm}
+
+                        <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
+                            <button onclick="document.getElementById('approveTagModal').remove()"
+                                style="background:#6b7280;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;">Annulla</button>
+                            <button onclick="confirmApproveTag('${tagId}','${tagType}')"
+                                style="background:${tagType==='energy'?'#f59e0b':'#10b981'};color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-weight:600;">
+                                ✅ Approva e Configura
+                            </button>
+                        </div>
+                    </div>
+                </div>`);
+
+            window._approveMetersCount = 0;
+        }
+
+        function approveEnergyMeterRow(key, label, i) {
+            return `<div id="appMeterRow_${i}" style="display:flex;gap:0.5rem;margin-bottom:0.4rem;align-items:center;">
+                <input type="text" placeholder="chiave" value="${key}" data-app-meter-key="${i}"
+                    style="flex:1;padding:0.5rem;border:1px solid #ddd;border-radius:4px;font-size:0.82rem;">
+                <input type="text" placeholder="etichetta (es. Contatore 1)" value="${label}" data-app-meter-label="${i}"
+                    style="flex:2;padding:0.5rem;border:1px solid #ddd;border-radius:4px;font-size:0.82rem;">
+                <button type="button" onclick="document.getElementById('appMeterRow_${i}').remove()"
+                    style="background:#ef4444;color:white;border:none;padding:0.35rem 0.6rem;border-radius:4px;cursor:pointer;">✕</button>
+            </div>`;
+        }
+
+        function addApproveEnergyMeter() {
+            window._approveMetersCount = (window._approveMetersCount || 0) + 1;
+            document.getElementById('approveMetersContainer')
+                .insertAdjacentHTML('beforeend', approveEnergyMeterRow('', '', window._approveMetersCount));
+        }
+
+        async function confirmApproveTag(tagId, tagType) {
+            try {
+                if (tagType === 'energy') {
+                    const name   = document.getElementById('appEsName').value.trim();
+                    const sid    = document.getElementById('appEsId').value.trim().toUpperCase().replace(/\s+/g,'_');
+                    const icon   = document.getElementById('appEsIcon').value.trim() || '⚡';
+                    const radius = parseInt(document.getElementById('appEsRadius').value) || 50;
+                    const lat    = parseFloat(document.getElementById('appEsLat').value) || null;
+                    const lng    = parseFloat(document.getElementById('appEsLng').value) || null;
+
+                    if (!name || !sid) { alert('Nome e ID Postazione sono obbligatori.'); return; }
+
+                    const keyInputs   = document.querySelectorAll('[data-app-meter-key]');
+                    const labelInputs = document.querySelectorAll('[data-app-meter-label]');
+                    const meters = [];
+                    keyInputs.forEach((ki, i) => {
+                        const k = ki.value.trim().replace(/\s+/g,'_');
+                        const l = labelInputs[i]?.value.trim() || '';
+                        if (k && l) meters.push({ key: k, label: l });
+                    });
+                    if (meters.length === 0) { alert('Aggiungi almeno un contatore.'); return; }
+
+                    await api.approveUnknownTagAsEnergy(tagId, {
+                        name, station_id: sid, nfc_tag: tagId,
+                        icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng
+                    });
+
+                    document.getElementById('approveTagModal').remove();
+                    alert(`✅ Postazione "${name}" configurata!\n\nTag NFC: ${tagId}\nOra l'operatore può usarla in lettura-contatori.`);
+
+                } else {
+                    const name      = document.getElementById('appName').value.trim();
+                    const desc      = document.getElementById('appDesc').value.trim();
+                    const catId     = document.getElementById('appCategory').value;
+                    const lat       = parseFloat(document.getElementById('appLat').value) || null;
+                    const lng       = parseFloat(document.getElementById('appLng').value) || null;
+                    const radius    = parseInt(document.getElementById('appRadius').value) || 50;
+
+                    if (!name || !catId) { alert('Nome e Categoria sono obbligatori.'); return; }
+
+                    await api.approveUnknownTag(tagId, {
+                        name, description: desc, category_id: catId,
+                        gps_lat: lat, gps_lng: lng, gps_radius: radius
+                    });
+
+                    document.getElementById('approveTagModal').remove();
+                    alert(`✅ Impianto "${name}" configurato!\n\nTag NFC: ${tagId}\nOra l'operatore può registrare controlli.`);
+                }
+
+                await loadUnknownTags('PENDING');
+
+            } catch(e) {
+                alert('Errore approvazione: ' + e.message);
+            }
+        }
+
+        async function rejectTag(tagId) {
+            const reason = prompt(`Motivo rifiuto tag "${tagId}" (opzionale):`);
+            if (reason === null) return; // annullato
+            try {
+                await api.rejectUnknownTag(tagId, reason);
+                alert(`❌ Tag "${tagId}" rifiutato.`);
+                await loadUnknownTags('PENDING');
+            } catch(e) { alert('Errore: ' + e.message); }
         }
         
         async function forceSyncAllDevices() {
@@ -1879,6 +2123,235 @@
             `;
         }
         
+        // ===== GESTIONE POSTAZIONI CONTATORI ENERGIA =====
+
+        async function loadEnergyStations() {
+            const container = document.getElementById('energyStationsList');
+            container.innerHTML = '<div class="loading">Caricamento postazioni...</div>';
+            try {
+                const stations = await api.getEnergyStations();
+                if (stations.length === 0) {
+                    container.innerHTML = '<p style="padding:1.5rem;text-align:center;color:#64748b;">Nessuna postazione configurata. Clicca "Nuova Postazione" per aggiungerne una.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Postazione</th>
+                                    <th>Tag NFC</th>
+                                    <th>Contatori</th>
+                                    <th>GPS</th>
+                                    <th>Azioni</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${stations.map(s => {
+                                    const meters = Array.isArray(s.meters) ? s.meters : JSON.parse(s.meters || '[]');
+                                    const gpsStatus = s.gps_lat ? `✅ ${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '⚪ Non configurato';
+                                    return `<tr>
+                                        <td><strong>${s.icon || '⚡'} ${s.name}</strong><br><small style="color:#64748b;">${s.station_id}</small></td>
+                                        <td><code style="background:#fef9c3;padding:2px 6px;border-radius:4px;">${s.nfc_tag}</code></td>
+                                        <td><small>${meters.map(m => m.label).join('<br>')}</small></td>
+                                        <td style="font-size:0.8rem;">${gpsStatus}</td>
+                                        <td>
+                                            <button class="btn btn-primary" onclick="showEditEnergyStationModal('${s.id}')" style="margin-bottom:4px;">✏️ Modifica</button><br>
+                                            <button class="btn" onclick="deleteEnergyStation('${s.id}','${s.name.replace(/'/g,"\\'")}'" style="background:#ef4444;color:white;">🗑️ Elimina</button>
+                                        </td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                container.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore caricamento postazioni: ${e.message}</p>`;
+            }
+        }
+
+        async function loadRecentEnergyReadings() {
+            const container = document.getElementById('recentEnergyReadingsList');
+            container.innerHTML = '<div class="loading">Caricamento...</div>';
+            try {
+                const readings = await api.getEnergyReadings({ startDate: new Date(Date.now() - 7*24*60*60*1000).toISOString() });
+                if (!readings || readings.length === 0) {
+                    container.innerHTML = '<p style="padding:1.5rem;text-align:center;color:#64748b;">Nessuna lettura negli ultimi 7 giorni.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr><th>Data/Ora</th><th>Postazione</th><th>Operatore</th><th>NFC</th><th>GPS</th><th>Valori</th></tr>
+                            </thead>
+                            <tbody>
+                                ${readings.slice(0,20).map(r => {
+                                    const meters = typeof r.meters === 'string' ? JSON.parse(r.meters) : (r.meters || {});
+                                    const vals = Object.entries(meters).map(([k,v]) => `${k}: <strong>${v}</strong>`).join('<br>');
+                                    return `<tr>
+                                        <td style="white-space:nowrap;">${new Date(r.timestamp).toLocaleString('it-IT')}</td>
+                                        <td>${r.station_name || r.station_id}</td>
+                                        <td>${r.operator_name || '—'}</td>
+                                        <td>${r.nfc_triggered ? '<span style="color:#166534;font-weight:600;">✅ Sì</span>' : '<span style="color:#dc2626;">❌ No</span>'}</td>
+                                        <td style="font-size:0.8rem;">${r.gps_valid === true ? '✅' : r.gps_valid === false ? '⚠️' : '—'} ${r.gps_distance_m != null ? r.gps_distance_m+'m' : ''}</td>
+                                        <td style="font-size:0.8rem;">${vals}</td>
+                                    </tr>`;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                container.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore: ${e.message}</p>`;
+            }
+        }
+
+        function showAddEnergyStationModal() { showEnergyStationModal(null); }
+
+        async function showEditEnergyStationModal(stationId) {
+            try {
+                const stations = await api.getEnergyStations();
+                const s = stations.find(x => x.id === stationId);
+                if (!s) { alert('Postazione non trovata'); return; }
+                showEnergyStationModal(s);
+            } catch(e) { alert('Errore: ' + e.message); }
+        }
+
+        function showEnergyStationModal(station) {
+            const isEdit = station !== null;
+            const existing = document.getElementById('energyStationModal');
+            if (existing) existing.remove();
+
+            const meters = isEdit
+                ? (Array.isArray(station.meters) ? station.meters : JSON.parse(station.meters || '[]'))
+                : [{ key: '', label: '' }];
+
+            const metersHtml = meters.map((m, i) => meterRow(m.key, m.label, i)).join('');
+
+            document.body.insertAdjacentHTML('beforeend', `
+                <div id="energyStationModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;overflow-y:auto;">
+                    <div style="background:white;border-radius:12px;width:95%;max-width:560px;padding:2rem;position:relative;margin:1rem auto;max-height:90vh;overflow-y:auto;">
+                        <h3 style="margin-bottom:1.5rem;">${isEdit ? '✏️ Modifica Postazione' : '➕ Nuova Postazione Contatori'}</h3>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:4px;">Nome Postazione *</label>
+                                <input id="esName" type="text" value="${isEdit ? station.name : ''}" placeholder="es. Cabina Ed. S"
+                                    style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            </div>
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:4px;">ID Postazione *</label>
+                                <input id="esStationId" type="text" value="${isEdit ? station.station_id : ''}" placeholder="es. CABINA_S"
+                                    style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;"
+                                    ${isEdit ? 'readonly style="background:#f8f9fa;width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;"' : ''}>
+                                <small style="color:#64748b;">Maiuscolo, senza spazi</small>
+                            </div>
+                        </div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:4px;">Tag NFC *</label>
+                                <input id="esNfcTag" type="text" value="${isEdit ? station.nfc_tag : ''}" placeholder="es. CONT-CAB-S"
+                                    style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                                <small style="color:#64748b;">Testo da scrivere sul tag fisico</small>
+                            </div>
+                            <div>
+                                <label style="display:block;font-weight:600;margin-bottom:4px;">Icona</label>
+                                <input id="esIcon" type="text" value="${isEdit ? (station.icon || '⚡') : '⚡'}" placeholder="⚡"
+                                    style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block;font-weight:600;margin-bottom:4px;">Raggio GPS (metri)</label>
+                            <input id="esGpsRadius" type="number" value="${isEdit ? (station.gps_radius || 50) : 50}" min="10" max="500"
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            <small style="color:#64748b;">Le coordinate vengono acquisite automaticamente alla prima scansione sul posto</small>
+                        </div>
+
+                        <div style="margin-bottom:1.25rem;">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+                                <label style="font-weight:600;">Contatori *</label>
+                                <button type="button" onclick="addMeterRow()" style="background:#10b981;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:0.8rem;">+ Aggiungi</button>
+                            </div>
+                            <div id="metersContainer">${metersHtml}</div>
+                        </div>
+
+                        <div style="display:flex;gap:1rem;justify-content:flex-end;">
+                            <button onclick="document.getElementById('energyStationModal').remove()"
+                                style="background:#6b7280;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;">Annulla</button>
+                            <button onclick="saveEnergyStation('${isEdit ? station.id : ''}')"
+                                style="background:#f59e0b;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-weight:600;">💾 Salva</button>
+                        </div>
+                    </div>
+                </div>`);
+        }
+
+        function meterRow(key, label, index) {
+            return `<div id="meterRow_${index}" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;align-items:center;">
+                <input type="text" placeholder="chiave (es. cont_1)" value="${key}"
+                    data-meter-key="${index}"
+                    style="flex:1;padding:0.5rem;border:1px solid #ddd;border-radius:4px;font-size:0.85rem;">
+                <input type="text" placeholder="etichetta (es. Contatore 1)" value="${label}"
+                    data-meter-label="${index}"
+                    style="flex:2;padding:0.5rem;border:1px solid #ddd;border-radius:4px;font-size:0.85rem;">
+                <button type="button" onclick="document.getElementById('meterRow_${index}').remove()"
+                    style="background:#ef4444;color:white;border:none;padding:0.4rem 0.7rem;border-radius:4px;cursor:pointer;">✕</button>
+            </div>`;
+        }
+
+        let meterRowCount = 10;
+        function addMeterRow() {
+            meterRowCount++;
+            document.getElementById('metersContainer').insertAdjacentHTML('beforeend', meterRow('', '', meterRowCount));
+        }
+
+        async function saveEnergyStation(stationId) {
+            const name      = document.getElementById('esName').value.trim();
+            const sid       = document.getElementById('esStationId').value.trim().toUpperCase().replace(/\s+/g,'_');
+            const nfcTag    = document.getElementById('esNfcTag').value.trim();
+            const icon      = document.getElementById('esIcon').value.trim() || '⚡';
+            const gpsRadius = parseInt(document.getElementById('esGpsRadius').value) || 50;
+
+            if (!name || !sid || !nfcTag) { alert('Nome, ID Postazione e Tag NFC sono obbligatori.'); return; }
+
+            // Raccogli contatori
+            const keyInputs   = document.querySelectorAll('[data-meter-key]');
+            const labelInputs = document.querySelectorAll('[data-meter-label]');
+            const meters = [];
+            keyInputs.forEach((ki, i) => {
+                const k = ki.value.trim().replace(/\s+/g,'_');
+                const l = labelInputs[i] ? labelInputs[i].value.trim() : '';
+                if (k && l) meters.push({ key: k, label: l });
+            });
+            if (meters.length === 0) { alert('Aggiungi almeno un contatore.'); return; }
+
+            const data = { name, station_id: sid, nfc_tag: nfcTag, icon, gps_radius: gpsRadius, meters };
+
+            try {
+                if (stationId) {
+                    await api.updateEnergyStation(stationId, data);
+                } else {
+                    await api.addEnergyStation(data);
+                }
+                document.getElementById('energyStationModal').remove();
+                alert(`✅ Postazione "${name}" ${stationId ? 'aggiornata' : 'creata'} con successo!\n\nProgramma il tag NFC con il testo: ${nfcTag}`);
+                await loadEnergyStations();
+            } catch(e) {
+                alert('Errore salvataggio: ' + e.message);
+            }
+        }
+
+        async function deleteEnergyStation(id, name) {
+            if (!confirm(`Eliminare la postazione "${name}"?\n\nLe letture già registrate vengono mantenute.`)) return;
+            try {
+                await api.deleteEnergyStation(id);
+                alert(`✅ Postazione "${name}" eliminata.`);
+                await loadEnergyStations();
+            } catch(e) { alert('Errore: ' + e.message); }
+        }
+
+        // ===== FINE GESTIONE POSTAZIONI CONTATORI =====
+
         // ===== REGISTRO CONSUMI ELETTRICI MENSILE =====
 
         async function generateEnergyConsumptionRegister() {

@@ -93,7 +93,7 @@ class ControlsAPI {
         return await response.json();
     }
 
-    async reportUnknownTag({ tagId, operatorId, gpsLat, gpsLng, suggestedName, suggestedCategory }) {
+    async reportUnknownTag({ tagId, operatorId, gpsLat, gpsLng, suggestedName, suggestedCategory, tagType = 'control' }) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags`, {
             method: 'POST',
             headers: { ...this.headers, 'Prefer': 'return=representation' },
@@ -105,6 +105,7 @@ class ControlsAPI {
                 gps_lng: gpsLng,
                 suggested_name: suggestedName,
                 suggested_category: suggestedCategory,
+                tag_type: tagType,
                 status: 'PENDING',
                 notes: 'Rilevato automaticamente dall\'app web'
             })
@@ -149,8 +150,8 @@ class ControlsAPI {
         return await response.json();
     }
 
+    // Approva tag come IMPIANTO TECNICO normale
     async approveUnknownTag(tagId, tagData) {
-        // 1. Aggiungi il tag alla configurazione
         const roomResponse = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms`, {
             method: 'POST',
             headers: this.headers,
@@ -158,25 +159,63 @@ class ControlsAPI {
                 tag_id: tagId,
                 name: tagData.name,
                 description: tagData.description,
-                category_id: tagData.category_id
+                category_id: tagData.category_id,
+                expected_lat: tagData.gps_lat || null,
+                expected_lng: tagData.gps_lng || null,
+                gps_radius: tagData.gps_radius || 50,
+                active: true
             })
         });
+        if (!roomResponse.ok) throw new Error('Errore aggiunta impianto');
 
-        if (!roomResponse.ok) {
-            throw new Error('Errore aggiunta impianto');
-        }
-
-        // 2. Marca il tag come approvato
-        const updateResponse = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
             method: 'PATCH',
             headers: this.headers,
+            body: JSON.stringify({ status: 'APPROVED', approved_at: new Date().toISOString() })
+        });
+        return { success: true };
+    }
+
+    // Approva tag come POSTAZIONE CONTATORI ENERGIA
+    async approveUnknownTagAsEnergy(tagId, stationData) {
+        // stationData: { name, station_id, nfc_tag, icon, gps_radius, meters[], gps_lat, gps_lng }
+        const stationResponse = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations`, {
+            method: 'POST',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
             body: JSON.stringify({
-                status: 'APPROVED',
-                approved_at: new Date().toISOString()
+                station_id: stationData.station_id,
+                name: stationData.name,
+                icon: stationData.icon || '⚡',
+                nfc_tag: stationData.nfc_tag || tagId,
+                meters: stationData.meters || [],
+                gps_lat: stationData.gps_lat || null,
+                gps_lng: stationData.gps_lng || null,
+                gps_radius: stationData.gps_radius || 50,
+                active: true
             })
         });
+        if (!stationResponse.ok) {
+            const err = await stationResponse.text();
+            throw new Error(`Errore aggiunta postazione: ${err}`);
+        }
 
-        return await updateResponse.json();
+        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ status: 'APPROVED', approved_at: new Date().toISOString() })
+        });
+        return { success: true };
+    }
+
+    // Rifiuta un tag sconosciuto
+    async rejectUnknownTag(tagId, reason = '') {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ status: 'REJECTED', notes: reason || 'Rifiutato dall\'amministratore' })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
     }
 
     // ===== CATEGORIE =====

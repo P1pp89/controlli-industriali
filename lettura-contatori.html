@@ -736,11 +736,8 @@ function handleNFCRead(message, serialNumber) {
     );
 
     if (!station) {
-        showMessage(
-            `Tag NFC "${tagText}" non corrisponde a nessuna postazione contatori.\n` +
-            `Verifica di aver scansionato il tag giusto oppure aggiungi la postazione dalla dashboard.`,
-            'error'
-        );
+        // Tag sconosciuto: registra per approvazione come postazione contatori
+        await handleUnknownEnergyTag(tagText);
         return;
     }
 
@@ -762,6 +759,59 @@ function handleNFCRead(message, serialNumber) {
 
     showMessage(`✅ Tag riconosciuto: ${station.icon} ${station.name}`, 'success');
     openReadingForm(station);
+}
+
+// ====================================================================
+// TAG CONTATORE SCONOSCIUTO → registra per approvazione in dashboard
+// ====================================================================
+async function handleUnknownEnergyTag(tagText) {
+    try {
+        // Controlla se esiste già
+        const existing = await fetch(
+            `${SUPABASE_URL}/rest/v1/unknown_tags?tag_id=eq.${encodeURIComponent(tagText)}&select=*&limit=1`,
+            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        ).then(r => r.json());
+
+        if (existing && existing.length > 0) {
+            const t = existing[0];
+            if (t.status === 'PENDING') {
+                showMessage(`⏳ Tag "${tagText}" già in attesa di configurazione.\nL'amministratore lo vedrà nella dashboard → Tag Sconosciuti.`, 'warning');
+            } else if (t.status === 'REJECTED') {
+                showMessage(`❌ Tag "${tagText}" precedentemente rifiutato.\nContatta l'amministratore.`, 'error');
+            } else {
+                showMessage(`✅ Tag "${tagText}" già approvato. Ricarica la pagina.`, 'success');
+            }
+            return;
+        }
+
+        // Nuovo tag — registralo
+        await api.reportUnknownTag({
+            tagId: tagText,
+            operatorId: currentOperator?.id || null,
+            gpsLat: currentPosition?.coords.latitude || null,
+            gpsLng: currentPosition?.coords.longitude || null,
+            suggestedName: `Postazione ${tagText}`,
+            suggestedCategory: 'Contatori Energia',
+            tagType: 'energy'
+        });
+
+        showMessage(
+            `🔍 Nuovo tag contatore rilevato: "${tagText}"\n\n` +
+            `✅ Registrato per configurazione.\n` +
+            `📋 L'amministratore lo troverà in Dashboard → Tag Sconosciuti\n` +
+            `   e lo configurerà come postazione contatori.\n\n` +
+            `👤 Operatore: ${currentOperator?.name || '—'}\n` +
+            `📍 GPS: ${currentPosition ? 'Registrato' : 'Non disponibile'}`,
+            'success'
+        );
+    } catch (e) {
+        showMessage(
+            `🔍 Tag "${tagText}" non riconosciuto.\n` +
+            `Errore registrazione: ${e.message}\n` +
+            `Segnalalo manualmente all'amministratore.`,
+            'error'
+        );
+    }
 }
 
 // ====================================================================
