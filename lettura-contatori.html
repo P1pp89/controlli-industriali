@@ -235,6 +235,7 @@
     <div class="status-bar">
         <div id="connectionStatus" class="status offline">🔴 Connessione...</div>
         <div id="gpsBadge" class="gps-badge gps-wait">📍 GPS: attesa...</div>
+        <div id="syncInfo" style="font-size:0.7rem;color:#64748b;flex-basis:100%;text-align:center;padding-top:2px;"></div>
     </div>
 
     <div class="main-content">
@@ -460,18 +461,26 @@ document.addEventListener('DOMContentLoaded', async function () {
 
 // Carica postazioni da Supabase; usa fallback statico se offline
 async function loadStationsFromDB() {
+    const connEl = document.getElementById('connectionStatus');
+    const syncEl = document.getElementById('syncInfo');
+
+    function setStatus(online, text) {
+        if (connEl) {
+            connEl.className = online ? 'status online' : 'status offline';
+            connEl.textContent = online ? '🟢 Online' : '🔴 Offline';
+        }
+        if (syncEl) syncEl.textContent = text;
+    }
+
     try {
         const rows = await api.getEnergyStations();
         if (rows && rows.length > 0) {
-            // Normalizza: meters può arrivare come stringa JSON da Supabase
             ENERGY_STATIONS = rows.map(s => ({
                 ...s,
                 meters: typeof s.meters === 'string' ? JSON.parse(s.meters) : (s.meters || [])
             }));
             isOnline = true;
-            document.getElementById('connectionStatus').className = 'status online';
-            document.getElementById('connectionStatus').textContent = '🟢 Online';
-            document.getElementById('syncInfo').textContent = `${ENERGY_STATIONS.length} postazioni caricate`;
+            setStatus(true, `${ENERGY_STATIONS.length} postazioni caricate`);
         } else {
             throw new Error('Nessuna postazione in DB');
         }
@@ -479,9 +488,7 @@ async function loadStationsFromDB() {
         console.warn('Fallback postazioni statiche:', e.message);
         ENERGY_STATIONS = ENERGY_STATIONS_FALLBACK;
         isOnline = false;
-        document.getElementById('connectionStatus').className = 'status offline';
-        document.getElementById('connectionStatus').textContent = '🔴 Offline';
-        document.getElementById('syncInfo').textContent = 'Postazioni offline (dati locali)';
+        setStatus(false, 'Postazioni offline (dati locali)');
     }
 }
 
