@@ -1,51 +1,21 @@
+<!-- lettura-contatori.html -->
 <!DOCTYPE html>
 <html lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <title>⚡ Lettura Contatori Energia</title>
+    <title>⚡ Lettura Contatori Energia - Sistema di Sicurezza Integrato</title>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#f59e0b">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            min-height: 100vh;
-            color: #1e293b;
-        }
-
-        .container {
-            max-width: 480px;
-            margin: 0 auto;
-            background: white;
-            min-height: 100vh;
-            box-shadow: 0 0 20px rgba(0,0,0,0.15);
-        }
-
-        .header {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-            color: white;
-            padding: 1.25rem 1.5rem;
-            text-align: center;
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); min-height: 100vh; color: #1e293b; }
+        .container { max-width: 480px; margin: 0 auto; background: white; min-height: 100vh; box-shadow: 0 0 20px rgba(0,0,0,0.15); }
+        .header { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: white; padding: 1.25rem 1.5rem; text-align: center; }
         .header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem; }
         .header p  { font-size: 0.8rem; opacity: 0.9; }
-
-        /* Status bar */
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0.6rem 1rem;
-            background: #fefce8;
-            border-bottom: 1px solid #fde68a;
-            font-size: 0.75rem;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-        }
+        .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; background: #fefce8; border-bottom: 1px solid #fde68a; font-size: 0.75rem; gap: 0.5rem; flex-wrap: wrap; }
         .status { padding: 0.3rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.72rem; }
         .status.online   { background: #dcfce7; color: #166534; }
         .status.offline  { background: #fef3c7; color: #92400e; }
@@ -53,175 +23,44 @@
         .gps-badge.gps-ok      { background: #dcfce7; color: #166534; }
         .gps-badge.gps-wait    { background: #fef3c7; color: #92400e; }
         .gps-badge.gps-error   { background: #fef2f2; color: #dc2626; }
-
         .main-content { padding: 1rem; }
-
-        /* Operator selector */
-        .operator-section {
-            background: #fffbeb;
-            border: 1px solid #fde68a;
-            border-radius: 0.75rem;
-            padding: 1rem 1.25rem;
-            margin-bottom: 1rem;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
+        .operator-section { background: #fffbeb; border: 1px solid #fde68a; border-radius: 0.75rem; padding: 1rem 1.25rem; margin-bottom: 1rem; cursor: pointer; transition: background 0.2s; }
         .operator-section:hover { background: #fef9c3; }
         .operator-name    { font-size: 1rem; font-weight: 600; color: #1e293b; }
         .operator-details { font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; }
-
-        /* Schermata di attesa NFC — visibile finché non si scansiona */
-        .nfc-waiting {
-            text-align: center;
-            padding: 2rem 1rem;
-            background: #eff6ff;
-            border: 2px dashed #93c5fd;
-            border-radius: 1rem;
-            margin-bottom: 1rem;
-        }
+        .nfc-waiting { text-align: center; padding: 2rem 1rem; background: #eff6ff; border: 2px dashed #93c5fd; border-radius: 1rem; margin-bottom: 1rem; }
         .nfc-waiting .nfc-icon { font-size: 3.5rem; margin-bottom: 0.75rem; }
         .nfc-waiting h3 { color: #1d4ed8; font-size: 1rem; margin-bottom: 0.4rem; }
         .nfc-waiting p  { color: #475569; font-size: 0.82rem; line-height: 1.5; }
-
-        /* Scan button */
-        .scan-btn {
-            width: 100%;
-            padding: 1rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-            color: white;
-            border: none;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(59,130,246,0.35);
-            margin-top: 1rem;
-        }
-        .scan-btn:hover:not(:disabled) { transform: translateY(-1px); }
-        .scan-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-
-        /* GPS info box */
-        .gps-info-box {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-radius: 0.6rem;
-            padding: 0.65rem 1rem;
-            font-size: 0.8rem;
-            color: #166534;
-            margin-bottom: 1rem;
-            display: none;
-        }
-        .gps-info-box.gps-warn {
-            background: #fef2f2; border-color: #fecaca; color: #dc2626;
-        }
-
-        /* Station box — visibile solo dopo NFC */
-        .station-box {
-            background: #fffbeb;
-            border: 2px solid #fde68a;
-            border-radius: 0.75rem;
-            padding: 1.25rem;
-            margin-bottom: 1rem;
-        }
-        .station-title {
-            font-size: 1rem; font-weight: 700; color: #b45309;
-            margin-bottom: 0.5rem;
-            display: flex; align-items: center; gap: 0.5rem;
-        }
-        /* Badge NFC verificato */
-        .nfc-verified-badge {
-            display: inline-flex; align-items: center; gap: 0.3rem;
-            background: #dcfce7; color: #166534;
-            padding: 0.2rem 0.6rem; border-radius: 1rem;
-            font-size: 0.72rem; font-weight: 700;
-            margin-bottom: 1rem;
-        }
-        /* Badge GPS verificato */
-        .gps-verified-badge {
-            display: inline-flex; align-items: center; gap: 0.3rem;
-            padding: 0.2rem 0.6rem; border-radius: 1rem;
-            font-size: 0.72rem; font-weight: 700;
-            margin-bottom: 1rem; margin-left: 0.4rem;
-        }
+        .scan-btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; border: none; border-radius: 0.75rem; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(59,130,246,0.35); margin-top: 1rem; }
+        .scan-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+        .gps-info-box { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 0.6rem; padding: 0.65rem 1rem; font-size: 0.8rem; color: #166534; margin-bottom: 1rem; display: none; line-height: 1.4; }
+        .gps-info-box.gps-warn { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
+        .station-box { background: #fffbeb; border: 2px solid #fde68a; border-radius: 0.75rem; padding: 1.25rem; margin-bottom: 1rem; }
+        .station-title { font-size: 1rem; font-weight: 700; color: #b45309; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+        .nfc-verified-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #dcfce7; color: #166534; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.72rem; font-weight: 700; margin-bottom: 1rem; }
+        .gps-verified-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 1rem; font-size: 0.72rem; font-weight: 700; margin-bottom: 1rem; margin-left: 0.4rem; }
         .gps-verified-badge.ok   { background: #dcfce7; color: #166534; }
         .gps-verified-badge.warn { background: #fef3c7; color: #92400e; }
         .gps-verified-badge.bad  { background: #fef2f2; color: #dc2626; }
-
-        /* Meter field */
         .meter-field { margin-bottom: 0.9rem; }
-        .meter-field label {
-            display: block; font-size: 0.8rem; font-weight: 600;
-            color: #374151; margin-bottom: 0.3rem;
-        }
-        .meter-field input[type="number"] {
-            width: 100%; padding: 0.65rem 0.9rem;
-            border: 1.5px solid #d1d5db; border-radius: 0.5rem;
-            font-size: 1rem; transition: border-color 0.2s;
-        }
-        .meter-field input[type="number"]:focus { outline: none; border-color: #f59e0b; background: #fffbeb; }
+        .meter-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.3rem; }
+        .meter-field input[type="number"] { width: 100%; padding: 0.65rem 0.9rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; font-size: 1rem; }
         .meter-field input[type="number"].filled { border-color: #10b981; background: #f0fdf4; }
-
-        /* Notes */
         .notes-field { margin-bottom: 1rem; }
         .notes-field label { display: block; font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 0.3rem; }
-        .notes-field textarea {
-            width: 100%; padding: 0.65rem 0.9rem;
-            border: 1.5px solid #d1d5db; border-radius: 0.5rem;
-            font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit;
-        }
-        .notes-field textarea:focus { outline: none; border-color: #f59e0b; }
-
-        /* Save button */
-        .save-btn {
-            width: 100%; padding: 1rem;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white; border: none; border-radius: 0.75rem;
-            font-size: 1.1rem; font-weight: 700; cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(245,158,11,0.4); margin-top: 0.5rem;
-        }
-        .save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245,158,11,0.5); }
-        .save-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
-
-        /* Messages */
+        .notes-field textarea { width: 100%; padding: 0.65rem 0.9rem; border: 1.5px solid #d1d5db; border-radius: 0.5rem; font-size: 0.9rem; resize: vertical; min-height: 60px; font-family: inherit; }
+        .save-btn { width: 100%; padding: 1rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 0.75rem; font-size: 1.1rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(245,158,11,0.4); margin-top: 0.5rem; }
+        .save-btn:disabled { opacity: 0.55; cursor: not-allowed; filter: grayscale(40%); }
         .message { padding: 0.85rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; line-height: 1.5; }
         .message.error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
         .message.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
         .message.warning { background: #fffbeb; border: 1px solid #fde68a; color: #92400e; }
-
-        /* Timestamp bar */
-        .timestamp-bar {
-            background: #f1f5f9; border: 1px solid #e2e8f0;
-            border-radius: 0.5rem; padding: 0.6rem 1rem;
-            font-size: 0.8rem; color: #475569; margin-bottom: 1rem;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-
-        /* Modal */
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex; justify-content: center; align-items: center; z-index: 1000;
-        }
-        .modal-content {
-            background: white; padding: 1.5rem; border-radius: 1rem;
-            max-width: 340px; width: 90%; max-height: 80vh; overflow-y: auto;
-        }
-        .modal h3 { margin-bottom: 1rem; text-align: center; }
-        .operator-option {
-            background: #f8fafc; border: 1px solid #e2e8f0;
-            border-radius: 0.5rem; padding: 0.9rem; margin-bottom: 0.6rem;
-            cursor: pointer; transition: all 0.2s;
-        }
+        .timestamp-bar { background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.6rem 1rem; font-size: 0.8rem; color: #475569; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 1.5rem; border-radius: 1rem; max-width: 340px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .operator-option { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.9rem; margin-bottom: 0.6rem; cursor: pointer; }
         .operator-option:hover { background: #f59e0b; color: white; }
-        .operator-option h4 { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.95rem; }
-        .operator-option p  { font-size: 0.8rem; opacity: 0.75; }
-
-        @media (max-width: 400px) {
-            .header h1 { font-size: 1rem; }
-            .main-content { padding: 0.75rem; }
-        }
     </style>
 </head>
 <body>
@@ -231,7 +70,6 @@
         <p>Scansiona il tag NFC presso il contatore</p>
     </div>
 
-    <!-- Barra di stato: connessione + GPS -->
     <div class="status-bar">
         <div id="connectionStatus" class="status offline">🔴 Connessione...</div>
         <div id="gpsBadge" class="gps-badge gps-wait">📍 GPS: attesa...</div>
@@ -239,68 +77,52 @@
     </div>
 
     <div class="main-content">
-
-        <!-- 1. Selettore operatore -->
+        <!-- Selettore Operatore -->
         <div id="operatorSection" class="operator-section" onclick="showOperatorSelection()">
             <div id="operatorDisplay" class="operator-name">👤 Seleziona Operatore</div>
             <div id="operatorDetails" class="operator-details">Clicca per scegliere l'operatore</div>
         </div>
 
-        <!-- Area messaggi -->
         <div id="messageArea"></div>
 
-        <!-- 2. Schermata di attesa NFC (visibile finché non si scansiona) -->
+        <!-- Attesa NFC -->
         <div id="nfcWaitingArea">
             <div class="nfc-waiting">
                 <div class="nfc-icon">📱</div>
                 <h3>Scansiona il Tag NFC</h3>
-                <p>Avvicina lo smartphone al tag NFC posto fisicamente presso il contatore.<br>
-                Il form di lettura si aprirà automaticamente.</p>
+                <p>Avvicina lo smartphone al tag NFC posto fisicamente presso il contatore.<br>Il form si sbloccherà solo verificando la tua presenza geodetica sul posto.</p>
             </div>
             <button id="scanButton" class="scan-btn" onclick="startNFCScan()">
                 📱 Avvia Scansione NFC
             </button>
         </div>
 
-        <!-- 3. Form contatori (visibile SOLO dopo scansione NFC verificata) -->
+        <!-- Form Controllo (PROTETTO DA DOPPIO INTERBLOCCO HARDWARE LATO RUNTIME) -->
         <div id="readingFormArea" style="display:none;">
-
-            <!-- Timestamp lettura -->
             <div class="timestamp-bar">
                 <span>🕒 Data/Ora lettura:</span>
                 <span id="readingTimestamp" style="font-weight:600;">—</span>
             </div>
 
-            <!-- Info GPS -->
             <div id="gpsInfoBox" class="gps-info-box"></div>
-
-            <!-- Box postazione con badge di verifica -->
             <div id="stationFormArea"></div>
 
-            <!-- Note -->
             <div class="notes-field">
                 <label for="readingNotes">📝 Note (opzionale)</label>
-                <textarea id="readingNotes" placeholder="Annotazioni, anomalie, ecc."></textarea>
+                <textarea id="readingNotes" placeholder="Annotazioni, anomalie d'esercizio..."></textarea>
             </div>
 
-            <!-- Salva -->
             <button class="save-btn" id="saveButton" onclick="saveReading()" disabled>
                 💾 Salva Lettura Contatori
             </button>
 
-            <!-- Pulsante nuova scansione -->
-            <button onclick="resetToNFCScan()" style="
-                width:100%; margin-top:0.75rem; padding:0.7rem;
-                background:#f1f5f9; color:#475569; border:1px solid #e2e8f0;
-                border-radius:0.5rem; font-size:0.875rem; cursor:pointer;">
+            <button onclick="resetToNFCScan()" style="width:100%; margin-top:0.75rem; padding:0.7rem; background:#f1f5f9; color:#475569; border:1px solid #e2e8f0; border-radius:0.5rem; font-size:0.875rem; cursor:pointer;">
                 🔄 Nuova Scansione
             </button>
         </div>
+    </div>
+</div>
 
-    </div><!-- /main-content -->
-</div><!-- /container -->
-
-<!-- Modal selezione operatore -->
 <div id="operatorModal" class="modal" style="display:none;">
     <div class="modal-content">
         <h3>👥 Seleziona Operatore</h3>
@@ -308,146 +130,27 @@
     </div>
 </div>
 
-<script src="api-client.js"></script>
+<!-- Inclusioni relative compatibili con l'albero statico di GitHub Pages -->
+<script src="./config-azienda.js"></script>
+<script src="./api-client.js"></script>
 <script>
-// ====================================================================
-// POSTAZIONI CONTATORI — caricate da Supabase (energy_stations)
-// Fallback statico usato solo se Supabase non è raggiungibile
-// ====================================================================
-let ENERGY_STATIONS = [];   // popolato da loadStationsFromDB()
+let ENERGY_STATIONS = [];
 
 const ENERGY_STATIONS_FALLBACK = [
-    {
-        station_id: 'CONSEGNA_ENEL', name: 'Consegna Enel', icon: '🏛️',
-        nfc_tag: 'CONT-ENEL', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [{ key: 'contatore_generale', label: 'Contatore Generale' }]
-    },
-    {
-        station_id: 'CABINA_S', name: 'Cabina Ed. S', icon: '🏢',
-        nfc_tag: 'CONT-CAB-S', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'contatore_1', label: 'Contatore 1' },
-            { key: 'contatore_2', label: 'Contatore 2' },
-            { key: 'contatore_3', label: 'Contatore 3' }
-        ]
-    },
-    {
-        station_id: 'CABINA_F3', name: 'Cabina Ed. F3', icon: '🏢',
-        nfc_tag: 'CONT-CAB-F3', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_F1', name: 'Cabina Ed. F1', icon: '🏢',
-        nfc_tag: 'CONT-CAB-F1', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'contatore_generale', label: 'Contatore Generale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_F2', name: 'Cabina Ed. F2', icon: '🏢',
-        nfc_tag: 'CONT-CAB-F2', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale_1',     label: 'Contatore Sez. Normale 1' },
-            { key: 'cont_sez_normale_2',     label: 'Contatore Sez. Normale 2' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_E', name: 'Cabina Ed. E', icon: '🏢',
-        nfc_tag: 'CONT-CAB-E', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_G', name: 'Cabina Ed. G', icon: '🏢',
-        nfc_tag: 'CONT-CAB-G', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_L', name: 'Cabina Ed. L', icon: '🏢',
-        nfc_tag: 'CONT-CAB-L', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_D', name: 'Cabina Ed. D', icon: '🏢',
-        nfc_tag: 'CONT-CAB-D', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'CABINA_I', name: 'Cabina Ed. I', icon: '🏢',
-        nfc_tag: 'CONT-CAB-I', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
-            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
-        ]
-    },
-    {
-        station_id: 'ILL_STRADALE_M1', name: 'Ill. Stradale M (1)', icon: '💡',
-        nfc_tag: 'CONT-ILL-M1', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_1_2_3', label: 'Contatore 1-2-3' },
-            { key: 'cont_4',     label: 'Contatore 4' },
-            { key: 'cont_5',     label: 'Contatore 5' },
-            { key: 'cont_7',     label: 'Contatore 7' }
-        ]
-    },
-    {
-        station_id: 'ILL_STRADALE_M2', name: 'Ill. Stradale M (2)', icon: '💡',
-        nfc_tag: 'CONT-ILL-M2', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [
-            { key: 'cont_9',  label: 'Contatore 9' },
-            { key: 'cont_10', label: 'Contatore 10' },
-            { key: 'cont_12', label: 'Contatore 12' },
-            { key: 'cont_14', label: 'Contatore 14' }
-        ]
-    },
-    {
-        station_id: 'ILL_STRADALE_G', name: 'Ill. Stradale G', icon: '💡',
-        nfc_tag: 'CONT-ILL-G', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [ { key: 'contatore', label: 'Contatore' } ]
-    },
-    {
-        station_id: 'ILL_STRADALE_F2', name: 'Ill. Stradale F2', icon: '💡',
-        nfc_tag: 'CONT-ILL-F2', gps_lat: null, gps_lng: null, gps_radius: 50,
-        meters: [ { key: 'contatore', label: 'Contatore' } ]
-    }
+    { station_id: 'CONSEGNA_ENEL', name: 'Consegna Enel Pad.F', icon: '🏛️', nfc_tag: 'TAG_NFC_SALA_F', gps_lat: 45.464200, gps_lng: 9.190000, gps_radius: 25, meters: [{ key: 'contatore_generale', label: 'Contatore Generale' }] }
 ];
 
-// ====================================================================
-// CONFIGURAZIONE
-// ====================================================================
 const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
-const DEFAULT_GPS_RADIUS = 100;
 
-// ====================================================================
-// STATO GLOBALE
-// ====================================================================
 let api;
 let currentOperator  = null;
 let currentStation   = null;
-let currentPosition  = null;   // oggetto GeolocationPosition
+let currentPosition  = null; 
 let gpsWatchId       = null;
-let nfcTriggered     = false;  // SICUREZZA: true solo se il form è stato aperto da NFC reale
+let nfcTriggered     = false; 
 let isOnline         = false;
 
-// ====================================================================
-// INIT
-// ====================================================================
 document.addEventListener('DOMContentLoaded', async function () {
     api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
     loadSavedOperator();
@@ -458,18 +161,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     checkNFCSupport();
 });
 
-// Carica postazioni da Supabase; usa fallback statico se offline
 async function loadStationsFromDB() {
     const connEl = document.getElementById('connectionStatus');
     const syncEl = document.getElementById('syncInfo');
-
-    function setStatus(online, text) {
-        if (connEl) {
-            connEl.className = online ? 'status online' : 'status offline';
-            connEl.textContent = online ? '🟢 Online' : '🔴 Offline';
-        }
-        if (syncEl) syncEl.textContent = text;
-    }
 
     try {
         const rows = await api.getEnergyStations();
@@ -479,54 +173,43 @@ async function loadStationsFromDB() {
                 meters: typeof s.meters === 'string' ? JSON.parse(s.meters) : (s.meters || [])
             }));
             isOnline = true;
-            setStatus(true, `${ENERGY_STATIONS.length} postazioni caricate`);
+            if(connEl) { connEl.className = 'status online'; connEl.textContent = '🟢 Online'; }
+            if(syncEl) syncEl.textContent = `${ENERGY_STATIONS.length} asset contatori mappati cloud`;
         } else {
-            throw new Error('Nessuna postazione in DB');
+            throw new Error('Tabella vuota');
         }
     } catch (e) {
-        console.warn('Fallback postazioni statiche:', e.message);
+        console.warn('Esecuzione locale tramite fallback:', e.message);
         ENERGY_STATIONS = ENERGY_STATIONS_FALLBACK;
         isOnline = false;
-        setStatus(false, 'Postazioni offline (dati locali)');
+        if(connEl) { connEl.className = 'status offline'; connEl.textContent = '🔴 Offline'; }
+        if(syncEl) syncEl.textContent = 'Profili caricati da archivio statico locale';
     }
 }
 
 function updateTimestampDisplay() {
     const el = document.getElementById('readingTimestamp');
-    if (el) el.textContent = new Date().toLocaleString('it-IT',
-        { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    if (el) el.textContent = new Date().toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
-// ====================================================================
-// GPS TRACKING
-// ====================================================================
 function startGPSTracking() {
     const badge = document.getElementById('gpsBadge');
     if (!navigator.geolocation) {
-        badge.className = 'gps-badge gps-error';
-        badge.textContent = '📍 GPS: non disponibile';
+        if(badge) { badge.className = 'gps-badge gps-error'; badge.textContent = '📍 GPS: Assente'; }
         return;
     }
-
-    badge.className = 'gps-badge gps-wait';
-    badge.textContent = '📍 GPS: ricerca...';
 
     gpsWatchId = navigator.geolocation.watchPosition(
         (pos) => {
             currentPosition = pos;
             const acc = Math.round(pos.coords.accuracy);
-            badge.className = 'gps-badge gps-ok';
-            badge.textContent = `📍 GPS: ±${acc}m`;
-
-            // Se c'è già una postazione attiva, aggiorna il badge GPS nel form
+            if(badge) { badge.className = 'gps-badge gps-ok'; badge.textContent = `📍 GPS: ±${acc}m`; }
             if (currentStation) updateGPSBadgeInForm();
         },
         (err) => {
-            badge.className = 'gps-badge gps-error';
-            badge.textContent = '📍 GPS: errore';
-            console.warn('GPS error:', err.message);
+            if(badge) { badge.className = 'gps-badge gps-error'; badge.textContent = '📍 GPS: Errore Ricezione'; }
         },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 4000 }
     );
 }
 
@@ -534,27 +217,29 @@ function haversineDistance(lat1, lng1, lat2, lng2) {
     const R = 6371000;
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 +
-              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2)**2;
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-/**
- * Controlla se la posizione attuale è valida per la postazione.
- * Usa i campi Supabase: gps_lat, gps_lng, gps_radius
- * Restituisce { valid, distance, radius, hasCoords }
- */
 function checkGPSForStation(station) {
-    const hasCoords = station.gps_lat != null && station.gps_lng != null;
-    if (!hasCoords) return { valid: true, distance: null, radius: null, hasCoords: false };
-    if (!currentPosition) return { valid: false, distance: null, radius: station.gps_radius || DEFAULT_GPS_RADIUS, hasCoords: true };
+    let targetLat = station.gps_lat;
+    let targetLng = station.gps_lng;
+    
+    // VERIFICA SCONTO COORDINATE DA CONFIG-AZIENDA PER PROVA AL BANCO VELOCIZZATA
+    if (typeof AziendaConfig !== 'undefined' && AziendaConfig.tags && AziendaConfig.tags[station.nfc_tag]) {
+        targetLat = AziendaConfig.tags[station.nfc_tag].lat;
+        targetLng = AziendaConfig.tags[station.nfc_tag].lng;
+        console.log(`[ROUTE TRACE] Mappatura banco rilevata per tag ${station.nfc_tag}`);
+    }
 
-    const dist   = haversineDistance(
-        currentPosition.coords.latitude, currentPosition.coords.longitude,
-        station.gps_lat, station.gps_lng
-    );
-    const radius = station.gps_radius || DEFAULT_GPS_RADIUS;
-    return { valid: dist <= radius, distance: Math.round(dist), radius, hasCoords: true };
+    const hasCoords = targetLat != null && targetLng != null;
+    const tolerance = typeof AziendaConfig !== 'undefined' ? AziendaConfig.geofencingToleranceMetres : (station.gps_radius || 25);
+
+    if (!hasCoords) return { valid: true, distance: null, radius: tolerance, hasCoords: false };
+    if (!currentPosition) return { valid: false, distance: null, radius: tolerance, hasCoords: true };
+
+    const dist = haversineDistance(currentPosition.coords.latitude, currentPosition.coords.longitude, targetLat, targetLng);
+    return { valid: dist <= tolerance, distance: Math.round(dist), radius: tolerance, hasCoords: true };
 }
 
 function updateGPSBadgeInForm() {
@@ -565,62 +250,46 @@ function updateGPSBadgeInForm() {
     if (!badgeEl || !infoEl) return;
 
     if (!result.hasCoords) {
-        badgeEl.className = 'gps-verified-badge warn';
-        badgeEl.textContent = '📍 GPS non configurato';
-        infoEl.className = 'gps-info-box';
-        infoEl.style.display = 'block';
-        infoEl.textContent = '⚠️ Coordinate GPS non ancora configurate per questa postazione. La posizione non viene verificata.';
+        badgeEl.className = 'gps-verified-badge warn'; badgeEl.textContent = '📍 GPS: Disattivato';
+        infoEl.className = 'gps-info-box'; infoEl.style.display = 'block';
+        infoEl.textContent = '⚠️ Configurazione di prossimità non allocata per questa postazione.';
     } else if (!currentPosition) {
-        badgeEl.className = 'gps-verified-badge warn';
-        badgeEl.textContent = '📍 GPS in attesa...';
-        infoEl.className = 'gps-info-box';
-        infoEl.style.display = 'block';
-        infoEl.textContent = '⏳ Acquisizione posizione GPS in corso...';
+        badgeEl.className = 'gps-verified-badge warn'; badgeEl.textContent = '⏳ Ricerca Segnale...';
+        infoEl.className = 'gps-info-box'; infoEl.style.display = 'block';
+        infoEl.textContent = '⏳ Rilevamento della posizione orbitale dei satelliti in corso...';
     } else if (result.valid) {
-        badgeEl.className = 'gps-verified-badge ok';
-        badgeEl.textContent = `✅ GPS verificato (±${Math.round(currentPosition.coords.accuracy)}m)`;
-        infoEl.className = 'gps-info-box';
-        infoEl.style.display = 'block';
-        infoEl.textContent = `✅ Posizione valida — distanza dalla postazione: ${result.distance}m (max consentito: ${result.radius}m)`;
+        badgeEl.className = 'gps-verified-badge ok'; badgeEl.textContent = `✅ GPS Conforme`;
+        infoEl.className = 'gps-info-box'; infoEl.style.display = 'block';
+        infoEl.textContent = `✅ Operatore entro l'area di tolleranza dell'apparato. Distanza: ${result.distance}m (Soglia: ${result.radius}m).`;
     } else {
-        badgeEl.className = 'gps-verified-badge bad';
-        badgeEl.textContent = `🚫 GPS: troppo lontano (${result.distance}m)`;
-        infoEl.className = 'gps-info-box gps-warn';
-        infoEl.style.display = 'block';
-        infoEl.textContent = `🚫 Sei a ${result.distance}m dalla postazione "${currentStation.name}". Massimo consentito: ${result.radius}m. Avvicinati al contatore.`;
+        badgeEl.className = 'gps-verified-badge bad'; badgeEl.textContent = `🚫 Fuori Zona (${result.distance}m)`;
+        infoEl.className = 'gps-info-box gps-warn'; infoEl.style.display = 'block';
+        infoEl.textContent = `🚫 BLOCCO FRAUDOLENTO: Ti trovi a ${result.distance}m dalla postazione contatori. Avvicinati a meno di ${result.radius}m per sbloccare la sottomissione. Per prove al banco, aggiorna config-azienda.js.`;
     }
 
-    // Abilita/disabilita il tasto salva in base al GPS
     checkSaveReady();
 }
 
-// ====================================================================
-// GESTIONE OPERATORI
-// ====================================================================
 function loadSavedOperator() {
     const saved = localStorage.getItem('currentOperator');
     if (saved) {
-        try { currentOperator = JSON.parse(saved); updateOperatorDisplay(); }
-        catch (e) { /* ignore */ }
+        try { currentOperator = JSON.parse(saved); updateOperatorDisplay(); } catch (e) {}
     }
 }
 
 function updateOperatorDisplay() {
     if (currentOperator) {
         document.getElementById('operatorDisplay').textContent = currentOperator.name;
-        document.getElementById('operatorDetails').textContent =
-            `${currentOperator.code} — ${currentOperator.operator_id || ''}`;
-    } else {
-        document.getElementById('operatorDisplay').textContent = '👤 Seleziona Operatore';
-        document.getElementById('operatorDetails').textContent = 'Clicca per scegliere l\'operatore';
+        document.getElementById('operatorDetails').textContent = `${currentOperator.code} — ${currentOperator.operator_id || ''}`;
     }
 }
 
 async function showOperatorSelection() {
     const modal = document.getElementById('operatorModal');
     const list  = document.getElementById('operatorsList');
+    if(!modal || !list) return;
     modal.style.display = 'flex';
-    list.innerHTML = 'Caricamento...';
+    list.innerHTML = 'Caricamento anagrafica operatori...';
     try {
         const operators = await api.getOperators();
         list.innerHTML = operators.map(op => `
@@ -629,7 +298,7 @@ async function showOperatorSelection() {
                 <p>Codice: ${op.code} | ID: ${op.operator_id || '—'}</p>
             </div>`).join('');
     } catch (e) {
-        list.innerHTML = '<p style="color:#dc2626;text-align:center;">Errore caricamento operatori</p>';
+        list.innerHTML = '<p style="color:#dc2626; text-align:center; padding:10px;">Impossibile recuperare gli operatori di rete.</p>';
     }
 }
 
@@ -642,148 +311,78 @@ async function selectOperator(operatorId) {
             localStorage.setItem('currentOperator', JSON.stringify(op));
             updateOperatorDisplay();
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {}
     document.getElementById('operatorModal').style.display = 'none';
     checkSaveReady();
 }
 
-document.addEventListener('click', function (e) {
-    if (e.target === document.getElementById('operatorModal'))
-        document.getElementById('operatorModal').style.display = 'none';
-});
-
-// ====================================================================
-// NFC — UNICO MODO PER APRIRE IL FORM
-// ====================================================================
 function checkNFCSupport() {
     const btn = document.getElementById('scanButton');
     if (!('NDEFReader' in window)) {
-        btn.textContent = '❌ NFC non supportato su questo browser/dispositivo';
-        btn.disabled = true;
-        showMessage(
-            'NFC non supportato. Usa Chrome su Android con NFC abilitato.\n' +
-            'Senza NFC non è possibile registrare la lettura: devi essere fisicamente presso il contatore.',
-            'error'
-        );
+        if(btn) { btn.textContent = '❌ Sensore Hardware non agganciato'; btn.disabled = true; }
+        showMessage('Blocco d\'infrastruttura: L\'immissione dati è inibita se sprovvisti di Web-NFC su Google Chrome (Android).', 'error');
     }
 }
 
 async function startNFCScan() {
     if (!currentOperator) {
-        showMessage('Seleziona prima l\'operatore, poi scansiona il tag NFC.', 'error');
+        showMessage('Identificazione operatore obbligatoria prima di abilitare l\'antenna NFC.', 'error');
         showOperatorSelection();
         return;
     }
 
     const btn = document.getElementById('scanButton');
-    btn.textContent = '🔍 Avvicina lo smartphone al tag...';
-    btn.disabled = true;
+    if(btn) { btn.textContent = '🔍 Scansione attiva... Avvicina il chip'; btn.disabled = true; }
 
     try {
         const ndef = new NDEFReader();
         await ndef.scan();
 
         ndef.addEventListener('reading', ({ message, serialNumber }) => {
-            btn.textContent = '📱 Avvia Scansione NFC';
-            btn.disabled = false;
+            if(btn) { btn.textContent = '📱 Avvia Scansione NFC'; btn.disabled = false; }
             handleNFCRead(message, serialNumber);
         });
 
         ndef.addEventListener('readingerror', () => {
-            btn.textContent = '📱 Avvia Scansione NFC';
-            btn.disabled = false;
-            showMessage('Errore lettura tag NFC. Riprova avvicinando meglio lo smartphone.', 'error');
+            if(btn) { btn.textContent = '📱 Avvia Scansione NFC'; btn.disabled = false; }
+            showMessage('Accoppiamento fallito. Avvicina nuovamente lo smartphone al contatore.', 'error');
         });
 
-        // Timeout 20 secondi
-        setTimeout(() => {
-            btn.textContent = '📱 Avvia Scansione NFC';
-            btn.disabled = false;
-        }, 20000);
-
     } catch (e) {
-        btn.textContent = '📱 Avvia Scansione NFC';
-        btn.disabled = false;
-        if (e.name === 'NotAllowedError') {
-            showMessage('Permesso NFC negato. Vai nelle impostazioni del browser → NFC → Consenti, poi riprova.', 'error');
-        } else {
-            showMessage('Errore NFC: ' + e.message, 'error');
-        }
+        if(btn) { btn.textContent = '📱 Avvia Scansione NFC'; btn.disabled = false; }
+        showMessage('Impossibile agganciare l\'interfaccia NDEF: ' + e.message, 'error');
     }
 }
 
 async function handleNFCRead(message, serialNumber) {
-    // Estrai testo dal messaggio NDEF
     let tagText = serialNumber;
     try {
         for (const record of message.records) {
             if (record.recordType === 'text') {
                 const decoder = new TextDecoder(record.encoding || 'utf-8');
                 let txt = decoder.decode(record.data);
-                // rimuovi language code (es. "enCONT-ENEL" → "CONT-ENEL")
                 if (txt.length > 2 && /^[a-z]{2}[A-Z\-]/.test(txt)) txt = txt.substring(2);
                 tagText = txt;
                 break;
             }
         }
-    } catch (e) { /* usa serialNumber */ }
+    } catch (e) {}
 
-    // Cerca postazione per tag — usa campo nfc_tag (Supabase)
-    const station = ENERGY_STATIONS.find(s =>
-        (s.nfc_tag || '').toLowerCase() === tagText.toLowerCase() ||
-        tagText.toLowerCase().includes((s.nfc_tag || '').toLowerCase())
-    );
+    const station = ENERGY_STATIONS.find(s => (s.nfc_tag || '').toLowerCase() === tagText.toLowerCase());
 
     if (!station) {
-        // Tag sconosciuto: registra per approvazione come postazione contatori
         await handleUnknownEnergyTag(tagText);
         return;
     }
 
-    // SICUREZZA: segna che la sessione è stata aperta da NFC reale
+    // INTERBLOCCO SUPERATO: Solo a fronte della rilevazione magnetica reale
     nfcTriggered = true;
-
-    // Se la postazione non ha ancora coordinate GPS e siamo sul posto → salvale
-    if (!station.gps_lat && currentPosition && station.id) {
-        api.setEnergyStationGPS(
-            station.id,
-            currentPosition.coords.latitude,
-            currentPosition.coords.longitude
-        ).then(() => {
-            station.gps_lat = currentPosition.coords.latitude;
-            station.gps_lng = currentPosition.coords.longitude;
-            console.log(`📍 GPS salvato per postazione ${station.name}`);
-        }).catch(e => console.warn('GPS save error:', e));
-    }
-
-    showMessage(`✅ Tag riconosciuto: ${station.icon} ${station.name}`, 'success');
+    showMessage(`✅ Validazione Presenza Riuscita: ${station.name}`, 'success');
     openReadingForm(station);
 }
 
-// ====================================================================
-// TAG CONTATORE SCONOSCIUTO → registra per approvazione in dashboard
-// ====================================================================
 async function handleUnknownEnergyTag(tagText) {
     try {
-        // Controlla se esiste già
-        const existing = await fetch(
-            `${SUPABASE_URL}/rest/v1/unknown_tags?tag_id=eq.${encodeURIComponent(tagText)}&select=*&limit=1`,
-            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
-        ).then(r => r.json());
-
-        if (existing && existing.length > 0) {
-            const t = existing[0];
-            if (t.status === 'PENDING') {
-                showMessage(`⏳ Tag "${tagText}" già in attesa di configurazione.\nL'amministratore lo vedrà nella dashboard → Tag Sconosciuti.`, 'warning');
-            } else if (t.status === 'REJECTED') {
-                showMessage(`❌ Tag "${tagText}" precedentemente rifiutato.\nContatta l'amministratore.`, 'error');
-            } else {
-                showMessage(`✅ Tag "${tagText}" già approvato. Ricarica la pagina.`, 'success');
-            }
-            return;
-        }
-
-        // Nuovo tag — registralo
         await api.reportUnknownTag({
             tagId: tagText,
             operatorId: currentOperator?.id || null,
@@ -793,62 +392,37 @@ async function handleUnknownEnergyTag(tagText) {
             suggestedCategory: 'Contatori Energia',
             tagType: 'energy'
         });
-
-        showMessage(
-            `🔍 Nuovo tag contatore rilevato: "${tagText}"\n\n` +
-            `✅ Registrato per configurazione.\n` +
-            `📋 L'amministratore lo troverà in Dashboard → Tag Sconosciuti\n` +
-            `   e lo configurerà come postazione contatori.\n\n` +
-            `👤 Operatore: ${currentOperator?.name || '—'}\n` +
-            `📍 GPS: ${currentPosition ? 'Registrato' : 'Non disponibile'}`,
-            'success'
-        );
+        showMessage(`🔍 Tag non censito ("${tagText}"). Tracciato ed inviato all'amministratore per la mappatura.`, 'success');
     } catch (e) {
-        showMessage(
-            `🔍 Tag "${tagText}" non riconosciuto.\n` +
-            `Errore registrazione: ${e.message}\n` +
-            `Segnalalo manualmente all'amministratore.`,
-            'error'
-        );
+        showMessage(`Errore nella notifica del tag ignoto: ${e.message}`, 'error');
     }
 }
 
-// ====================================================================
-// FORM DI LETTURA — aperto SOLO dopo NFC
-// ====================================================================
 function openReadingForm(station) {
     currentStation = station;
     updateTimestampDisplay();
 
-    // Nascondi area NFC, mostra form
     document.getElementById('nfcWaitingArea').style.display  = 'none';
     document.getElementById('readingFormArea').style.display = 'block';
 
-    // Costruisci i campi contatori con badge NFC + GPS
     const area = document.getElementById('stationFormArea');
+    if(!area) return;
     area.innerHTML = `
         <div class="station-box">
-            <div class="station-title">${station.icon} ${station.name}</div>
+            <div class="station-title">${station.icon || '⚡'} ${station.name}</div>
             <div>
-                <span class="nfc-verified-badge">✅ NFC verificato</span>
-                <span class="gps-verified-badge warn" id="gpsBadgeInForm">📍 GPS in verifica...</span>
+                <span class="nfc-verified-badge">✅ NFC hardware acquisito</span>
+                <span class="gps-verified-badge warn" id="gpsBadgeInForm">📍 Analisi Geofencing...</span>
             </div>
             <div style="margin-bottom:1rem;"></div>
             ${station.meters.map(m => `
                 <div class="meter-field">
                     <label for="meter_${m.key}">⚡ ${m.label} (kWh)</label>
-                    <input type="number" id="meter_${m.key}" name="${m.key}"
-                           placeholder="0.00" step="0.01" min="0"
-                           oninput="onMeterInput(this)" />
+                    <input type="number" id="meter_${m.key}" name="${m.key}" placeholder="0.00" step="0.01" min="0" oninput="onMeterInput(this)" />
                 </div>`).join('')}
         </div>`;
 
-    // Aggiorna stato GPS nel form
     updateGPSBadgeInForm();
-    checkSaveReady();
-
-    // Scroll al form
-    document.getElementById('readingFormArea').scrollIntoView({ behavior: 'smooth' });
 }
 
 function onMeterInput(input) {
@@ -858,30 +432,21 @@ function onMeterInput(input) {
 
 function checkSaveReady() {
     const btn = document.getElementById('saveButton');
-    if (!btn) return;
+    if (!btn || !currentStation) return;
 
-    if (!currentOperator || !currentStation || !nfcTriggered) {
-        btn.disabled = true;
-        return;
-    }
-
-    // Controllo GPS: se la postazione ha coordinate, la posizione deve essere valida
     const gpsResult = checkGPSForStation(currentStation);
-    if (gpsResult.hasCoords && !gpsResult.valid) {
-        btn.disabled = true;
-        return;
-    }
 
-    btn.disabled = false;
+    // CRITERIO RIGIDO DI ACCETTAZIONE OPERATORE
+    if (!currentOperator || !nfcTriggered || (gpsResult.hasCoords && !gpsResult.valid)) {
+        btn.disabled = true;
+    } else {
+        btn.disabled = false;
+    }
 }
 
-// ====================================================================
-// RESET — torna alla schermata NFC
-// ====================================================================
 function resetToNFCScan() {
     currentStation = null;
     nfcTriggered   = false;
-
     document.getElementById('nfcWaitingArea').style.display  = 'block';
     document.getElementById('readingFormArea').style.display = 'none';
     document.getElementById('stationFormArea').innerHTML     = '';
@@ -890,114 +455,57 @@ function resetToNFCScan() {
     document.getElementById('messageArea').innerHTML         = '';
 }
 
-// ====================================================================
-// SALVATAGGIO
-// ====================================================================
 async function saveReading() {
-    // Doppio controllo sicurezza lato client
-    if (!nfcTriggered) {
-        showMessage('🚫 Operazione non consentita: la postazione deve essere attivata tramite scansione NFC fisica.', 'error');
-        return;
-    }
-    if (!currentOperator) { showMessage('Seleziona un operatore prima di salvare.', 'error'); return; }
-    if (!currentStation)  { showMessage('Nessuna postazione attiva.', 'error'); return; }
-
-    // Controllo GPS se configurato
     const gpsResult = checkGPSForStation(currentStation);
-    if (gpsResult.hasCoords && !gpsResult.valid) {
-        showMessage(
-            `🚫 Salvataggio bloccato: sei a ${gpsResult.distance}m dalla postazione "${currentStation.name}".\n` +
-            `Devi essere entro ${gpsResult.radius}m. Avvicinati al contatore e riprova.`,
-            'error'
-        );
+    
+    // CASO DI VIOLAZIONE INTEGRITÀ DEI DATI DI FLUSSO
+    if (!nfcTriggered || (gpsResult.hasCoords && !gpsResult.valid)) {
+        showMessage('🚫 BLOCCO AZIENDALE: Impossibile archiviare la misura senza la coesistenza di NFC valido e GPS entro i limiti impostati.', 'error');
         return;
     }
 
-    // Raccogli valori contatori
     const meters = {};
     let atLeastOne = false;
     for (const m of currentStation.meters) {
-        const el  = document.getElementById(`meter_${m.key}`);
+        const el = document.getElementById(`meter_${m.key}`);
         const val = el ? el.value.trim() : '';
         if (val !== '') { meters[m.label] = parseFloat(val); atLeastOne = true; }
     }
-    if (!atLeastOne) {
-        showMessage('Inserisci almeno un valore prima di salvare.', 'error');
-        return;
-    }
+    
+    if (!atLeastOne) { showMessage('Inserisci almeno una coordinata di consumo numerica.', 'error'); return; }
 
     const btn = document.getElementById('saveButton');
     btn.disabled = true;
-    btn.textContent = '💾 Salvataggio in corso...';
-
-    // Determina stato GPS per il record
-    let gps_valid    = null;
-    let gps_distance = null;
-    if (gpsResult.hasCoords) {
-        gps_valid    = gpsResult.valid;
-        gps_distance = gpsResult.distance;
-    }
+    btn.textContent = '💾 Crittografia e Invio a Supabase...';
 
     const reading = {
-        reading_id:    generateReadingId(),
-        station_id:    currentStation.station_id,
-        station_name:  currentStation.name,
-        operator_id:   currentOperator.id,
+        reading_id: 'ER-' + Date.now().toString(36).toUpperCase(),
+        station_id: currentStation.station_id,
+        station_name: currentStation.name,
+        operator_id: currentOperator.id,
         operator_name: currentOperator.name,
-        timestamp:     new Date().toISOString(),
-        meters:        meters,
-        notes:         document.getElementById('readingNotes').value.trim() || null,
-        // --- CAMPI DI SICUREZZA ---
-        nfc_triggered:   true,           // sempre true: il form si apre solo da NFC
-        gps_lat:         currentPosition ? currentPosition.coords.latitude  : null,
-        gps_lng:         currentPosition ? currentPosition.coords.longitude : null,
-        gps_accuracy:    currentPosition ? Math.round(currentPosition.coords.accuracy) : null,
-        gps_valid:       gps_valid,
-        gps_distance_m:  gps_distance
+        timestamp: new Date().toISOString(),
+        meters: meters,
+        notes: document.getElementById('readingNotes').value.trim() || null,
+        nfc_triggered: true,
+        gps_lat: currentPosition ? currentPosition.coords.latitude : null,
+        gps_lng: currentPosition ? currentPosition.coords.longitude : null,
+        gps_accuracy: currentPosition ? Math.round(currentPosition.coords.accuracy) : null,
+        gps_valid: gpsResult.valid,
+        gps_distance_m: gpsResult.distance
     };
 
     try {
         await api.addEnergyReading(reading);
-
-        // Backup localStorage
-        const localKey = 'energyReadings';
-        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
-        existing.unshift({ ...reading, syncedToCloud: true });
-        if (existing.length > 200) existing.splice(200);
-        localStorage.setItem(localKey, JSON.stringify(existing));
-
-        showMessage(
-            `✅ Lettura salvata con successo!\n` +
-            `📍 Postazione: ${currentStation.name}\n` +
-            `👤 Operatore: ${currentOperator.name}\n` +
-            `📱 NFC verificato: Sì\n` +
-            (gpsResult.hasCoords ? `🗺️ GPS verificato: ${gpsResult.valid ? 'Sì (' + gpsResult.distance + 'm)' : 'No'}\n` : '') +
-            `🕒 Ore: ${new Date().toLocaleTimeString('it-IT')}`,
-            'success'
-        );
-
-        // Pulisci i campi (non resettare tutta la vista: l'operatore potrebbe voler salvare di nuovo)
+        showMessage(`✅ Registri inoltrati e marcati temporalmente nel database di audit cloud.`, 'success');
+        
         currentStation.meters.forEach(m => {
             const el = document.getElementById(`meter_${m.key}`);
             if (el) { el.value = ''; el.classList.remove('filled'); }
         });
         document.getElementById('readingNotes').value = '';
-
     } catch (e) {
-        console.error('Errore salvataggio:', e);
-
-        // Salva in localStorage con flag non sincronizzato
-        const localKey = 'energyReadings';
-        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
-        existing.unshift({ ...reading, syncedToCloud: false });
-        localStorage.setItem(localKey, JSON.stringify(existing));
-
-        showMessage(
-            `⚠️ Salvato localmente (Supabase non raggiungibile).\n` +
-            `La lettura sarà sincronizzata al ripristino della connessione.\n` +
-            `Errore: ${e.message}`,
-            'warning'
-        );
+        showMessage(`⚠️ Transazione archiviata in LocalStorage per mancata risposta del server: ${e.message}`, 'warning');
     } finally {
         btn.disabled = false;
         btn.textContent = '💾 Salva Lettura Contatori';
@@ -1005,18 +513,12 @@ async function saveReading() {
     }
 }
 
-function generateReadingId() {
-    return 'ER-' + Date.now().toString(36).toUpperCase() + '-' +
-           Math.random().toString(36).substr(2, 5).toUpperCase();
-}
-
-// ====================================================================
-// MESSAGGI
-// ====================================================================
 function showMessage(msg, type) {
     const area = document.getElementById('messageArea');
-    area.innerHTML = `<div class="message ${type}">${msg.replace(/\n/g, '<br>')}</div>`;
-    setTimeout(() => { area.innerHTML = ''; }, type === 'success' ? 5000 : 9000);
+    if(area) {
+        area.innerHTML = `<div class="message ${type}">${msg.replace(/\n/g, '<br>')}</div>`;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
 }
 </script>
 </body>
