@@ -669,6 +669,9 @@
                             <button onclick="generateProfessionalShiftRegister()" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,73,94,0.3); transition: all 0.3s;">
                                 🕐 Registro per Turni
                             </button>
+                            <button onclick="generateEnergyConsumptionRegister()" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(245,158,11,0.3); transition: all 0.3s;">
+                                ⚡ Registro Consumi Elettrici
+                            </button>
                         </div>
                         
                         <div style="background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 8px; padding: 1rem; margin-top: 1rem;">
@@ -1876,6 +1879,188 @@
             `;
         }
         
+        // ===== REGISTRO CONSUMI ELETTRICI MENSILE =====
+
+        async function generateEnergyConsumptionRegister() {
+            try {
+                const filters = getRegistryFilters();
+                const startDate = filters.startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+                const endDate   = filters.endDate   || new Date().toISOString().split('T')[0];
+
+                // Carica letture da Supabase
+                let readings = [];
+                try {
+                    readings = await api.getEnergyReadings({
+                        startDate: startDate + 'T00:00:00',
+                        endDate:   endDate   + 'T23:59:59'
+                    });
+                } catch (e) {
+                    console.warn('Supabase non raggiungibile, provo localStorage:', e);
+                }
+
+                // Fallback: localStorage
+                if (!readings || readings.length === 0) {
+                    const local = JSON.parse(localStorage.getItem('energyReadings') || '[]');
+                    readings = local.filter(r => {
+                        const d = r.timestamp ? r.timestamp.split('T')[0] : '';
+                        return d >= startDate && d <= endDate;
+                    });
+                }
+
+                const companyName        = document.getElementById('displayCompanyName')?.textContent        || 'AZIENDA S.R.L.';
+                const technicalManager   = document.getElementById('displayTechnicalManager')?.textContent   || 'Responsabile Tecnico';
+                const maintenanceManager = document.getElementById('displayMaintenanceManager')?.textContent || 'Resp. Manutenzione';
+                const address            = document.getElementById('displayAddress')?.textContent            || '';
+                const phone              = document.getElementById('displayPhone')?.textContent              || '';
+                const email              = document.getElementById('displayEmail')?.textContent              || '';
+
+                let logoData = null;
+                try { const cfg = await api.getCompanyConfig(); logoData = cfg?.logo_data; } catch(e) {}
+
+                const logoSection = logoData
+                    ? `<img src="${logoData}" alt="Logo" style="max-height:80px;max-width:240px;object-fit:contain;">`
+                    : `<div style="display:inline-block;padding:10px 20px;background:#f59e0b;color:white;border-radius:6px;font-weight:bold;font-size:14px;">${companyName}</div>`;
+
+                // Raggruppa letture per data e postazione
+                // Struttura: { 'YYYY-MM-DD': { 'CABINA_S': { reading, ... }, ... } }
+                const byDate = {};
+                readings.forEach(r => {
+                    const day = (r.timestamp || '').split('T')[0];
+                    if (!day) return;
+                    if (!byDate[day]) byDate[day] = {};
+                    byDate[day][r.station_id] = r;
+                });
+                const sortedDates = Object.keys(byDate).sort();
+
+                // Lista tutte le postazioni che compaiono nelle letture
+                const stationIds = [...new Set(readings.map(r => r.station_id))];
+
+                // Costruisci tabella per ogni postazione
+                let stationsTables = '';
+                if (stationIds.length === 0) {
+                    stationsTables = `<p style="text-align:center;color:#666;padding:2rem;">
+                        Nessuna lettura trovata per il periodo selezionato.</p>`;
+                } else {
+                    stationIds.forEach(sid => {
+                        const stReadings = readings.filter(r => r.station_id === sid)
+                            .sort((a,b) => (a.timestamp||'').localeCompare(b.timestamp||''));
+                        if (stReadings.length === 0) return;
+                        const stName = stReadings[0].station_name || sid;
+
+                        // Raccogli tutte le chiavi contatori per questa postazione
+                        const meterLabels = [];
+                        stReadings.forEach(r => {
+                            if (r.meters && typeof r.meters === 'object') {
+                                Object.keys(r.meters).forEach(lbl => {
+                                    if (!meterLabels.includes(lbl)) meterLabels.push(lbl);
+                                });
+                            }
+                        });
+
+                        const headerCols = meterLabels.map(lbl => `<th>${lbl} (kWh)</th>`).join('');
+                        const rows = stReadings.map(r => {
+                            const metersObj = (typeof r.meters === 'string') ? JSON.parse(r.meters) : (r.meters || {});
+                            const cols = meterLabels.map(lbl => {
+                                const v = metersObj[lbl];
+                                return `<td style="text-align:right;">${v != null ? Number(v).toLocaleString('it-IT', {minimumFractionDigits:0, maximumFractionDigits:2}) : '—'}</td>`;
+                            }).join('');
+                            return `<tr>
+                                <td>${new Date(r.timestamp).toLocaleDateString('it-IT')}</td>
+                                <td>${new Date(r.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</td>
+                                <td>${r.operator_name || '—'}</td>
+                                ${cols}
+                                <td style="font-size:11px;color:#666;">${r.notes || ''}</td>
+                            </tr>`;
+                        }).join('');
+
+                        stationsTables += `
+                            <h3 style="margin:2rem 0 0.5rem;color:#b45309;font-size:15px;border-left:4px solid #f59e0b;padding-left:8px;">
+                                ${stName}
+                            </h3>
+                            <table style="width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:12px;">
+                                <thead>
+                                    <tr style="background:#f59e0b;color:white;">
+                                        <th>Data</th><th>Ora</th><th>Operatore</th>
+                                        ${headerCols}
+                                        <th>Note</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>`;
+                    });
+                }
+
+                const html = `<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<title>Registro Consumi Elettrici</title>
+<style>
+    @page { margin: 1.8cm; }
+    body { font-family: Arial, sans-serif; color: #333; font-size: 13px; margin: 0; }
+    h1 { color: #b45309; font-size: 22px; margin: 0 0 4px; text-transform: uppercase; }
+    table { border-collapse: collapse; }
+    table th, table td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+    table th { font-weight: bold; }
+    table tr:nth-child(even) { background: #fffbeb; }
+    .no-print { margin: 16px 0; }
+    .print-btn { background: #f59e0b; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-right: 8px; }
+    .print-btn:hover { opacity: 0.85; }
+    @media print { .no-print { display: none !important; } }
+    .sig-box { text-align: center; border-top: 1px solid #333; padding-top: 6px; font-size: 12px; }
+</style>
+</head>
+<body>
+<div style="text-align:center;margin-bottom:20px;">${logoSection}</div>
+<div style="text-align:center;border-bottom:3px solid #f59e0b;padding-bottom:16px;margin-bottom:20px;">
+    <h1>⚡ REGISTRO CONSUMI ELETTRICI</h1>
+    <p style="color:#666;margin:4px 0;">Letture periodiche contatori di energia</p>
+    <p style="margin:4px 0;"><strong>Periodo:</strong>
+        ${new Date(startDate).toLocaleDateString('it-IT')} — ${new Date(endDate).toLocaleDateString('it-IT')}
+    </p>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:14px;margin-bottom:20px;">
+    <div>
+        <strong>🏢 Azienda:</strong> ${companyName}<br>
+        <strong>📍 Indirizzo:</strong> ${address}<br>
+        <strong>📞 Telefono:</strong> ${phone}
+    </div>
+    <div>
+        <strong>👷 Resp. Tecnico:</strong> ${technicalManager}<br>
+        <strong>🔧 Resp. Manutenzione:</strong> ${maintenanceManager}<br>
+        <strong>📧 Email:</strong> ${email}
+    </div>
+</div>
+<div class="no-print" style="text-align:center;">
+    <button class="print-btn" onclick="window.print()">🖨️ Stampa Registro</button>
+    <button class="print-btn" onclick="window.print()" style="background:#10b981;">📄 Salva PDF</button>
+    <button class="print-btn" onclick="window.close()" style="background:#6b7280;">❌ Chiudi</button>
+</div>
+<div style="background:#fef3c7;border:1px solid #fde68a;border-radius:6px;padding:10px 14px;margin-bottom:16px;font-size:12px;">
+    <strong>📊 Riepilogo:</strong> ${readings.length} letture | ${stationIds.length} postazioni |
+    Generato il ${new Date().toLocaleString('it-IT')}
+</div>
+${stationsTables}
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:30px;margin-top:40px;">
+    <div class="sig-box"><strong>Responsabile Tecnico</strong><br>${technicalManager}</div>
+    <div class="sig-box"><strong>Resp. Manutenzione</strong><br>${maintenanceManager}</div>
+    <div class="sig-box"><strong>Data e Timbro</strong><br>${new Date().toLocaleDateString('it-IT')}</div>
+</div>
+<div style="margin-top:30px;border-top:1px solid #eee;padding-top:10px;text-align:center;font-size:10px;color:#999;">
+    ${companyName} — ${address} — Documento generato automaticamente dal Sistema Controlli Industriali
+</div>
+</body></html>`;
+
+                showReportPreview(html);
+
+            } catch (e) {
+                console.error('Errore generazione registro consumi:', e);
+                alert('Errore generazione registro consumi: ' + e.message);
+            }
+        }
+
+        // ===== FINE REGISTRO CONSUMI ELETTRICI =====
+
         function showReportPreview(html) {
             const newWindow = window.open('', '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
             if (newWindow) {

@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>⚡ Lettura Contatori Energia</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#f59e0b">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: white;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+        }
+        .header h1 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.25rem; }
+        .header p  { font-size: 0.8rem; opacity: 0.9; }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background: #fefce8;
+            border-bottom: 1px solid #fde68a;
+            font-size: 0.8rem;
+        }
+
+        .status { padding: 0.3rem 0.75rem; border-radius: 1rem; font-weight: 600; font-size: 0.75rem; }
+        .status.online  { background: #dcfce7; color: #166534; }
+        .status.offline { background: #fef3c7; color: #92400e; }
+
+        .main-content { padding: 1rem; }
+
+        /* Operator selector */
+        .operator-section {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 0.75rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .operator-section:hover { background: #fef9c3; }
+        .operator-name { font-size: 1rem; font-weight: 600; color: #1e293b; }
+        .operator-details { font-size: 0.8rem; color: #64748b; margin-top: 0.2rem; }
+
+        /* Station selector */
+        .station-selector {
+            margin-bottom: 1.25rem;
+        }
+        .station-selector label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #374151;
+            margin-bottom: 0.4rem;
+        }
+        .station-selector select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 2px solid #fde68a;
+            border-radius: 0.5rem;
+            font-size: 0.95rem;
+            background: white;
+            color: #1e293b;
+            appearance: none;
+            cursor: pointer;
+        }
+        .station-selector select:focus { outline: none; border-color: #f59e0b; }
+
+        /* Cabina/stazione box */
+        .station-box {
+            background: #fffbeb;
+            border: 2px solid #fde68a;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1.25rem;
+            display: none;
+        }
+        .station-box.visible { display: block; }
+        .station-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #b45309;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Meter field */
+        .meter-field { margin-bottom: 0.9rem; }
+        .meter-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.3rem;
+        }
+        .meter-field input[type="number"] {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .meter-field input[type="number"]:focus {
+            outline: none;
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+        .meter-field input[type="number"].filled { border-color: #10b981; background: #f0fdf4; }
+
+        /* Notes */
+        .notes-field { margin-bottom: 1rem; }
+        .notes-field label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.3rem;
+        }
+        .notes-field textarea {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+        .notes-field textarea:focus { outline: none; border-color: #f59e0b; }
+
+        /* Save button */
+        .save-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+            margin-top: 0.5rem;
+        }
+        .save-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(245,158,11,0.5); }
+        .save-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* Messages */
+        .message { padding: 0.85rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; }
+        .message.error   { background: #fef2f2; border: 1px solid #fecaca; color: #dc2626; }
+        .message.success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+
+        /* Scan section */
+        .scan-section { text-align: center; margin-bottom: 1.25rem; }
+        .scan-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(59,130,246,0.35);
+            margin-bottom: 0.5rem;
+        }
+        .scan-btn:hover:not(:disabled) { transform: translateY(-1px); }
+        .scan-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* Modal */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 1rem;
+            max-width: 340px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal h3 { margin-bottom: 1rem; text-align: center; }
+        .operator-option {
+            background: #f8fafc; border: 1px solid #e2e8f0;
+            border-radius: 0.5rem; padding: 0.9rem; margin-bottom: 0.6rem;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .operator-option:hover { background: #f59e0b; color: white; }
+        .operator-option h4 { font-weight: 600; margin-bottom: 0.2rem; font-size: 0.95rem; }
+        .operator-option p  { font-size: 0.8rem; opacity: 0.75; }
+
+        /* Timestamp bar */
+        .timestamp-bar {
+            background: #f1f5f9; border: 1px solid #e2e8f0;
+            border-radius: 0.5rem; padding: 0.6rem 1rem;
+            font-size: 0.8rem; color: #475569;
+            margin-bottom: 1rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        @media (max-width: 400px) {
+            .header h1 { font-size: 1rem; }
+            .main-content { padding: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>⚡ Lettura Contatori Energia</h1>
+        <p>Registrazione consumi elettrici mensili</p>
+    </div>
+
+    <div class="status-bar">
+        <div id="connectionStatus" class="status offline">🔴 Connessione...</div>
+        <div id="syncInfo" style="font-size:0.75rem; color:#64748b;">Inizializzazione...</div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- Selettore operatore -->
+        <div id="operatorSection" class="operator-section" onclick="showOperatorSelection()">
+            <div id="operatorDisplay" class="operator-name">👤 Seleziona Operatore</div>
+            <div id="operatorDetails" class="operator-details">Clicca per scegliere l'operatore</div>
+        </div>
+
+        <!-- Messaggi -->
+        <div id="messageArea"></div>
+
+        <!-- Scansione NFC -->
+        <div class="scan-section">
+            <button id="scanButton" class="scan-btn" onclick="startNFCScan()">
+                📱 Scansiona Tag NFC Contatori
+            </button>
+        </div>
+
+        <!-- Timestamp lettura -->
+        <div class="timestamp-bar">
+            <span>🕒 Data/Ora lettura:</span>
+            <span id="readingTimestamp" style="font-weight:600;">—</span>
+        </div>
+
+        <!-- Selettore postazione (usato in modalità manuale o dopo NFC) -->
+        <div class="station-selector" id="stationSelectorWrap">
+            <label for="stationSelect">📍 Postazione / Cabina</label>
+            <select id="stationSelect" onchange="showStationForm()">
+                <option value="">— Scegli postazione —</option>
+            </select>
+        </div>
+
+        <!-- Form dinamico per la postazione selezionata -->
+        <div id="stationFormArea"></div>
+
+        <!-- Note -->
+        <div class="notes-field" id="notesWrap" style="display:none;">
+            <label for="readingNotes">📝 Note (opzionale)</label>
+            <textarea id="readingNotes" placeholder="Annotazioni, anomalie, ecc."></textarea>
+        </div>
+
+        <!-- Salva -->
+        <button class="save-btn" id="saveButton" onclick="saveReading()" style="display:none;" disabled>
+            💾 Salva Lettura Contatori
+        </button>
+
+    </div><!-- /main-content -->
+</div><!-- /container -->
+
+<!-- Modal selezione operatore -->
+<div id="operatorModal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>👥 Seleziona Operatore</h3>
+        <div id="operatorsList">Caricamento...</div>
+    </div>
+</div>
+
+<script src="api-client.js"></script>
+<script>
+// ====================================================================
+// CONFIGURAZIONE POSTAZIONI CONTATORI
+// Ogni postazione ha un array di contatori.
+// station_id deve coincidere con il testo scritto sul tag NFC (o part di esso).
+// ====================================================================
+const ENERGY_STATIONS = [
+    {
+        id: 'CONSEGNA_ENEL',
+        name: 'Consegna Enel',
+        icon: '🏛️',
+        // tag NFC che attiva questa postazione (testo scritto sul tag)
+        nfcTag: 'CONT-ENEL',
+        meters: [
+            { key: 'contatore_generale', label: 'Contatore Generale' }
+        ]
+    },
+    {
+        id: 'CABINA_S',
+        name: 'Cabina Ed. S',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-S',
+        meters: [
+            { key: 'contatore_1', label: 'Contatore 1' },
+            { key: 'contatore_2', label: 'Contatore 2' },
+            { key: 'contatore_3', label: 'Contatore 3' }
+        ]
+    },
+    {
+        id: 'CABINA_F3',
+        name: 'Cabina Ed. F3',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-F3',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_F1',
+        name: 'Cabina Ed. F1',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-F1',
+        meters: [
+            { key: 'contatore_generale', label: 'Contatore Generale' }
+        ]
+    },
+    {
+        id: 'CABINA_F2',
+        name: 'Cabina Ed. F2',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-F2',
+        meters: [
+            { key: 'cont_sez_normale_1',     label: 'Contatore Sez. Normale 1' },
+            { key: 'cont_sez_normale_2',     label: 'Contatore Sez. Normale 2' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_E',
+        name: 'Cabina Ed. E',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-E',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_G',
+        name: 'Cabina Ed. G',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-G',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_L',
+        name: 'Cabina Ed. L',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-L',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_D',
+        name: 'Cabina Ed. D',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-D',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'CABINA_I',
+        name: 'Cabina Ed. I',
+        icon: '🏢',
+        nfcTag: 'CONT-CAB-I',
+        meters: [
+            { key: 'cont_sez_normale',       label: 'Contatore Sez. Normale' },
+            { key: 'cont_sez_preferenziale', label: 'Contatore Sez. Preferenziale' }
+        ]
+    },
+    {
+        id: 'ILL_STRADALE_M1',
+        name: 'Ill. Stradale M (1)',
+        icon: '💡',
+        nfcTag: 'CONT-ILL-M1',
+        meters: [
+            { key: 'cont_1_2_3', label: 'Contatore 1-2-3' },
+            { key: 'cont_4',     label: 'Contatore 4' },
+            { key: 'cont_5',     label: 'Contatore 5' },
+            { key: 'cont_7',     label: 'Contatore 7' }
+        ]
+    },
+    {
+        id: 'ILL_STRADALE_M2',
+        name: 'Ill. Stradale M (2)',
+        icon: '💡',
+        nfcTag: 'CONT-ILL-M2',
+        meters: [
+            { key: 'cont_9',  label: 'Contatore 9' },
+            { key: 'cont_10', label: 'Contatore 10' },
+            { key: 'cont_12', label: 'Contatore 12' },
+            { key: 'cont_14', label: 'Contatore 14' }
+        ]
+    },
+    {
+        id: 'ILL_STRADALE_G',
+        name: 'Ill. Stradale G',
+        icon: '💡',
+        nfcTag: 'CONT-ILL-G',
+        meters: [
+            { key: 'contatore', label: 'Contatore' }
+        ]
+    },
+    {
+        id: 'ILL_STRADALE_F2',
+        name: 'Ill. Stradale F2',
+        icon: '💡',
+        nfcTag: 'CONT-ILL-F2',
+        meters: [
+            { key: 'contatore', label: 'Contatore' }
+        ]
+    }
+];
+
+// ====================================================================
+// CONFIGURAZIONE SUPABASE
+// ====================================================================
+const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
+
+// ====================================================================
+// STATO GLOBALE
+// ====================================================================
+let api;
+let currentOperator = null;
+let currentStation  = null;  // oggetto ENERGY_STATIONS
+let readingTimestamp = null;
+let isOnline = false;
+
+// ====================================================================
+// INIT
+// ====================================================================
+document.addEventListener('DOMContentLoaded', function () {
+    api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+    loadSavedOperator();
+    populateStationSelect();
+    updateTimestamp();
+    setInterval(updateTimestamp, 30000); // aggiorna ogni 30s
+    testConnection();
+    checkNFCSupport();
+});
+
+function updateTimestamp() {
+    readingTimestamp = new Date().toISOString();
+    document.getElementById('readingTimestamp').textContent =
+        new Date().toLocaleString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric',
+                                             hour:'2-digit', minute:'2-digit' });
+}
+
+async function testConnection() {
+    try {
+        await api.getStats();
+        isOnline = true;
+        document.getElementById('connectionStatus').className = 'status online';
+        document.getElementById('connectionStatus').textContent = '🟢 Online';
+        document.getElementById('syncInfo').textContent = 'Connesso a Supabase';
+    } catch (e) {
+        isOnline = false;
+        document.getElementById('connectionStatus').className = 'status offline';
+        document.getElementById('connectionStatus').textContent = '🔴 Offline';
+        document.getElementById('syncInfo').textContent = 'Nessuna connessione';
+    }
+}
+
+// ====================================================================
+// GESTIONE OPERATORI
+// ====================================================================
+function loadSavedOperator() {
+    const saved = localStorage.getItem('currentOperator');
+    if (saved) {
+        try { currentOperator = JSON.parse(saved); updateOperatorDisplay(); }
+        catch (e) { /* ignore */ }
+    }
+}
+
+function updateOperatorDisplay() {
+    if (currentOperator) {
+        document.getElementById('operatorDisplay').textContent = currentOperator.name;
+        document.getElementById('operatorDetails').textContent =
+            `${currentOperator.code} — ${currentOperator.operator_id || ''}`;
+    } else {
+        document.getElementById('operatorDisplay').textContent = '👤 Seleziona Operatore';
+        document.getElementById('operatorDetails').textContent = 'Clicca per scegliere l\'operatore';
+    }
+}
+
+async function showOperatorSelection() {
+    const modal = document.getElementById('operatorModal');
+    const list  = document.getElementById('operatorsList');
+    modal.style.display = 'flex';
+    list.innerHTML = 'Caricamento...';
+    try {
+        const operators = await api.getOperators();
+        list.innerHTML = operators.map(op => `
+            <div class="operator-option" onclick="selectOperator('${op.id}')">
+                <h4>${op.name}</h4>
+                <p>Codice: ${op.code} | ID: ${op.operator_id || '—'}</p>
+            </div>`).join('');
+    } catch (e) {
+        list.innerHTML = '<p style="color:#dc2626;text-align:center;">Errore caricamento operatori</p>';
+    }
+}
+
+async function selectOperator(operatorId) {
+    try {
+        const operators = await api.getOperators();
+        const op = operators.find(o => o.id === operatorId);
+        if (op) {
+            currentOperator = op;
+            localStorage.setItem('currentOperator', JSON.stringify(op));
+            updateOperatorDisplay();
+        }
+    } catch (e) { /* ignore */ }
+    document.getElementById('operatorModal').style.display = 'none';
+    checkSaveReady();
+}
+
+document.addEventListener('click', function (e) {
+    if (e.target === document.getElementById('operatorModal'))
+        document.getElementById('operatorModal').style.display = 'none';
+});
+
+// ====================================================================
+// SELETTORE POSTAZIONI
+// ====================================================================
+function populateStationSelect() {
+    const select = document.getElementById('stationSelect');
+    ENERGY_STATIONS.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = `${s.icon} ${s.name}`;
+        select.appendChild(opt);
+    });
+}
+
+function showStationForm() {
+    const stationId = document.getElementById('stationSelect').value;
+    if (!stationId) {
+        document.getElementById('stationFormArea').innerHTML = '';
+        document.getElementById('notesWrap').style.display  = 'none';
+        document.getElementById('saveButton').style.display = 'none';
+        currentStation = null;
+        return;
+    }
+    const station = ENERGY_STATIONS.find(s => s.id === stationId);
+    activateStation(station);
+}
+
+function activateStation(station) {
+    currentStation = station;
+    updateTimestamp();
+
+    // Aggiorna il select per coerenza
+    document.getElementById('stationSelect').value = station.id;
+
+    const area = document.getElementById('stationFormArea');
+    area.innerHTML = `
+        <div class="station-box visible">
+            <div class="station-title">${station.icon} ${station.name}</div>
+            ${station.meters.map(m => `
+                <div class="meter-field">
+                    <label for="meter_${m.key}">⚡ ${m.label} (kWh)</label>
+                    <input type="number" id="meter_${m.key}" name="${m.key}"
+                           placeholder="0.00" step="0.01" min="0"
+                           oninput="onMeterInput(this)" />
+                </div>`).join('')}
+        </div>`;
+
+    document.getElementById('notesWrap').style.display  = 'block';
+    document.getElementById('saveButton').style.display = 'block';
+    checkSaveReady();
+}
+
+function onMeterInput(input) {
+    if (input.value !== '') {
+        input.classList.add('filled');
+    } else {
+        input.classList.remove('filled');
+    }
+    checkSaveReady();
+}
+
+function checkSaveReady() {
+    const btn = document.getElementById('saveButton');
+    if (!btn) return;
+    const ready = currentOperator && currentStation;
+    btn.disabled = !ready;
+}
+
+// ====================================================================
+// NFC
+// ====================================================================
+function checkNFCSupport() {
+    const btn = document.getElementById('scanButton');
+    if (!('NDEFReader' in window)) {
+        btn.textContent = '❌ NFC non supportato — usa selezione manuale';
+        btn.disabled = true;
+    }
+}
+
+async function startNFCScan() {
+    if (!currentOperator) {
+        showMessage('Seleziona prima un operatore', 'error');
+        showOperatorSelection();
+        return;
+    }
+    const btn = document.getElementById('scanButton');
+    btn.textContent = '🔍 Scansione in corso...';
+    btn.disabled = true;
+    try {
+        const ndef = new NDEFReader();
+        await ndef.scan();
+        ndef.addEventListener('reading', ({ message, serialNumber }) => {
+            btn.textContent = '📱 Scansiona Tag NFC Contatori';
+            btn.disabled = false;
+            handleNFCRead(message, serialNumber);
+        });
+        ndef.addEventListener('readingerror', () => {
+            btn.textContent = '📱 Scansiona Tag NFC Contatori';
+            btn.disabled = false;
+            showMessage('Errore lettura tag NFC. Riprova.', 'error');
+        });
+        setTimeout(() => { btn.textContent = '📱 Scansiona Tag NFC Contatori'; btn.disabled = false; }, 15000);
+    } catch (e) {
+        btn.textContent = '📱 Scansiona Tag NFC Contatori';
+        btn.disabled = false;
+        if (e.name === 'NotAllowedError') {
+            showMessage('Permesso NFC negato. Abilita NFC nelle impostazioni del browser.', 'error');
+        } else {
+            showMessage('Errore NFC: ' + e.message, 'error');
+        }
+    }
+}
+
+function handleNFCRead(message, serialNumber) {
+    // Estrai testo dal messaggio NDEF
+    let tagText = serialNumber;
+    try {
+        for (const record of message.records) {
+            if (record.recordType === 'text') {
+                const decoder = new TextDecoder(record.encoding || 'utf-8');
+                let txt = decoder.decode(record.data);
+                // rimuovi language code se presente (es "enCONT-ENEL" → "CONT-ENEL")
+                if (txt.length > 2 && /^[a-z]{2}[A-Z\-]/.test(txt)) txt = txt.substring(2);
+                tagText = txt;
+                break;
+            }
+        }
+    } catch (e) { /* usa serialNumber come fallback */ }
+
+    // Cerca la postazione per il tag
+    const station = ENERGY_STATIONS.find(s =>
+        s.nfcTag.toLowerCase() === tagText.toLowerCase() ||
+        tagText.toLowerCase().includes(s.nfcTag.toLowerCase())
+    );
+
+    if (!station) {
+        showMessage(`Tag NFC "${tagText}" non corrisponde a nessuna postazione contatori configurata.`, 'error');
+        return;
+    }
+
+    showMessage(`✅ Tag riconosciuto: ${station.icon} ${station.name}`, 'success');
+    activateStation(station);
+    // scroll al form
+    document.getElementById('stationFormArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ====================================================================
+// SALVATAGGIO
+// ====================================================================
+async function saveReading() {
+    if (!currentOperator) { showMessage('Seleziona un operatore prima di salvare.', 'error'); return; }
+    if (!currentStation)  { showMessage('Seleziona una postazione prima di salvare.', 'error'); return; }
+
+    // Raccogli valori contatori
+    const meters = {};
+    let atLeastOne = false;
+    for (const m of currentStation.meters) {
+        const el = document.getElementById(`meter_${m.key}`);
+        const val = el ? el.value.trim() : '';
+        if (val !== '') {
+            meters[m.label] = parseFloat(val);
+            atLeastOne = true;
+        }
+    }
+
+    if (!atLeastOne) {
+        showMessage('Inserisci almeno un valore prima di salvare.', 'error');
+        return;
+    }
+
+    const btn = document.getElementById('saveButton');
+    btn.disabled = true;
+    btn.textContent = '💾 Salvataggio in corso...';
+
+    const reading = {
+        reading_id:    generateReadingId(),
+        station_id:    currentStation.id,
+        station_name:  currentStation.name,
+        operator_id:   currentOperator.id,
+        operator_name: currentOperator.name,
+        timestamp:     new Date().toISOString(),
+        meters:        meters,
+        notes:         document.getElementById('readingNotes').value.trim() || null
+    };
+
+    try {
+        await api.addEnergyReading(reading);
+
+        // Salva anche in localStorage come backup
+        const localKey = 'energyReadings';
+        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
+        existing.unshift(reading);
+        if (existing.length > 200) existing.splice(200);
+        localStorage.setItem(localKey, JSON.stringify(existing));
+
+        showMessage(
+            `✅ Lettura salvata!\n` +
+            `📍 Postazione: ${currentStation.name}\n` +
+            `👤 Operatore: ${currentOperator.name}\n` +
+            `🕒 Ore: ${new Date().toLocaleTimeString('it-IT')}`,
+            'success'
+        );
+
+        // Reset form
+        resetForm();
+
+    } catch (e) {
+        console.error('Errore salvataggio lettura:', e);
+
+        // Salva solo in localStorage se Supabase non è disponibile
+        const localKey = 'energyReadings';
+        const existing = JSON.parse(localStorage.getItem(localKey) || '[]');
+        existing.unshift({ ...reading, syncedToCloud: false });
+        localStorage.setItem(localKey, JSON.stringify(existing));
+
+        showMessage(
+            `⚠️ Salvato in locale (Supabase non raggiungibile).\n` +
+            `La lettura verrà sincronizzata quando la connessione sarà ripristinata.\n` +
+            `Errore: ${e.message}`,
+            'error'
+        );
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '💾 Salva Lettura Contatori';
+        checkSaveReady();
+    }
+}
+
+function resetForm() {
+    if (currentStation) {
+        currentStation.meters.forEach(m => {
+            const el = document.getElementById(`meter_${m.key}`);
+            if (el) { el.value = ''; el.classList.remove('filled'); }
+        });
+    }
+    document.getElementById('readingNotes').value = '';
+}
+
+function generateReadingId() {
+    return 'ER-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
+}
+
+// ====================================================================
+// MESSAGGI
+// ====================================================================
+function showMessage(msg, type) {
+    const area = document.getElementById('messageArea');
+    area.innerHTML = `<div class="message ${type}">${msg.replace(/\n/g, '<br>')}</div>`;
+    setTimeout(() => { area.innerHTML = ''; }, type === 'success' ? 5000 : 8000);
+}
+</script>
+</body>
+</html>

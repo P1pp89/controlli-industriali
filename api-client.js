@@ -269,4 +269,52 @@ class ControlsAPI {
         });
         return await response.json();
     }
+
+    // ===== LETTURE CONTATORI ENERGIA =====
+
+    /**
+     * Salva una lettura contatori energia.
+     * @param {Object} reading - Dati della lettura
+     * @param {string} reading.reading_id     - ID univoco della lettura
+     * @param {string} reading.station_id     - ID della postazione (es. "CONSEGNA_ENEL", "CABINA_S", ...)
+     * @param {string} reading.station_name   - Nome leggibile della postazione
+     * @param {string} reading.operator_id    - FK → operators.id
+     * @param {string} reading.operator_name  - Nome operatore (denormalizzato per report)
+     * @param {string} reading.timestamp      - ISO8601
+     * @param {Object} reading.meters         - Oggetto chiave/valore: { "Contatore Generale": 12345.6, ... }
+     * @param {string} [reading.notes]        - Note libere
+     */
+    async addEnergyReading(reading) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_readings`, {
+            method: 'POST',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify(reading)
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        return { success: true, message: 'Lettura contatori registrata con successo' };
+    }
+
+    /**
+     * Recupera le letture contatori, con filtri opzionali per periodo e postazione.
+     */
+    async getEnergyReadings(filters = {}) {
+        let url = `${this.supabaseUrl}/rest/v1/energy_readings?order=timestamp.desc`;
+
+        if (filters.startDate) url += `&timestamp=gte.${filters.startDate}`;
+        if (filters.endDate)   url += `&timestamp=lte.${filters.endDate}`;
+        if (filters.stationId) url += `&station_id=eq.${filters.stationId}`;
+
+        const response = await fetch(url, { headers: this.headers });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        return await response.json();
+    }
 }
