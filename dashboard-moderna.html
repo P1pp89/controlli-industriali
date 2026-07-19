@@ -652,13 +652,13 @@
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                             <button onclick="generateProfessionalElectricalRegister()" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(243,156,18,0.3); transition: all 0.3s;">
-                                ⚡ Registro Impianti Elettrici
+                                ⚡ Registro Cabine BT/MT
                             </button>
                             <button onclick="generateProfessionalFireRegister()" style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(231,76,60,0.3); transition: all 0.3s;">
                                 🔥 Registro Antincendio
                             </button>
-                            <button onclick="generateProfessionalHVACRegister()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,152,219,0.3); transition: all 0.3s;">
-                                ❄️ Registro HVAC
+                            <button onclick="generateProfessionalGeneratorsRegister()" style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(52,152,219,0.3); transition: all 0.3s;">
+                                ⚙️ Registro Gruppi Elettrogeni
                             </button>
                             <button onclick="generateProfessionalUPSRegister()" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%); color: white; border: none; padding: 1rem 1.5rem; border-radius: 12px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 15px rgba(39,174,96,0.3); transition: all 0.3s;">
                                 🔋 Registro UPS
@@ -1820,8 +1820,8 @@
                 const controls = await getFilteredControlsForProfessional();
                 
                 const html = await generateProfessionalRegisterHTML({
-                    title: "REGISTRO CONTROLLI IMPIANTI ELETTRICI",
-                    subtitle: "Controlli periodici impianti elettrici, gruppi elettrogeni, UPS e quadri elettrici",
+                    title: "REGISTRO CONTROLLI CABINE ELETTRICHE BT/MT",
+                    subtitle: "Controlli periodici cabine elettriche bassa e media tensione",
                     icon: "⚡",
                     color: "#f39c12",
                     controls: controls,
@@ -1858,24 +1858,24 @@
             }
         }
         
-        async function generateProfessionalHVACRegister() {
+        async function generateProfessionalGeneratorsRegister() {
             try {
                 const controls = await getFilteredControlsForProfessional();
                 
                 const html = await generateProfessionalRegisterHTML({
-                    title: "REGISTRO CONTROLLI HVAC",
-                    subtitle: "Controlli periodici sistemi di climatizzazione e ventilazione",
-                    icon: "❄️",
+                    title: "REGISTRO CONTROLLI GRUPPI ELETTROGENI",
+                    subtitle: "Controlli periodici gruppi elettrogeni e alimentazione di emergenza",
+                    icon: "⚙️",
                     color: "#3498db",
                     controls: controls,
-                    category: "hvac"
+                    category: "generatori"
                 });
                 
                 showReportPreview(html);
                 
             } catch (error) {
-                console.error('Errore generazione registro HVAC:', error);
-                alert('Errore generazione registro HVAC: ' + error.message);
+                console.error('Errore generazione registro gruppi elettrogeni:', error);
+                alert('Errore generazione registro gruppi elettrogeni: ' + error.message);
             }
         }
         
@@ -1885,7 +1885,7 @@
                 
                 const html = await generateProfessionalRegisterHTML({
                     title: "REGISTRO CONTROLLI UPS",
-                    subtitle: "Controlli periodici gruppi di continuità e alimentazioni ausiliarie",
+                    subtitle: "Controlli periodici gruppi di continuità (UPS)",
                     icon: "🔋",
                     color: "#27ae60",
                     controls: controls,
@@ -2005,21 +2005,22 @@
             
             let filteredControls = controls;
             
-            // Filtra per categoria se specificata
+            // Filtra per categoria se specificata (basato sulla categoria assegnata
+            // all'impianto in fase di configurazione, non sul nome libero del locale:
+            // così non ci sono più sovrapposizioni tra registri)
             if (category && category !== 'completo' && category !== 'turni') {
                 filteredControls = controls.filter(control => {
-                    const roomName = control.technical_rooms?.name?.toLowerCase() || '';
                     const categoryName = control.technical_rooms?.categories?.name?.toLowerCase() || '';
-                    
+
                     switch(category) {
-                        case 'elettrico':
-                            return roomName.includes('elettr') || roomName.includes('ups') || roomName.includes('gruppo') || categoryName.includes('elettr');
+                        case 'elettrico': // Cabine Bassa/Media Tensione
+                            return categoryName.includes('bassa tensione') || categoryName.includes('media tensione') || categoryName.includes('cabina') || categoryName.includes('cabine');
+                        case 'generatori': // Gruppi Elettrogeni
+                            return categoryName.includes('gruppi elettrogeni') || categoryName.includes('generator');
+                        case 'ups': // Locali UPS
+                            return categoryName.includes('ups') || categoryName.includes('continuità');
                         case 'antincendio':
-                            return roomName.includes('antincendio') || roomName.includes('fire') || roomName.includes('sprinkler') || categoryName.includes('antincendio');
-                        case 'hvac':
-                            return roomName.includes('hvac') || roomName.includes('clima') || roomName.includes('ventil') || categoryName.includes('hvac');
-                        case 'ups':
-                            return roomName.includes('ups') || roomName.includes('continuità') || categoryName.includes('ups');
+                            return categoryName.includes('antincendio');
                         default:
                             return true;
                     }
