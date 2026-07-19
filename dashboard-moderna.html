@@ -529,9 +529,9 @@
         <div class="nav-tabs">
             <div class="nav-tab active" onclick="showTab('overview')">📊 Panoramica</div>
             <div class="nav-tab" onclick="showTab('operators')">👥 Operatori</div>
-            <div class="nav-tab" onclick="showTab('tags')">🏷️ Tag NFC</div>
-            <div class="nav-tab" onclick="showTab('registries')">📋 Registri</div>
+            <div class="nav-tab" onclick="showTab('rooms')">🏭 Impianti</div>
             <div class="nav-tab" onclick="showTab('energy')">⚡ Contatori</div>
+            <div class="nav-tab" onclick="showTab('registries')">📋 Registri</div>
             <div class="nav-tab" onclick="showTab('config')">⚙️ Configurazione</div>
         </div>
 
@@ -580,26 +580,21 @@
                 </div>
             </div>
 
-            <!-- TAB TAG NFC (UNIFICATO: impianti + contatori + tag rilevati sul campo) -->
-            <div id="tags" class="tab-content">
+            <!-- TAB IMPIANTI TECNICI -->
+            <div id="rooms" class="tab-content">
                 <div class="card">
                     <div class="card-header">
-                        <h3 class="card-title">🏷️ Gestione Tag NFC</h3>
-                        <button class="btn btn-success" onclick="openUnifiedTagModal(null)">➕ Nuovo Tag</button>
+                        <h3 class="card-title">🏭 Impianti Tecnici</h3>
+                        <button class="btn btn-success" onclick="openUnifiedTagModal(null, 'control')">➕ Nuovo Impianto</button>
                     </div>
                     <div style="padding:1rem 1.5rem 0;">
                         <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#1e40af;">
-                            💡 Qui trovi <strong>tutti</strong> i tag NFC del sistema, sia impianti che postazioni contatori: quelli già attivi, quelli rilevati sul campo e in attesa di configurazione, e quelli rifiutati. Un solo bottone per creare un tag nuovo o completarne uno rilevato automaticamente.
+                            💡 <strong>Come funziona:</strong> Clicca "Nuovo Impianto" e scrivi il testo che scriverai poi sul tag NFC con l'app <strong>NFC Tools</strong> (es. <code>GE001</code>). <strong>Non</strong> devi scansionare nulla prima. Se invece un operatore scansiona sul campo un tag non ancora configurato, comparirà qui sotto come "In attesa": basta cliccare "Configura" per completarlo.
                         </div>
                         <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;align-items:center;">
-                            <input id="tagSearchInput" type="text" placeholder="🔎 Cerca per tag ID o nome..." oninput="renderUnifiedTagsTable()"
+                            <input id="roomSearchInput" type="text" placeholder="🔎 Cerca per tag ID o nome..." oninput="renderRoomsTable()"
                                 style="flex:1;min-width:200px;padding:0.6rem 0.85rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
-                            <select id="tagFilterType" onchange="renderUnifiedTagsTable()" style="padding:0.6rem 0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
-                                <option value="">Tutti i tipi</option>
-                                <option value="control">🏭 Impianti</option>
-                                <option value="energy">⚡ Contatori</option>
-                            </select>
-                            <select id="tagFilterStatus" onchange="renderUnifiedTagsTable()" style="padding:0.6rem 0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
+                            <select id="roomFilterStatus" onchange="renderRoomsTable()" style="padding:0.6rem 0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
                                 <option value="">Tutti gli stati</option>
                                 <option value="active">✅ Attivi</option>
                                 <option value="pending">⏳ In attesa</option>
@@ -608,7 +603,7 @@
                             <button class="btn btn-primary" onclick="loadUnifiedTags()">🔄 Aggiorna</button>
                         </div>
                     </div>
-                    <div id="unifiedTagsList" class="loading">Caricamento tag...</div>
+                    <div id="roomsList" class="loading">Caricamento impianti...</div>
                 </div>
             </div>
 
@@ -692,11 +687,22 @@
                 <div class="card">
                     <div class="card-header">
                         <h3 class="card-title">⚡ Postazioni Contatori Energia</h3>
-                        <button class="btn btn-primary" onclick="showTab('tags')">🏷️ Crea/Modifica in Tag NFC</button>
+                        <button class="btn btn-success" onclick="openUnifiedTagModal(null, 'energy')">➕ Nuova Postazione</button>
                     </div>
                     <div style="padding:1rem 1.5rem 0;">
                         <div style="background:#fefce8;border:1px solid #fde68a;border-radius:8px;padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#92400e;">
-                            💡 <strong>Come funziona:</strong> Le postazioni si creano e modificano dal tab <strong>🏷️ Tag NFC</strong>, insieme agli impianti. Qui sotto trovi solo l'elenco di quelle attive. Dopo la creazione, programma il tag NFC con il testo indicato nella colonna "Tag NFC" usando l'app <strong>NFC Tools</strong> e fissalo fisicamente sul contatore: le coordinate GPS vengono acquisite automaticamente alla prima scansione sul posto.
+                            💡 <strong>Come funziona:</strong> Clicca "Nuova Postazione" e scrivi il testo che scriverai poi sul tag NFC con l'app <strong>NFC Tools</strong> (es. <code>CONT-CAB-S</code>), poi fissalo fisicamente sul contatore. Se lasci le coordinate GPS vuote, vengono acquisite in automatico alla <strong>prima scansione sul posto</strong>. Puoi anche inserirle o correggerle manualmente qui in qualsiasi momento cliccando "Modifica".
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:1rem;align-items:center;">
+                            <input id="energySearchInput" type="text" placeholder="🔎 Cerca per tag ID o nome..." oninput="renderEnergyManageTable()"
+                                style="flex:1;min-width:200px;padding:0.6rem 0.85rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
+                            <select id="energyFilterStatus" onchange="renderEnergyManageTable()" style="padding:0.6rem 0.75rem;border:1px solid #ddd;border-radius:6px;font-size:0.875rem;">
+                                <option value="">Tutti gli stati</option>
+                                <option value="active">✅ Attive</option>
+                                <option value="pending">⏳ In attesa</option>
+                                <option value="rejected">❌ Rifiutate</option>
+                            </select>
+                            <button class="btn btn-primary" onclick="loadUnifiedTags()">🔄 Aggiorna</button>
                         </div>
                     </div>
                     <div id="energyStationsList" class="loading">Caricamento postazioni...</div>
@@ -1044,9 +1050,9 @@
             event.target.classList.add('active');
             
             if (tabName === 'operators') loadOperators();
-            if (tabName === 'tags') loadUnifiedTags();
+            if (tabName === 'rooms') loadUnifiedTags();
             if (tabName === 'registries') loadRegistries();
-            if (tabName === 'energy') { loadEnergyStations(); loadRecentEnergyReadings(); }
+            if (tabName === 'energy') { loadUnifiedTags(); loadRecentEnergyReadings(); }
         }
         
         async function loadOperators() {
@@ -1206,7 +1212,10 @@
         }
         
         // ================================================================
-        // GESTIONE UNIFICATA TAG NFC (impianti + contatori energia)
+        // GESTIONE TAG NFC (impianti + contatori energia)
+        // Motore condiviso: un'unica cache dati, due viste filtrate distinte
+        // (tab "Impianti" e tab "Contatori"), per rispecchiare due sezioni
+        // dedicate e speculari, come richiesto.
         // ================================================================
         let _unifiedTagsCache = []; // righe già normalizzate, per filtri client-side
         let _unifiedCategories = []; // categorie impianti, caricate una volta
@@ -1215,10 +1224,9 @@
             return { source, status, tagId, name, type, raw, detectedBy, detectedAt, gps };
         }
 
+        // Carica tutti i dati (impianti, postazioni, tag in attesa/rifiutati) una sola volta
+        // e alimenta entrambe le tabelle (Impianti e Contatori).
         async function loadUnifiedTags() {
-            const container = document.getElementById('unifiedTagsList');
-            container.innerHTML = '<div class="loading">Caricamento tag...</div>';
-
             try {
                 const [rooms, stations, pending, rejected, categories] = await Promise.all([
                     api.getTechnicalRooms().catch(() => []),
@@ -1259,22 +1267,36 @@
                 })));
 
                 _unifiedTagsCache = rows;
-                renderUnifiedTagsTable();
+                renderRoomsTable();
+                renderEnergyManageTable();
 
             } catch (error) {
-                console.error('Errore caricamento tag unificati:', error);
-                container.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore caricamento: ${error.message}</p>`;
+                console.error('Errore caricamento tag:', error);
+                const roomsEl = document.getElementById('roomsList');
+                const energyEl = document.getElementById('energyStationsList');
+                if (roomsEl) roomsEl.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore caricamento: ${error.message}</p>`;
+                if (energyEl) energyEl.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore caricamento: ${error.message}</p>`;
             }
         }
 
-        function renderUnifiedTagsTable() {
-            const container = document.getElementById('unifiedTagsList');
-            const search = (document.getElementById('tagSearchInput')?.value || '').toLowerCase().trim();
-            const filterType = document.getElementById('tagFilterType')?.value || '';
-            const filterStatus = document.getElementById('tagFilterStatus')?.value || '';
+        function typeBadgeHtml(type) {
+            return type === 'energy'
+                ? '<span style="background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">⚡ Contatore</span>'
+                : '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">🏭 Impianto</span>';
+        }
+
+        function statusBadgeHtml(status) {
+            if (status === 'active') return '<span class="status-badge status-approved">✅ Attivo</span>';
+            if (status === 'pending') return '<span class="status-badge status-pending">⏳ In attesa</span>';
+            return '<span class="status-badge" style="background:#fee2e2;color:#991b1b;">❌ Rifiutato</span>';
+        }
+
+        function filterAndSortRows(type, searchId, statusId) {
+            const search = (document.getElementById(searchId)?.value || '').toLowerCase().trim();
+            const filterStatus = document.getElementById(statusId)?.value || '';
 
             let rows = _unifiedTagsCache.filter(r => {
-                if (filterType && r.type !== filterType) return false;
+                if (r.type !== type) return false;
                 if (filterStatus && r.status !== filterStatus) return false;
                 if (search) {
                     const hay = `${r.tagId || ''} ${r.name || ''}`.toLowerCase();
@@ -1283,33 +1305,25 @@
                 return true;
             });
 
-            // Ordina: in attesa prima (richiedono azione), poi attivi, poi rifiutati
             const statusOrder = { pending: 0, active: 1, rejected: 2 };
             rows.sort((a, b) => (statusOrder[a.status] - statusOrder[b.status]) || (a.name || '').localeCompare(b.name || ''));
+            return rows;
+        }
 
+        function renderGenericTagTable(rows, containerEl, globalArrayName, emptyText) {
             if (rows.length === 0) {
-                container.innerHTML = '<p style="padding:2rem;text-align:center;color:#64748b;">Nessun tag corrisponde ai filtri selezionati.</p>';
+                containerEl.innerHTML = `<p style="padding:2rem;text-align:center;color:#64748b;">${emptyText}</p>`;
+                window[globalArrayName] = [];
                 return;
             }
 
-            const typeBadge = (type) => type === 'energy'
-                ? '<span style="background:#fef9c3;color:#92400e;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">⚡ Contatore</span>'
-                : '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 8px;border-radius:999px;font-size:0.72rem;font-weight:600;">🏭 Impianto</span>';
-
-            const statusBadge = (status) => {
-                if (status === 'active') return '<span class="status-badge status-approved">✅ Attivo</span>';
-                if (status === 'pending') return '<span class="status-badge status-pending">⏳ In attesa</span>';
-                return '<span class="status-badge" style="background:#fee2e2;color:#991b1b;">❌ Rifiutato</span>';
-            };
-
-            container.innerHTML = `
+            containerEl.innerHTML = `
                 <div class="table-container">
                     <table class="table">
                         <thead>
                             <tr>
                                 <th>Tag NFC</th>
                                 <th>Nome</th>
-                                <th>Tipo</th>
                                 <th>Stato</th>
                                 <th>Rilevato da</th>
                                 <th>GPS</th>
@@ -1321,34 +1335,46 @@
                                 <tr>
                                     <td><code>${r.tagId || 'N/A'}</code></td>
                                     <td><strong>${r.name || 'N/A'}</strong></td>
-                                    <td>${typeBadge(r.type)}</td>
-                                    <td>${statusBadge(r.status)}</td>
+                                    <td>${statusBadgeHtml(r.status)}</td>
                                     <td>${r.detectedBy || (r.status === 'active' ? '—' : 'N/A')}</td>
                                     <td><small>${r.gps || '—'}</small></td>
-                                    <td>${renderUnifiedTagActions(r, i)}</td>
+                                    <td>${renderTagActions(r, i, globalArrayName)}</td>
                                 </tr>
                             `).join('')}
                         </tbody>
                     </table>
                 </div>`;
 
-            // Espone le righe correnti per gli onclick (evita di serializzare oggetti enormi nell'HTML)
-            window._unifiedTagsRendered = rows;
+            window[globalArrayName] = rows;
         }
 
-        function renderUnifiedTagActions(row, i) {
+        function renderRoomsTable() {
+            const el = document.getElementById('roomsList');
+            if (!el) return;
+            const rows = filterAndSortRows('control', 'roomSearchInput', 'roomFilterStatus');
+            renderGenericTagTable(rows, el, '_roomsRendered', 'Nessun impianto corrisponde ai filtri. Clicca "➕ Nuovo Impianto" per crearne uno.');
+        }
+
+        function renderEnergyManageTable() {
+            const el = document.getElementById('energyStationsList');
+            if (!el) return;
+            const rows = filterAndSortRows('energy', 'energySearchInput', 'energyFilterStatus');
+            renderGenericTagTable(rows, el, '_energyRendered', 'Nessuna postazione corrisponde ai filtri. Clicca "➕ Nuova Postazione" per crearne una.');
+        }
+
+        function renderTagActions(row, i, globalArrayName) {
+            const ref = `window['${globalArrayName}'][${i}]`;
             if (row.status === 'pending') {
                 return `
-                    <button class="btn btn-success" onclick="openUnifiedTagModal(window._unifiedTagsRendered[${i}])" style="margin-bottom:4px;font-size:0.8rem;">✅ Configura</button><br>
+                    <button class="btn btn-success" onclick="openUnifiedTagModal(${ref})" style="margin-bottom:4px;font-size:0.8rem;">✅ Configura</button><br>
                     <button class="btn" onclick="rejectUnifiedTag('${row.tagId}')" style="background:#ef4444;color:white;font-size:0.8rem;">❌ Rifiuta</button>`;
             }
             if (row.status === 'rejected') {
                 return `<button class="btn btn-primary" onclick="reactivateUnifiedTag('${row.tagId}')" style="font-size:0.8rem;">🔄 Riattiva</button>`;
             }
-            // active
             return `
-                <button class="btn btn-primary" onclick="openUnifiedTagModal(window._unifiedTagsRendered[${i}])" style="margin-bottom:4px;font-size:0.8rem;">✏️ Modifica</button><br>
-                <button class="btn" onclick="deleteUnifiedTag(window._unifiedTagsRendered[${i}])" style="background:#ef4444;color:white;font-size:0.8rem;">🗑️ Elimina</button>`;
+                <button class="btn btn-primary" onclick="openUnifiedTagModal(${ref})" style="margin-bottom:4px;font-size:0.8rem;">✏️ Modifica</button><br>
+                <button class="btn" onclick="deleteUnifiedTag(${ref})" style="background:#ef4444;color:white;font-size:0.8rem;">🗑️ Elimina</button>`;
         }
 
         async function rejectUnifiedTag(tagId) {
@@ -1380,38 +1406,41 @@
             } catch (e) { alert('Errore: ' + e.message); }
         }
 
-        // ===== MODAL UNIFICATO: crea nuovo / configura tag rilevato / modifica esistente =====
+        // ===== MODAL: crea nuovo / configura tag rilevato / modifica esistente =====
+        // row = null per un tag nuovo (lockType ne fissa il tipo, senza mostrare il selettore)
+        // row = { status, type, tagId, name, raw } per configurare/modificare un tag esistente
 
-        function openUnifiedTagModal(row) {
+        function openUnifiedTagModal(row, lockType) {
             const existing = document.getElementById('unifiedTagModal');
             if (existing) existing.remove();
 
-            // Determina modalità e valori iniziali
             const isNew = !row;
             const isPending = row && row.status === 'pending';
             const isActive = row && row.status === 'active';
-            const initialType = row ? row.type : 'control';
+            const initialType = row ? row.type : (lockType || 'control');
+            const showToggle = isNew ? false : false; // il tipo di un tag esistente non si cambia mai dopo la creazione
             const tagIdValue = row ? row.tagId : '';
-            const tagIdEditable = isNew; // il tag id si può scrivere solo quando è nuovo di zecca
+            const tagIdEditable = isNew;
 
             const suggestedName = isPending ? (row.raw.suggested_name || '') : (isActive ? row.name.replace(/^[^\s]+\s/, '') : '');
-
             const catOptions = _unifiedCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
 
             document.body.insertAdjacentHTML('beforeend', `
                 <div id="unifiedTagModal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:2000;display:flex;align-items:center;justify-content:center;overflow-y:auto;">
                     <div style="background:white;border-radius:12px;width:95%;max-width:600px;padding:2rem;margin:1rem auto;max-height:92vh;overflow-y:auto;">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-                            <h3 style="margin:0;">${isNew ? '➕ Nuovo Tag NFC' : (isPending ? '✅ Configura Tag Rilevato' : '✏️ Modifica Tag')}</h3>
+                            <h3 style="margin:0;">
+                                ${isNew
+                                    ? (initialType === 'energy' ? '➕ Nuova Postazione Contatori' : '➕ Nuovo Impianto Tecnico')
+                                    : (isPending ? '✅ Configura Tag Rilevato' : '✏️ Modifica Tag')}
+                            </h3>
                             ${!isNew ? `<span style="background:#f1f5f9;color:#475569;padding:3px 10px;border-radius:999px;font-size:0.8rem;">Tag: <code>${tagIdValue}</code></span>` : ''}
                         </div>
 
-                        <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;background:#f1f5f9;padding:4px;border-radius:8px;">
-                            <button type="button" id="unifiedTypeBtnControl" onclick="setUnifiedTagType('control')"
-                                style="flex:1;padding:0.6rem;border:none;border-radius:6px;cursor:pointer;font-weight:600;">🏭 Impianto</button>
-                            <button type="button" id="unifiedTypeBtnEnergy" onclick="setUnifiedTagType('energy')"
-                                style="flex:1;padding:0.6rem;border:none;border-radius:6px;cursor:pointer;font-weight:600;">⚡ Contatore</button>
-                        </div>
+                        ${isPending ? `
+                        <div style="margin-bottom:1.25rem;background:#f1f5f9;padding:0.6rem 0.9rem;border-radius:8px;font-size:0.85rem;color:#334155;">
+                            Tipo rilevato sul campo: ${typeBadgeHtml(initialType)} — se non è corretto, rifiuta il tag e ricrealo manualmente col tipo giusto.
+                        </div>` : ''}
 
                         <div style="margin-bottom:1rem;">
                             <label style="font-weight:600;display:block;margin-bottom:4px;">Tag NFC *</label>
@@ -1483,6 +1512,25 @@
                                         style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
                                 </div>
                             </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.4rem;">
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;">Lat GPS</label>
+                                    <input id="uEsLat" type="number" step="any" placeholder="es. 41.9000 (vuoto = auto alla 1ª scansione)"
+                                        style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                                </div>
+                                <div>
+                                    <label style="font-weight:600;display:block;margin-bottom:4px;">Lng GPS</label>
+                                    <input id="uEsLng" type="number" step="any" placeholder="es. 12.5000"
+                                        style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                                </div>
+                            </div>
+                            <div style="margin-bottom:1rem;">
+                                <button type="button" onclick="document.getElementById('uEsLat').value='';document.getElementById('uEsLng').value='';"
+                                    style="background:none;border:none;color:#dc2626;font-size:0.8rem;cursor:pointer;padding:0;text-decoration:underline;">
+                                    🔄 Svuota coordinate (verranno riacquisite alla prossima scansione sul posto)
+                                </button>
+                                <div id="uEsGpsHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
+                            </div>
                             <div style="margin-bottom:0.75rem;">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
                                     <label style="font-weight:600;">Contatori *</label>
@@ -1490,8 +1538,6 @@
                                 </div>
                                 <div id="uMetersContainer"></div>
                             </div>
-                            <input type="hidden" id="uEsLat"><input type="hidden" id="uEsLng">
-                            <small id="uEsGpsHint" style="color:#64748b;"></small>
                         </div>
 
                         <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
@@ -1507,13 +1553,12 @@
 
             window._unifiedMeterCount = 0;
 
-            // Precompila in base al contesto
             if (isPending) {
                 document.getElementById('uLat').value = row.raw.gps_lat || '';
                 document.getElementById('uLng').value = row.raw.gps_lng || '';
                 document.getElementById('uEsLat').value = row.raw.gps_lat || '';
                 document.getElementById('uEsLng').value = row.raw.gps_lng || '';
-                document.getElementById('uEsGpsHint').textContent = `💡 GPS pre-compilato dalla scansione: lat=${row.raw.gps_lat || '—'}, lng=${row.raw.gps_lng || '—'}`;
+                document.getElementById('uEsGpsHint').textContent = `Pre-compilato dalla posizione rilevata durante la scansione sul campo.`;
                 document.getElementById('uEsId').value = (row.tagId || '').replace(/[^A-Z0-9]/gi, '_').toUpperCase();
                 addUnifiedMeterRow();
             } else if (isActive && row.type === 'energy') {
@@ -1522,19 +1567,22 @@
                 document.getElementById('uEsId').value = s.station_id || '';
                 document.getElementById('uEsIcon').value = s.icon || '⚡';
                 document.getElementById('uEsRadius').value = s.gps_radius || 50;
-                document.getElementById('uEsLat').value = s.gps_lat || '';
-                document.getElementById('uEsLng').value = s.gps_lng || '';
-                document.getElementById('uEsGpsHint').textContent = s.gps_lat ? `📍 GPS acquisito: ${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '📍 GPS non ancora acquisito (verrà preso alla prima scansione sul posto)';
+                document.getElementById('uEsLat').value = s.gps_lat != null ? s.gps_lat : '';
+                document.getElementById('uEsLng').value = s.gps_lng != null ? s.gps_lng : '';
+                document.getElementById('uEsGpsHint').textContent = s.gps_lat != null
+                    ? `📍 Coordinate acquisite: ${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}`
+                    : '📍 Non ancora acquisite: verranno registrate alla prima scansione sul posto.';
                 const meters = Array.isArray(s.meters) ? s.meters : JSON.parse(s.meters || '[]');
                 (meters.length ? meters : [{ key: '', label: '' }]).forEach(m => addUnifiedMeterRow(m.key, m.label));
             } else if (isActive && row.type === 'control') {
                 const r = row.raw;
                 document.getElementById('uCategory').value = r.category_id || '';
-                document.getElementById('uLat').value = r.expected_lat || '';
-                document.getElementById('uLng').value = r.expected_lng || '';
+                document.getElementById('uLat').value = r.expected_lat != null ? r.expected_lat : '';
+                document.getElementById('uLng').value = r.expected_lng != null ? r.expected_lng : '';
                 document.getElementById('uRadius').value = r.gps_radius || 50;
             } else {
                 addUnifiedMeterRow();
+                document.getElementById('uEsGpsHint').textContent = 'Lascia vuoto: le coordinate verranno registrate automaticamente alla prima scansione sul posto. Oppure inseriscile subito se le conosci già.';
             }
 
             setUnifiedTagType(initialType);
@@ -1543,12 +1591,6 @@
         function setUnifiedTagType(type) {
             document.getElementById('unifiedControlForm').style.display = type === 'control' ? 'block' : 'none';
             document.getElementById('unifiedEnergyForm').style.display = type === 'energy' ? 'block' : 'none';
-            const btnC = document.getElementById('unifiedTypeBtnControl');
-            const btnE = document.getElementById('unifiedTypeBtnEnergy');
-            btnC.style.background = type === 'control' ? '#3b82f6' : 'transparent';
-            btnC.style.color = type === 'control' ? 'white' : '#475569';
-            btnE.style.background = type === 'energy' ? '#f59e0b' : 'transparent';
-            btnE.style.color = type === 'energy' ? 'white' : '#475569';
             window._unifiedCurrentType = type;
         }
 
@@ -1579,8 +1621,10 @@
                     const sid    = document.getElementById('uEsId').value.trim().toUpperCase().replace(/\s+/g, '_');
                     const icon   = document.getElementById('uEsIcon').value.trim() || '⚡';
                     const radius = parseInt(document.getElementById('uEsRadius').value) || 50;
-                    const lat    = parseFloat(document.getElementById('uEsLat').value) || null;
-                    const lng    = parseFloat(document.getElementById('uEsLng').value) || null;
+                    const latRaw = document.getElementById('uEsLat').value.trim();
+                    const lngRaw = document.getElementById('uEsLng').value.trim();
+                    const lat    = latRaw === '' ? null : parseFloat(latRaw);
+                    const lng    = lngRaw === '' ? null : parseFloat(lngRaw);
 
                     if (!name || !sid) { alert('Nome e ID Postazione sono obbligatori.'); return; }
 
@@ -1606,8 +1650,10 @@
                     const name   = document.getElementById('uName').value.trim();
                     const desc   = document.getElementById('uDesc').value.trim();
                     const catId  = document.getElementById('uCategory').value;
-                    const lat    = parseFloat(document.getElementById('uLat').value) || null;
-                    const lng    = parseFloat(document.getElementById('uLng').value) || null;
+                    const latRaw = document.getElementById('uLat').value.trim();
+                    const lngRaw = document.getElementById('uLng').value.trim();
+                    const lat    = latRaw === '' ? null : parseFloat(latRaw);
+                    const lng    = lngRaw === '' ? null : parseFloat(lngRaw);
                     const radius = parseInt(document.getElementById('uRadius').value) || 50;
 
                     if (!name || !catId) { alert('Nome e Categoria sono obbligatori.'); return; }
@@ -1628,6 +1674,7 @@
                 alert('Errore salvataggio: ' + e.message);
             }
         }
+
 
         
         function loadRegistries() {
@@ -2189,50 +2236,6 @@
         
         // ===== GESTIONE POSTAZIONI CONTATORI ENERGIA =====
 
-        async function loadEnergyStations() {
-            const container = document.getElementById('energyStationsList');
-            container.innerHTML = '<div class="loading">Caricamento postazioni...</div>';
-            try {
-                const stations = await api.getEnergyStations();
-                if (stations.length === 0) {
-                    container.innerHTML = '<p style="padding:1.5rem;text-align:center;color:#64748b;">Nessuna postazione configurata. Clicca "Nuova Postazione" per aggiungerne una.</p>';
-                    return;
-                }
-                container.innerHTML = `
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Postazione</th>
-                                    <th>Tag NFC</th>
-                                    <th>Contatori</th>
-                                    <th>GPS</th>
-                                    <th>Azioni</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${stations.map(s => {
-                                    const meters = Array.isArray(s.meters) ? s.meters : JSON.parse(s.meters || '[]');
-                                    const gpsStatus = s.gps_lat ? `✅ ${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}` : '⚪ Non configurato';
-                                    return `<tr>
-                                        <td><strong>${s.icon || '⚡'} ${s.name}</strong><br><small style="color:#64748b;">${s.station_id}</small></td>
-                                        <td><code style="background:#fef9c3;padding:2px 6px;border-radius:4px;">${s.nfc_tag}</code></td>
-                                        <td><small>${meters.map(m => m.label).join('<br>')}</small></td>
-                                        <td style="font-size:0.8rem;">${gpsStatus}</td>
-                                        <td>
-                                            <button class="btn btn-primary" onclick='openUnifiedTagModal({source:"energy", raw:${JSON.stringify(s).replace(/'/g,"&#39;")}})' style="margin-bottom:4px;">✏️ Modifica</button><br>
-                                            <button class="btn" onclick="deleteEnergyStation('${s.id}','${s.name.replace(/'/g,"\\'")}')" style="background:#ef4444;color:white;">🗑️ Elimina</button>
-                                        </td>
-                                    </tr>`;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>`;
-            } catch (e) {
-                container.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore caricamento postazioni: ${e.message}</p>`;
-            }
-        }
-
         async function loadRecentEnergyReadings() {
             const container = document.getElementById('recentEnergyReadingsList');
             container.innerHTML = '<div class="loading">Caricamento...</div>';
@@ -2267,15 +2270,6 @@
             } catch (e) {
                 container.innerHTML = `<p style="padding:1.5rem;color:#ef4444;">Errore: ${e.message}</p>`;
             }
-        }
-
-        async function deleteEnergyStation(id, name) {
-            if (!confirm(`Eliminare la postazione "${name}"?\n\nLe letture già registrate vengono mantenute.`)) return;
-            try {
-                await api.deleteEnergyStation(id);
-                alert(`✅ Postazione "${name}" eliminata.`);
-                await loadEnergyStations();
-            } catch(e) { alert('Errore: ' + e.message); }
         }
 
         // ===== FINE GESTIONE POSTAZIONI CONTATORI =====
