@@ -111,10 +111,28 @@ class ControlsAPI {
 
     // ===== TAG SCONOSCIUTI =====
     async getUnknownTags(status = 'PENDING') {
-        const response = await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&select=*,operators(name)&order=created_at.desc`, {
-            headers: this.headers
-        });
-        return await response.json();
+        const baseUrl = `${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&order=created_at.desc`;
+
+        let response = await fetch(`${baseUrl}&select=*,operators(name)`, { headers: this.headers });
+
+        // Se l'embed "operators(name)" fallisce (tipicamente per relazione FK mancante
+        // tra unknown_tags.operator_id e operators.id), riprova senza embed: meglio
+        // mostrare i tag senza nome operatore che far crashare l'intera vista.
+        if (!response.ok) {
+            console.warn('getUnknownTags: embed operators(name) fallito, ritento senza embed. Verifica la relazione FK unknown_tags.operator_id -> operators.id se vuoi vedere il nome operatore.');
+            response = await fetch(`${baseUrl}&select=*`, { headers: this.headers });
+        }
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+
+        const data = await response.json();
+        if (!Array.isArray(data)) {
+            throw new Error(typeof data === 'object' ? (data.message || JSON.stringify(data)) : 'Risposta inattesa dal server per unknown_tags');
+        }
+        return data;
     }
 
     async reportUnknownTag({ tagId, operatorId, gpsLat, gpsLng, suggestedName, suggestedCategory, tagType = 'control' }) {
