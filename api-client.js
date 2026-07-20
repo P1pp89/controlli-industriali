@@ -279,6 +279,46 @@ class ControlsAPI {
         return await response.json();
     }
 
+    async addCategory(name) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/categories`, {
+            method: 'POST',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify({ name })
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { success: true };
+    }
+
+    async updateCategory(id, updates) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/categories?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: { ...this.headers, 'Prefer': 'return=representation' },
+            body: JSON.stringify(updates)
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { success: true };
+    }
+
+    // Attenzione: fallisce se ci sono impianti ancora assegnati a questa categoria
+    // (vincolo di integrità referenziale) - è un comportamento voluto, protegge i dati.
+    async deleteCategory(id) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/categories?id=eq.${id}`, {
+            method: 'DELETE',
+            headers: this.headers
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        return { success: true };
+    }
+
     // ===== STATISTICHE =====
     async getStats() {
         const today = new Date().toISOString().split('T')[0];

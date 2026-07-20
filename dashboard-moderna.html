@@ -781,6 +781,23 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="card" style="margin-top:1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title">🗂️ Categorie Impianti</h3>
+                    </div>
+                    <div style="padding: 1.5rem;">
+                        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:0.85rem 1rem;margin-bottom:1.25rem;font-size:0.875rem;color:#1e40af;">
+                            💡 Le categorie servono a organizzare gli impianti e a generare correttamente i registri (es. "Cabine Media Tensione", "Gruppi Elettrogeni", "Locali UPS"). Rinominare una categoria qui aggiorna automaticamente il nome ovunque venga mostrato. Una categoria non si può eliminare finché ci sono impianti ancora assegnati ad essa: riassegnali prima da 🏭 Impianti → ✏️ Modifica.
+                        </div>
+                        <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+                            <input id="newCategoryName" type="text" placeholder="Nome nuova categoria (es. Cabine Bassa Tensione)"
+                                style="flex:1;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            <button class="btn btn-success" onclick="addNewCategory()">➕ Aggiungi</button>
+                        </div>
+                        <div id="categoriesManageList" class="loading">Caricamento categorie...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1053,6 +1070,7 @@
             if (tabName === 'rooms') loadUnifiedTags();
             if (tabName === 'registries') loadRegistries();
             if (tabName === 'energy') { loadUnifiedTags(); loadRecentEnergyReadings(); }
+            if (tabName === 'config') loadCategoriesManagement();
         }
         
         async function loadOperators() {
@@ -1310,7 +1328,18 @@
             return rows;
         }
 
-        function renderGenericTagTable(rows, containerEl, globalArrayName, emptyText) {
+        function getRowCategoryLabel(row) {
+            if (row.status === 'active') {
+                const catName = row.raw.categories?.name;
+                return catName
+                    ? catName
+                    : '<span style="color:#dc2626;font-weight:600;">⚠️ non assegnata</span>';
+            }
+            // tag in attesa/rifiutati: mostra la categoria suggerita al momento del rilevamento
+            return row.raw.suggested_category || '—';
+        }
+
+        function renderGenericTagTable(rows, containerEl, globalArrayName, emptyText, showCategory) {
             if (rows.length === 0) {
                 containerEl.innerHTML = `<p style="padding:2rem;text-align:center;color:#64748b;">${emptyText}</p>`;
                 window[globalArrayName] = [];
@@ -1324,6 +1353,7 @@
                             <tr>
                                 <th>Tag NFC</th>
                                 <th>Nome</th>
+                                ${showCategory ? '<th>Categoria</th>' : ''}
                                 <th>Stato</th>
                                 <th>Rilevato da</th>
                                 <th>GPS</th>
@@ -1335,6 +1365,7 @@
                                 <tr>
                                     <td><code>${r.tagId || 'N/A'}</code></td>
                                     <td><strong>${r.name || 'N/A'}</strong></td>
+                                    ${showCategory ? `<td>${getRowCategoryLabel(r)}</td>` : ''}
                                     <td>${statusBadgeHtml(r.status)}</td>
                                     <td>${r.detectedBy || (r.status === 'active' ? '—' : 'N/A')}</td>
                                     <td><small>${r.gps || '—'}</small></td>
@@ -1352,14 +1383,14 @@
             const el = document.getElementById('roomsList');
             if (!el) return;
             const rows = filterAndSortRows('control', 'roomSearchInput', 'roomFilterStatus');
-            renderGenericTagTable(rows, el, '_roomsRendered', 'Nessun impianto corrisponde ai filtri. Clicca "➕ Nuovo Impianto" per crearne uno.');
+            renderGenericTagTable(rows, el, '_roomsRendered', 'Nessun impianto corrisponde ai filtri. Clicca "➕ Nuovo Impianto" per crearne uno.', true);
         }
 
         function renderEnergyManageTable() {
             const el = document.getElementById('energyStationsList');
             if (!el) return;
             const rows = filterAndSortRows('energy', 'energySearchInput', 'energyFilterStatus');
-            renderGenericTagTable(rows, el, '_energyRendered', 'Nessuna postazione corrisponde ai filtri. Clicca "➕ Nuova Postazione" per crearne una.');
+            renderGenericTagTable(rows, el, '_energyRendered', 'Nessuna postazione corrisponde ai filtri. Clicca "➕ Nuova Postazione" per crearne una.', false);
         }
 
         function renderTagActions(row, i, globalArrayName) {
@@ -1683,6 +1714,78 @@
             setDefaultDates();
         }
         
+        // ===== GESTIONE CATEGORIE IMPIANTI =====
+
+        async function loadCategoriesManagement() {
+            const container = document.getElementById('categoriesManageList');
+            if (!container) return;
+            container.innerHTML = '<div class="loading">Caricamento categorie...</div>';
+            try {
+                const categories = await api.getCategories();
+                if (!categories || categories.length === 0) {
+                    container.innerHTML = '<p style="color:#64748b;padding:1rem 0;">Nessuna categoria configurata. Aggiungine una qui sopra.</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead><tr><th>Nome Categoria</th><th style="width:220px;">Azioni</th></tr></thead>
+                            <tbody>
+                                ${categories.map(c => `
+                                    <tr>
+                                        <td><input type="text" id="catName_${c.id}" value="${c.name.replace(/"/g,'&quot;')}" style="width:100%;padding:0.4rem;border:1px solid #ddd;border-radius:4px;"></td>
+                                        <td>
+                                            <button class="btn btn-primary" onclick="saveCategoryName('${c.id}')" style="margin-right:0.4rem;">💾 Salva</button>
+                                            <button class="btn" onclick="removeCategory('${c.id}','${c.name.replace(/'/g,"\\'")}')" style="background:#ef4444;color:white;">🗑️</button>
+                                        </td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                container.innerHTML = `<p style="color:#ef4444;">Errore caricamento categorie: ${e.message}</p>`;
+            }
+        }
+
+        async function addNewCategory() {
+            const input = document.getElementById('newCategoryName');
+            const name = input.value.trim();
+            if (!name) { alert('Inserisci un nome per la categoria.'); return; }
+            try {
+                await api.addCategory(name);
+                input.value = '';
+                await loadCategoriesManagement();
+                await loadUnifiedTags(); // aggiorna il menu a tendina e le tabelle Impianti/Contatori
+            } catch (e) {
+                alert('Errore aggiunta categoria: ' + e.message);
+            }
+        }
+
+        async function saveCategoryName(id) {
+            const input = document.getElementById(`catName_${id}`);
+            const name = input.value.trim();
+            if (!name) { alert('Il nome non può essere vuoto.'); return; }
+            try {
+                await api.updateCategory(id, { name });
+                await loadCategoriesManagement();
+                await loadUnifiedTags(); // il nuovo nome si riflette subito ovunque
+                alert(`✅ Categoria rinominata in "${name}"`);
+            } catch (e) {
+                alert('Errore salvataggio categoria: ' + e.message);
+            }
+        }
+
+        async function removeCategory(id, name) {
+            if (!confirm(`Eliminare la categoria "${name}"?\n\nSe alcuni impianti sono ancora assegnati a questa categoria, l'eliminazione verrà rifiutata dal database per proteggere i dati.`)) return;
+            try {
+                await api.deleteCategory(id);
+                await loadCategoriesManagement();
+                await loadUnifiedTags();
+            } catch (e) {
+                alert('Errore eliminazione categoria: ' + e.message + '\n\nProbabile causa: ci sono ancora impianti assegnati a questa categoria. Vai su 🏭 Impianti, apri "✏️ Modifica" su ciascuno e assegna un\u2019altra categoria, poi riprova.');
+            }
+        }
+
         // ===== GESTIONE CONFIGURAZIONE AZIENDA =====
         
         function editCompanyConfig() {
