@@ -119,7 +119,8 @@ class ControlsAPI {
         // tra unknown_tags.operator_id e operators.id), riprova senza embed: meglio
         // mostrare i tag senza nome operatore che far crashare l'intera vista.
         if (!response.ok) {
-            console.warn('getUnknownTags: embed operators(name) fallito, ritento senza embed. Verifica la relazione FK unknown_tags.operator_id -> operators.id se vuoi vedere il nome operatore.');
+            const errText = await response.text();
+            console.warn('getUnknownTags: embed operators(name) fallito, ritento senza embed. Errore reale da Supabase:', errText);
             response = await fetch(`${baseUrl}&select=*`, { headers: this.headers });
         }
 
