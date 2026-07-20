@@ -1453,7 +1453,6 @@
             const initialType = row ? row.type : (lockType || 'control');
             const showToggle = isNew ? false : false; // il tipo di un tag esistente non si cambia mai dopo la creazione
             const tagIdValue = row ? row.tagId : '';
-            const tagIdEditable = isNew;
 
             const suggestedName = isPending ? (row.raw.suggested_name || '') : (isActive ? row.name.replace(/^[^\s]+\s/, '') : '');
             const catOptions = _unifiedCategories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
@@ -1478,9 +1477,8 @@
                         <div style="margin-bottom:1rem;">
                             <label style="font-weight:600;display:block;margin-bottom:4px;">Tag NFC *</label>
                             <input id="uTagId" type="text" value="${tagIdValue}" placeholder="es. GE001 o CONT-CAB-S"
-                                ${tagIdEditable ? '' : 'readonly'}
-                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;${tagIdEditable ? '' : 'background:#f8f9fa;color:#64748b;'}">
-                            <small style="color:#64748b;">${tagIdEditable ? 'Testo esatto da programmare sul tag fisico con l\u2019app NFC Tools' : 'Il tag NFC non è modificabile qui: cambialo solo se sai già che il fisico è stato riprogrammato'}</small>
+                                style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
+                            <small style="color:#64748b;">${isNew ? 'Testo esatto da programmare sul tag fisico con l\u2019app NFC Tools' : '⚠️ Se lo modifichi, ricordati di riprogrammare anche il tag fisico con lo stesso testo nuovo (o di usarne uno già esistente, es. per condividerlo con un altro impianto/postazione nello stesso locale)'}</small>
                         </div>
 
                         <div id="unifiedControlForm">
@@ -1653,7 +1651,8 @@
                     const name   = document.getElementById('uEsName').value.trim();
                     const sid    = document.getElementById('uEsId').value.trim().toUpperCase().replace(/\s+/g, '_');
                     const icon   = document.getElementById('uEsIcon').value.trim() || '⚡';
-                    const radius = parseInt(document.getElementById('uEsRadius').value) || 50;
+                    const radiusParsed = parseInt(document.getElementById('uEsRadius').value);
+                    const radius = Number.isNaN(radiusParsed) ? 50 : radiusParsed;
                     const latRaw = document.getElementById('uEsLat').value.trim();
                     const lngRaw = document.getElementById('uEsLng').value.trim();
                     const lat    = latRaw === '' ? null : parseFloat(latRaw);
@@ -1687,7 +1686,8 @@
                     const lngRaw = document.getElementById('uLng').value.trim();
                     const lat    = latRaw === '' ? null : parseFloat(latRaw);
                     const lng    = lngRaw === '' ? null : parseFloat(lngRaw);
-                    const radius = parseInt(document.getElementById('uRadius').value) || 50;
+                    const radiusParsed = parseInt(document.getElementById('uRadius').value);
+                    const radius = Number.isNaN(radiusParsed) ? 50 : radiusParsed;
 
                     if (!name || !catId) { alert('Nome e Categoria sono obbligatori.'); return; }
 
