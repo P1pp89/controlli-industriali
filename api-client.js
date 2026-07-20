@@ -113,11 +113,11 @@ class ControlsAPI {
     async getUnknownTags(status = 'PENDING') {
         const baseUrl = `${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&order=created_at.desc`;
 
-        let response = await fetch(`${baseUrl}&select=*,operators(name)`, { headers: this.headers });
+        // unknown_tags ha due relazioni verso operators (operator_id e approved_by),
+        // quindi va specificata esplicitamente quale imbarcare per il nome di chi
+        // ha rilevato il tag, altrimenti PostgREST rifiuta la richiesta come ambigua.
+        let response = await fetch(`${baseUrl}&select=*,operators!unknown_tags_operator_id_fkey(name)`, { headers: this.headers });
 
-        // Se l'embed "operators(name)" fallisce (tipicamente per relazione FK mancante
-        // tra unknown_tags.operator_id e operators.id), riprova senza embed: meglio
-        // mostrare i tag senza nome operatore che far crashare l'intera vista.
         if (!response.ok) {
             const errText = await response.text();
             console.warn('getUnknownTags: embed operators(name) fallito, ritento senza embed. Errore reale da Supabase:', errText);
