@@ -791,6 +791,8 @@
                             💡 Le categorie servono a organizzare gli impianti e a generare correttamente i registri (es. "Cabine Media Tensione", "Gruppi Elettrogeni", "Locali UPS"). Rinominare una categoria qui aggiorna automaticamente il nome ovunque venga mostrato. Una categoria non si può eliminare finché ci sono impianti ancora assegnati ad essa: riassegnali prima da 🏭 Impianti → ✏️ Modifica.
                         </div>
                         <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;">
+                            <input id="newCategoryColor" type="color" value="#64748b" title="Colore etichetta"
+                                style="width:48px;padding:0;border:1px solid #ddd;border-radius:6px;cursor:pointer;">
                             <input id="newCategoryName" type="text" placeholder="Nome nuova categoria (es. Cabine Bassa Tensione)"
                                 style="flex:1;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
                             <button class="btn btn-success" onclick="addNewCategory()">➕ Aggiungi</button>
@@ -1729,10 +1731,11 @@
                 container.innerHTML = `
                     <div class="table-container">
                         <table class="table">
-                            <thead><tr><th>Nome Categoria</th><th style="width:220px;">Azioni</th></tr></thead>
+                            <thead><tr><th style="width:60px;">Colore</th><th>Nome Categoria</th><th style="width:220px;">Azioni</th></tr></thead>
                             <tbody>
                                 ${categories.map(c => `
                                     <tr>
+                                        <td><input type="color" id="catColor_${c.id}" value="${c.color || '#64748b'}" style="width:36px;height:36px;padding:0;border:1px solid #ddd;border-radius:4px;cursor:pointer;"></td>
                                         <td><input type="text" id="catName_${c.id}" value="${c.name.replace(/"/g,'&quot;')}" style="width:100%;padding:0.4rem;border:1px solid #ddd;border-radius:4px;"></td>
                                         <td>
                                             <button class="btn btn-primary" onclick="saveCategoryName('${c.id}')" style="margin-right:0.4rem;">💾 Salva</button>
@@ -1749,10 +1752,12 @@
 
         async function addNewCategory() {
             const input = document.getElementById('newCategoryName');
+            const colorInput = document.getElementById('newCategoryColor');
             const name = input.value.trim();
+            const color = colorInput ? colorInput.value : '#64748b';
             if (!name) { alert('Inserisci un nome per la categoria.'); return; }
             try {
-                await api.addCategory(name);
+                await api.addCategory(name, color);
                 input.value = '';
                 await loadCategoriesManagement();
                 await loadUnifiedTags(); // aggiorna il menu a tendina e le tabelle Impianti/Contatori
@@ -1762,11 +1767,15 @@
         }
 
         async function saveCategoryName(id) {
-            const input = document.getElementById(`catName_${id}`);
-            const name = input.value.trim();
+            const nameInput = document.getElementById(`catName_${id}`);
+            const colorInput = document.getElementById(`catColor_${id}`);
+            const name = nameInput.value.trim();
+            const color = colorInput ? colorInput.value : null;
             if (!name) { alert('Il nome non può essere vuoto.'); return; }
             try {
-                await api.updateCategory(id, { name });
+                const updates = { name };
+                if (color) updates.color = color;
+                await api.updateCategory(id, updates);
                 await loadCategoriesManagement();
                 await loadUnifiedTags(); // il nuovo nome si riflette subito ovunque
                 alert(`✅ Categoria rinominata in "${name}"`);

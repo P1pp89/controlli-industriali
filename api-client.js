@@ -279,11 +279,11 @@ class ControlsAPI {
         return await response.json();
     }
 
-    async addCategory(name) {
+    async addCategory(name, color) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/categories`, {
             method: 'POST',
             headers: { ...this.headers, 'Prefer': 'return=representation' },
-            body: JSON.stringify({ name })
+            body: JSON.stringify({ name, color: color || '#64748b' })
         });
         if (!response.ok) {
             const errorText = await response.text();
