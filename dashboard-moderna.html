@@ -1447,6 +1447,11 @@
             const existing = document.getElementById('unifiedTagModal');
             if (existing) existing.remove();
 
+            // Riferimento pulito alla riga in modifica: saveUnifiedTag lo legge da qui,
+            // invece di ricevere dati grezzi incollati nell'HTML (che si rompeva con
+            // virgolette/caratteri speciali nei nomi/descrizioni).
+            window._unifiedEditingRow = row;
+
             const isNew = !row;
             const isPending = row && row.status === 'pending';
             const isActive = row && row.status === 'active';
@@ -1574,7 +1579,7 @@
                         <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1.5rem;">
                             <button onclick="document.getElementById('unifiedTagModal').remove()"
                                 style="background:#6b7280;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;">Annulla</button>
-                            <button onclick="saveUnifiedTag(${isNew ? 'null' : `'${row.status}'`}, ${isNew ? 'null' : JSON.stringify(row.raw).replace(/'/g, "&#39;")})"
+                            <button onclick="saveUnifiedTag()"
                                 style="background:#10b981;color:white;border:none;padding:0.75rem 1.5rem;border-radius:6px;cursor:pointer;font-weight:600;">
                                 💾 Salva
                             </button>
@@ -1641,7 +1646,11 @@
             document.getElementById('uMetersContainer').insertAdjacentHTML('beforeend', unifiedMeterRow(key, label, window._unifiedMeterCount));
         }
 
-        async function saveUnifiedTag(existingStatus, existingRaw) {
+        async function saveUnifiedTag() {
+            const editingRow = window._unifiedEditingRow || null;
+            const existingStatus = editingRow ? editingRow.status : null;
+            const existingRaw = editingRow ? editingRow.raw : null;
+
             const type = window._unifiedCurrentType || 'control';
             const tagId = document.getElementById('uTagId').value.trim();
             if (!tagId) { alert('Il campo Tag NFC è obbligatorio.'); return; }
