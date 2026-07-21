@@ -194,12 +194,15 @@ class ControlsAPI {
     }
 
     // Approva tag come IMPIANTO TECNICO normale
-    async approveUnknownTag(tagId, tagData) {
+    // originalTagId: il tag così come si chiamava in unknown_tags (per trovarlo e segnarlo APPROVATO)
+    // tagData.tag_id: il nuovo nome tag scelto in fase di configurazione (può essere diverso dall'originale)
+    async approveUnknownTag(originalTagId, tagData) {
+        const newTagId = tagData.tag_id || originalTagId;
         const roomResponse = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms`, {
             method: 'POST',
             headers: this.headers,
             body: JSON.stringify({
-                tag_id: tagId,
+                tag_id: newTagId,
                 name: tagData.name,
                 description: tagData.description,
                 category_id: tagData.category_id,
@@ -211,7 +214,7 @@ class ControlsAPI {
         });
         if (!roomResponse.ok) throw new Error('Errore aggiunta impianto');
 
-        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${originalTagId}`, {
             method: 'PATCH',
             headers: this.headers,
             body: JSON.stringify({ status: 'APPROVED', approved_at: new Date().toISOString() })
@@ -220,7 +223,9 @@ class ControlsAPI {
     }
 
     // Approva tag come POSTAZIONE CONTATORI ENERGIA
-    async approveUnknownTagAsEnergy(tagId, stationData) {
+    // originalTagId: il tag così come si chiamava in unknown_tags (per trovarlo e segnarlo APPROVATO)
+    // stationData.nfc_tag: il nuovo nome tag scelto in fase di configurazione (può essere diverso dall'originale)
+    async approveUnknownTagAsEnergy(originalTagId, stationData) {
         // stationData: { name, station_id, nfc_tag, icon, gps_radius, meters[], gps_lat, gps_lng }
         const stationResponse = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations`, {
             method: 'POST',
@@ -229,7 +234,7 @@ class ControlsAPI {
                 station_id: stationData.station_id,
                 name: stationData.name,
                 icon: stationData.icon || '⚡',
-                nfc_tag: stationData.nfc_tag || tagId,
+                nfc_tag: stationData.nfc_tag || originalTagId,
                 meters: stationData.meters || [],
                 gps_lat: stationData.gps_lat || null,
                 gps_lng: stationData.gps_lng || null,
@@ -242,7 +247,7 @@ class ControlsAPI {
             throw new Error(`Errore aggiunta postazione: ${err}`);
         }
 
-        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${tagId}`, {
+        await fetch(`${this.supabaseUrl}/rest/v1/unknown_tags?tag_id=eq.${originalTagId}`, {
             method: 'PATCH',
             headers: this.headers,
             body: JSON.stringify({ status: 'APPROVED', approved_at: new Date().toISOString() })

@@ -1682,7 +1682,7 @@
                     if (existingStatus === 'active') {
                         await api.updateEnergyStation(existingRaw.id, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng });
                     } else if (existingStatus === 'pending') {
-                        await api.approveUnknownTagAsEnergy(tagId, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng });
+                        await api.approveUnknownTagAsEnergy(editingRow.tagId, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng });
                     } else {
                         await api.addEnergyStation({ name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng, active: true });
                     }
@@ -1703,7 +1703,7 @@
                     if (existingStatus === 'active') {
                         await api.updateTechnicalRoom(existingRaw.id, { tag_id: tagId, name, description: desc, category_id: catId, expected_lat: lat, expected_lng: lng, gps_radius: radius });
                     } else if (existingStatus === 'pending') {
-                        await api.approveUnknownTag(tagId, { name, description: desc, category_id: catId, gps_lat: lat, gps_lng: lng, gps_radius: radius });
+                        await api.approveUnknownTag(editingRow.tagId, { tag_id: tagId, name, description: desc, category_id: catId, gps_lat: lat, gps_lng: lng, gps_radius: radius });
                     } else {
                         await api.addTechnicalRoom({ tag_id: tagId, name, description: desc, category_id: catId, expected_lat: lat, expected_lng: lng, gps_radius: radius, active: true });
                     }
