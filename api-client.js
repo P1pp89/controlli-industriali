@@ -100,6 +100,17 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Aggiorna coordinate GPS dopo prima scansione sul posto (equivalente a setEnergyStationGPS)
+    async setTechnicalRoomGPS(id, lat, lng) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: this.headers,
+            body: JSON.stringify({ expected_lat: lat, expected_lng: lng })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
+    }
+
     async getTechnicalRoomByTagId(tagId) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
             headers: this.headers

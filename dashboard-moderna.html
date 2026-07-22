@@ -1504,7 +1504,7 @@
                                     ${catOptions}
                                 </select>
                             </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:0.4rem;">
                                 <div>
                                     <label style="font-weight:600;display:block;margin-bottom:4px;">Lat GPS</label>
                                     <input id="uLat" type="number" step="any" placeholder="41.9000"
@@ -1520,6 +1520,13 @@
                                     <input id="uRadius" type="number" value="50" min="10" max="500"
                                         style="width:100%;padding:0.65rem;border:1px solid #ddd;border-radius:6px;">
                                 </div>
+                            </div>
+                            <div style="margin-bottom:1rem;">
+                                <button type="button" onclick="document.getElementById('uLat').value='';document.getElementById('uLng').value='';"
+                                    style="background:none;border:none;color:#dc2626;font-size:0.8rem;cursor:pointer;padding:0;text-decoration:underline;">
+                                    🔄 Svuota coordinate (verranno riacquisite alla prossima scansione sul posto)
+                                </button>
+                                <div id="uGpsHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
                             </div>
                         </div>
 
@@ -1594,6 +1601,7 @@
                 document.getElementById('uLng').value = row.raw.gps_lng || '';
                 document.getElementById('uEsLat').value = row.raw.gps_lat || '';
                 document.getElementById('uEsLng').value = row.raw.gps_lng || '';
+                document.getElementById('uGpsHint').textContent = `Pre-compilato dalla posizione rilevata durante la scansione sul campo.`;
                 document.getElementById('uEsGpsHint').textContent = `Pre-compilato dalla posizione rilevata durante la scansione sul campo.`;
                 document.getElementById('uEsId').value = (row.tagId || '').replace(/[^A-Z0-9]/gi, '_').toUpperCase();
                 addUnifiedMeterRow();
@@ -1616,8 +1624,12 @@
                 document.getElementById('uLat').value = r.expected_lat != null ? r.expected_lat : '';
                 document.getElementById('uLng').value = r.expected_lng != null ? r.expected_lng : '';
                 document.getElementById('uRadius').value = r.gps_radius || 50;
+                document.getElementById('uGpsHint').textContent = r.expected_lat != null
+                    ? `📍 Coordinate acquisite: ${r.expected_lat.toFixed(4)}, ${r.expected_lng.toFixed(4)}`
+                    : '📍 Non ancora acquisite: verranno registrate alla prima scansione sul posto.';
             } else {
                 addUnifiedMeterRow();
+                document.getElementById('uGpsHint').textContent = 'Lascia vuoto: le coordinate verranno registrate automaticamente alla prima scansione sul posto. Oppure inseriscile subito se le conosci già.';
                 document.getElementById('uEsGpsHint').textContent = 'Lascia vuoto: le coordinate verranno registrate automaticamente alla prima scansione sul posto. Oppure inseriscile subito se le conosci già.';
             }
 

@@ -200,6 +200,20 @@ async function handleNFCRead(serialNumber, message) {
             await handleUnknownTag(tagId);
             return;
         }
+
+        // Se l'impianto non ha ancora coordinate GPS e siamo sul posto, acquisiscile ora
+        // (stesso meccanismo già usato per le postazioni contatori energia)
+        if (!hasExpectedLocation(room) && currentPosition && room.id) {
+            api.setTechnicalRoomGPS(
+                room.id,
+                currentPosition.coords.latitude,
+                currentPosition.coords.longitude
+            ).then(() => {
+                room.expected_lat = currentPosition.coords.latitude;
+                room.expected_lng = currentPosition.coords.longitude;
+                console.log(`📍 GPS salvato per impianto ${room.name}`);
+            }).catch(e => console.warn('GPS save error:', e));
+        }
         
         // Verifica posizione GPS prima di procedere
         const locationValid = validateLocation(room);
