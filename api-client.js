@@ -114,10 +114,10 @@ class ControlsAPI {
 
     // Aggiorna coordinate GPS dopo prima scansione sul posto (equivalente a setEnergyStationGPS)
     async setTechnicalRoomGPS(id, lat, lng) {
-        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?id=eq.${id}`, {
-            method: 'PATCH',
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/set_technical_room_gps`, {
+            method: 'POST',
             headers: this.headers,
-            body: JSON.stringify({ expected_lat: lat, expected_lng: lng })
+            body: JSON.stringify({ room_id: id, lat, lng })
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return { success: true };
@@ -495,12 +495,12 @@ class ControlsAPI {
         return { success: true };
     }
 
-    // Aggiorna coordinate GPS dopo prima scansione sul posto
+    // Aggiorna coordinate GPS dopo prima scansione sul posto (tramite funzione dedicata sul database)
     async setEnergyStationGPS(id, lat, lng) {
-        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?id=eq.${id}`, {
-            method: 'PATCH',
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/set_energy_station_gps`, {
+            method: 'POST',
             headers: this.headers,
-            body: JSON.stringify({ gps_lat: lat, gps_lng: lng, updated_at: new Date().toISOString() })
+            body: JSON.stringify({ station_id: id, lat, lng })
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return { success: true };
