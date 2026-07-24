@@ -481,11 +481,7 @@
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
                 </svg>
-                🔐 Accedi con GitHub OAuth
-            </button>
-            
-            <button onclick="loginWithSecureKey()" style="background: #dc2626; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%; margin-top: 0.5rem;">
-                🔑 Accesso con Password
+                🔐 Accedi con GitHub
             </button>
             
             <div class="authorized-user">
@@ -494,9 +490,9 @@
             </div>
             
             <div class="security-info">
-                <strong>🔒 Sicurezza Massima</strong><br>
-                Solo il proprietario del repository può accedere.<br>
-                Nessuna credenziale esposta nel codice.
+                <strong>🔒 Autenticazione reale via Supabase Auth</strong><br>
+                Login verificato da GitHub e Supabase, non da questo codice.<br>
+                Nessuna password o chiave segreta è presente in questa pagina.
             </div>
             
             <div id="loginError" class="login-error"></div>
@@ -804,165 +800,101 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="api-client.js"></script>
     <script>
-        // CONFIGURAZIONE GITHUB OAUTH REALE
-        const GITHUB_CONFIG = {
-            // Il tuo username GitHub autorizzato
-            authorizedUser: 'P1pp89',
-            // Client ID della tua GitHub App (DEVI CREARE L'APP)
-            clientId: 'Ov23liABCDEF123456', // SOSTITUISCI CON IL TUO
-            // Client Secret (MANTIENI SEGRETO)
-            clientSecret: 'ghs_ABCDEF123456789' // SOSTITUISCI CON IL TUO
-        };
-        
+        // Solo questo username GitHub può accedere come amministratore.
+        const AUTHORIZED_GITHUB_USERNAME = 'P1pp89';
+
         // Configurazione Supabase
         const SUPABASE_URL = 'https://pynodlnwozlyxcfwfqvp.supabase.co';
         const SUPABASE_KEY = 'sb_publishable_C61rsZm3YWmvz82MHGkTAg_RGQQXCL6';
-        
-        let api;
-        let currentUser = null;
 
-        // GITHUB OAUTH PUBBLICO (SENZA CLIENT SECRET)
-        function loginWithGitHub() {
-            // OAuth pubblico - solo Client ID necessario
-            const clientId = 'Ov23liP1pp89Dashboard'; // Il tuo Client ID (pubblico, sicuro)
-            const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
-            const scope = 'user:email';
-            const state = generateRandomState();
-            
-            // Salva lo state per verificare la risposta
-            localStorage.setItem('github_oauth_state', state);
-            
-            // Redirect a GitHub per l'autenticazione
-            const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
-            
-            console.log('🔄 Reindirizzamento a GitHub OAuth...');
-            window.location.href = githubAuthUrl;
+        let api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
+        let currentUser = null;
+        let supabaseClient;
+
+        function initSupabaseAuth() {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+            // Si attiva ad ogni cambio di stato: login, logout, refresh automatico del token
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                handleAuthSession(session);
+            });
+
+            // Controlla se esiste già una sessione (es. subito dopo il redirect di ritorno da GitHub)
+            supabaseClient.auth.getSession().then(({ data }) => {
+                handleAuthSession(data.session);
+            });
         }
-        
-        // Controlla se c'è un code di ritorno da GitHub
-        async function checkGitHubCallback() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const code = urlParams.get('code');
-            const state = urlParams.get('state');
-            const storedState = localStorage.getItem('github_oauth_state');
-            
-            if (code && state) {
-                console.log('🔍 Callback GitHub ricevuto, verifica in corso...');
-                
-                // Verifica state per sicurezza
-                if (state !== storedState) {
-                    showLoginError('❌ Errore di sicurezza OAuth. Riprova.');
-                    return;
+
+        async function handleAuthSession(session) {
+            if (session && session.user) {
+                // Per il provider GitHub, Supabase espone lo username in user_metadata.user_name
+                const githubUsername = session.user.user_metadata?.user_name
+                    || session.user.user_metadata?.preferred_username
+                    || null;
+
+                console.log('🔍 Sessione Supabase attiva, username GitHub rilevato:', githubUsername);
+
+                if (githubUsername && githubUsername.toLowerCase() === AUTHORIZED_GITHUB_USERNAME.toLowerCase()) {
+                    currentUser = githubUsername;
+                    api.setAccessToken(session.access_token);
+                    document.getElementById('userDisplay').textContent = `👤 ${githubUsername} (GitHub Verified)`;
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    document.getElementById('loginError').style.display = 'none';
+                    initDashboard();
+                } else {
+                    // Autenticato con GitHub, ma non è l'account autorizzato: nega e disconnetti subito
+                    showLoginError(`❌ Accesso negato.\n\nSolo l'account GitHub "${AUTHORIZED_GITHUB_USERNAME}" è autorizzato.\nSei autenticato come: "${githubUsername || 'sconosciuto'}"`);
+                    await supabaseClient.auth.signOut();
+                    api.setAccessToken(null);
                 }
-                
-                try {
-                    // Per OAuth pubblico, usiamo GitHub API direttamente
-                    // Questo è un workaround sicuro per client-side
-                    
-                    // Simuliamo la verifica dell'utente tramite GitHub API pubblica
-                    // In realtà GitHub restituisce l'utente nel callback
-                    const githubUser = await verifyGitHubUser(code);
-                    
-                    if (githubUser && githubUser.toLowerCase() === GITHUB_CONFIG.authorizedUser.toLowerCase()) {
-                        // ACCESSO AUTORIZZATO
-                        currentUser = githubUser;
-                        document.getElementById('userDisplay').textContent = `👤 ${githubUser} (GitHub Verified)`;
-                        
-                        // Nascondi login, mostra dashboard
-                        document.getElementById('loginScreen').style.display = 'none';
-                        document.getElementById('dashboard').style.display = 'block';
-                        
-                        // Inizializza dashboard
-                        initDashboard();
-                        
-                        alert(`✅ Accesso GitHub verificato!\n\n👤 Benvenuto ${githubUser}!\n🛡️ Autenticazione OAuth completata`);
-                        
-                    } else {
-                        // ACCESSO NEGATO
-                        showLoginError(`❌ Accesso negato!\n\nSolo l'utente "${GITHUB_CONFIG.authorizedUser}" è autorizzato.\n\nTu sei: "${githubUser}"`);
-                    }
-                    
-                } catch (error) {
-                    console.error('Errore OAuth GitHub:', error);
-                    showLoginError('❌ Errore durante l\'autenticazione GitHub');
-                }
-                
-                // Pulisci l'URL e lo state
-                localStorage.removeItem('github_oauth_state');
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        }
-        
-        // Verifica utente GitHub (workaround per OAuth pubblico)
-        async function verifyGitHubUser(code) {
-            // Per ora restituiamo il nome utente se il code è valido
-            // In una implementazione reale, useresti un proxy server
-            
-            // Simulazione: se il code esiste, l'utente si è autenticato
-            if (code && code.length > 10) {
-                // Qui dovresti implementare la verifica reale
-                // Per ora assumiamo che solo P1pp89 possa generare un code valido
-                return 'P1pp89';
-            }
-            
-            return null;
-        }
-        
-        // Genera state casuale per sicurezza OAuth
-        function generateRandomState() {
-            return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        }
-        
-        // ACCESSO SEMPLIFICATO DI EMERGENZA
-        function loginWithSecureKey() {
-            const password = prompt('🔑 Inserisci la password di accesso:');
-            
-            if (password === '1989cat8') {
-                // ACCESSO AUTORIZZATO
-                currentUser = 'P1pp89';
-                document.getElementById('userDisplay').textContent = `👤 P1pp89 (Verified)`;
-                
-                // Nascondi login, mostra dashboard
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                
-                // Inizializza dashboard
-                initDashboard();
-                
-                alert(`✅ Accesso verificato!\n\n👤 Benvenuto P1pp89!`);
-                
             } else {
-                showLoginError(`❌ Password non valida!`);
+                currentUser = null;
+                api.setAccessToken(null);
+                document.getElementById('loginScreen').style.display = 'flex';
+                document.getElementById('dashboard').style.display = 'none';
             }
         }
-        
+
+        async function loginWithGitHub() {
+            const { error } = await supabaseClient.auth.signInWithOAuth({
+                provider: 'github',
+                options: { redirectTo: window.location.origin + window.location.pathname }
+            });
+            if (error) {
+                showLoginError('❌ Errore avvio login GitHub: ' + error.message);
+            }
+        }
+
         function showLoginError(message) {
             const errorDiv = document.getElementById('loginError');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
         }
-        
-        function doLogout() {
-            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard GitHub?')) {
+
+        async function doLogout() {
+            if (confirm('🚪 Sei sicuro di voler uscire dalla dashboard?')) {
+                await supabaseClient.auth.signOut();
+                // handleAuthSession(null) viene comunque chiamato automaticamente da
+                // onAuthStateChange, ma lo forziamo anche qui per un feedback immediato
+                api.setAccessToken(null);
                 currentUser = null;
                 document.getElementById('loginScreen').style.display = 'flex';
                 document.getElementById('dashboard').style.display = 'none';
                 document.getElementById('loginError').style.display = 'none';
             }
         }
-        
+
         // INIZIALIZZAZIONE
         document.addEventListener('DOMContentLoaded', function() {
-            // Controlla se c'è un callback GitHub
-            checkGitHubCallback();
+            initSupabaseAuth();
         });
-        
+
         // INIZIALIZZAZIONE DASHBOARD
         function initDashboard() {
-            api = new ControlsAPI(SUPABASE_URL, SUPABASE_KEY);
-            
             const lastSync = localStorage.getItem('lastSyncTime');
             if (lastSync) {
                 document.getElementById('lastSyncTime').textContent = lastSync;

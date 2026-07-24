@@ -5,10 +5,22 @@ class ControlsAPI {
     constructor(supabaseUrl, supabaseKey) {
         this.supabaseUrl = supabaseUrl;
         this.supabaseKey = supabaseKey;
-        this.headers = {
+        this._accessToken = null; // impostato da setAccessToken() dopo il login GitHub
+    }
+
+    // Chiamata dalla dashboard dopo il login (o al logout, con null) per far sì che le
+    // richieste vengano riconosciute da Supabase come autenticate, non più anonime.
+    // Le app di campo (app-moderna.html, lettura-contatori.html) non la chiamano mai,
+    // quindi continuano a usare la chiave pubblica esattamente come prima.
+    setAccessToken(token) {
+        this._accessToken = token;
+    }
+
+    get headers() {
+        return {
             'Content-Type': 'application/json',
-            'apikey': supabaseKey,
-            'Authorization': `Bearer ${supabaseKey}`
+            'apikey': this.supabaseKey,
+            'Authorization': `Bearer ${this._accessToken || this.supabaseKey}`
         };
     }
 
