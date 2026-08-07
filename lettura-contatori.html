@@ -740,6 +740,34 @@ async function handleNFCRead(message, serialNumber) {
         return;
     }
 
+    // ===== VERIFICA SERIALE NFC ANTI-CLONAZIONE =====
+    // Ogni chip NFC ha un numero seriale hardware incorporato in fabbrica,
+    // non riscrivibile. Se il testo del tag corrisponde ma il chip fisico
+    // è diverso da quello registrato la prima volta, blocca la lettura.
+    if (station.nfc_serial) {
+        if (station.nfc_serial !== serialNumber) {
+            showMessage(
+                `🚫 LETTURA BLOCCATA - TAG NON RICONOSCIUTO!\n\n` +
+                `📍 Postazione: ${station.name}\n` +
+                `⚠️ Il chip fisico di questo tag non corrisponde a quello registrato per questa postazione.\n\n` +
+                `Possibili cause:\n` +
+                `• Il tag NFC è stato clonato su un altro chip\n` +
+                `• Il tag fisico è stato sostituito senza avvisare l'amministratore\n\n` +
+                `Contatta l'amministratore per verificare la situazione.`,
+                'error'
+            );
+            return; // BLOCCA completamente
+        }
+    } else if (station.id) {
+        // Prima scansione: impara il seriale di questo tag
+        api.setEnergyStationNfcSerial(station.id, serialNumber)
+            .then(() => {
+                station.nfc_serial = serialNumber;
+                console.log(`🔐 Seriale NFC registrato per postazione ${station.name}`);
+            })
+            .catch(e => console.warn('Errore salvataggio seriale NFC:', e));
+    }
+
     // SICUREZZA: segna che la sessione è stata aperta da NFC reale
     nfcTriggered = true;
 
