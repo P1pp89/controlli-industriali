@@ -201,6 +201,33 @@ async function handleNFCRead(serialNumber, message) {
             return;
         }
 
+        // ===== VERIFICA SERIALE NFC ANTI-CLONAZIONE =====
+        // Ogni chip NFC ha un numero seriale hardware incorporato in fabbrica,
+        // non riscrivibile. Se il testo del tag corrisponde ma il chip fisico
+        // è diverso da quello registrato la prima volta, blocca il controllo.
+        if (room.nfc_serial) {
+            if (room.nfc_serial !== serialNumber) {
+                showError(
+                    `🚫 CONTROLLO BLOCCATO - TAG NON RICONOSCIUTO!\n\n` +
+                    `📍 Impianto: ${room.name}\n` +
+                    `⚠️ Il chip fisico di questo tag non corrisponde a quello registrato per questo impianto.\n\n` +
+                    `Possibili cause:\n` +
+                    `• Il tag NFC è stato clonato su un altro chip\n` +
+                    `• Il tag fisico è stato sostituito senza avvisare l'amministratore\n\n` +
+                    `Contatta l'amministratore per verificare la situazione.`
+                );
+                return; // BLOCCA completamente il controllo
+            }
+        } else if (room.id) {
+            // Prima scansione: impara il seriale di questo tag
+            api.setTechnicalRoomNfcSerial(room.id, serialNumber)
+                .then(() => {
+                    room.nfc_serial = serialNumber;
+                    console.log(`🔐 Seriale NFC registrato per impianto ${room.name}`);
+                })
+                .catch(e => console.warn('Errore salvataggio seriale NFC:', e));
+        }
+
         // Se l'impianto non ha ancora coordinate GPS e siamo sul posto, acquisiscile ora
         // (stesso meccanismo già usato per le postazioni contatori energia)
         if (!hasExpectedLocation(room) && currentPosition && room.id) {
@@ -265,9 +292,48 @@ async function handleNFCRead(serialNumber, message) {
         const locationMessage = generateLocationFeedback(room, locationValid, distance);
         showSuccess(`✅ Controllo registrato!\n\n📍 Locale: ${room.name}\n👤 Operatore: ${currentOperator.name}\n🕒 Ora: ${new Date().toLocaleTimeString('it-IT')}\n\n${locationMessage}`);
         
+        // Offri la possibilità di aggiungere una nota libera (facoltativa)
+        openControlNoteModal(controlData.control_id);
+        
     } catch (error) {
         console.error('Errore gestione controllo:', error);
         showError('Errore durante il salvataggio del controllo: ' + error.message);
+    }
+}
+
+// ===== NOTA LIBERA AL CONTROLLO (facoltativa) =====
+
+let _pendingNoteControlId = null;
+
+function openControlNoteModal(controlId) {
+    _pendingNoteControlId = controlId;
+    document.getElementById('controlNoteText').value = '';
+    document.getElementById('noteModal').style.display = 'flex';
+}
+
+function skipControlNote() {
+    document.getElementById('noteModal').style.display = 'none';
+    _pendingNoteControlId = null;
+}
+
+async function saveControlNote() {
+    const note = document.getElementById('controlNoteText').value.trim();
+    if (!note) {
+        skipControlNote();
+        return;
+    }
+    if (!_pendingNoteControlId) {
+        skipControlNote();
+        return;
+    }
+    try {
+        await api.setControlOperatorNote(_pendingNoteControlId, note);
+        document.getElementById('noteModal').style.display = 'none';
+        _pendingNoteControlId = null;
+        showSuccess('📝 Nota salvata correttamente.');
+    } catch (error) {
+        console.error('Errore salvataggio nota:', error);
+        showError('Errore durante il salvataggio della nota: ' + error.message);
     }
 }
 
@@ -531,9 +597,13 @@ function showHelp() {
 
 // Chiudi modal cliccando fuori
 document.addEventListener('click', function(event) {
-    const modal = document.getElementById('operatorModal');
-    if (event.target === modal) {
-        modal.style.display = 'none';
+    const operatorModal = document.getElementById('operatorModal');
+    if (event.target === operatorModal) {
+        operatorModal.style.display = 'none';
+    }
+    const noteModal = document.getElementById('noteModal');
+    if (event.target === noteModal) {
+        skipControlNote();
     }
 });
 
