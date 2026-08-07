@@ -123,6 +123,17 @@ class ControlsAPI {
         return { success: true };
     }
 
+    // Registra il seriale hardware del chip NFC alla prima scansione (solo se non già impostato)
+    async setTechnicalRoomNfcSerial(id, serial) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/set_technical_room_nfc_serial`, {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({ room_id: id, serial })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
+    }
+
     async getTechnicalRoomByTagId(tagId) {
         const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
             headers: this.headers
@@ -203,6 +214,17 @@ class ControlsAPI {
         }
         
         return await response.json();
+    }
+
+    // Aggiunge/aggiorna la nota libera di un controllo già registrato (tramite funzione dedicata)
+    async setControlOperatorNote(controlId, note) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/set_control_operator_note`, {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({ p_control_id: controlId, p_note: note })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
     }
 
     async getControls(filters = {}) {
@@ -501,6 +523,17 @@ class ControlsAPI {
             method: 'POST',
             headers: this.headers,
             body: JSON.stringify({ station_id: id, lat, lng })
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return { success: true };
+    }
+
+    // Registra il seriale hardware del chip NFC alla prima scansione (solo se non già impostato)
+    async setEnergyStationNfcSerial(id, serial) {
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/rpc/set_energy_station_nfc_serial`, {
+            method: 'POST',
+            headers: this.headers,
+            body: JSON.stringify({ station_id: id, serial })
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         return { success: true };
