@@ -1,11 +1,11 @@
 // Service Worker per funzionalità offline
-const CACHE_NAME = 'controlli-tecnici-v2-20250121'; // ← VERSIONE AGGIORNATA
+const CACHE_NAME = 'controlli-tecnici-v3-20260806'; // ← VERSIONE AGGIORNATA
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/app.js',
-  '/config.js',
-  '/manifest.json'
+  'app-moderna.html',
+  'lettura-contatori.html',
+  'api-client.js',
+  'app-moderna-functions.js',
+  'manifest.json'
 ];
 
 // Installazione del Service Worker
@@ -54,7 +54,7 @@ self.addEventListener('fetch', function(event) {
           
           return fetch(event.request).catch(function() {
             if (event.request.destination === 'document') {
-              return caches.match('/index.html');
+              return caches.match('app-moderna.html');
             }
           });
         }
