@@ -962,6 +962,7 @@
                                     <th>Impianto</th>
                                     <th>Tag</th>
                                     <th>Stato</th>
+                                    <th>Nota</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -976,6 +977,7 @@
                                                 ${control.location_valid ? '✅ Valido' : '⚠️ GPS Invalido'}
                                             </span>
                                         </td>
+                                        <td style="font-size:0.8rem;color:#475569;">${control.operator_notes || '—'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -1273,7 +1275,7 @@
             return row.raw.suggested_category || '—';
         }
 
-        function renderGenericTagTable(rows, containerEl, globalArrayName, emptyText, showCategory) {
+        function renderGenericTagTable(rows, containerEl, globalArrayName, emptyText, showCategory, showSerial) {
             if (rows.length === 0) {
                 containerEl.innerHTML = `<p style="padding:2rem;text-align:center;color:#64748b;">${emptyText}</p>`;
                 window[globalArrayName] = [];
@@ -1289,7 +1291,7 @@
                                 <th>Nome</th>
                                 ${showCategory ? '<th>Categoria</th>' : ''}
                                 <th>Stato</th>
-                                <th>Rilevato da</th>
+                                <th>${showSerial ? '🔐 Seriale Tag' : 'Rilevato da'}</th>
                                 <th>GPS</th>
                                 <th>Azioni</th>
                             </tr>
@@ -1301,7 +1303,7 @@
                                     <td><strong>${r.name || 'N/A'}</strong></td>
                                     ${showCategory ? `<td>${getRowCategoryLabel(r)}</td>` : ''}
                                     <td>${statusBadgeHtml(r.status)}</td>
-                                    <td>${r.detectedBy || (r.status === 'active' ? '—' : 'N/A')}</td>
+                                    <td>${renderDetectedOrSerialCell(r, showSerial)}</td>
                                     <td><small>${r.gps || '—'}</small></td>
                                     <td>${renderTagActions(r, i, globalArrayName)}</td>
                                 </tr>
@@ -1313,18 +1315,31 @@
             window[globalArrayName] = rows;
         }
 
+        function renderDetectedOrSerialCell(r, showSerial) {
+            if (!showSerial) {
+                return r.detectedBy || (r.status === 'active' ? '—' : 'N/A');
+            }
+            // Il seriale hardware esiste solo per righe già configurate (tabella technical_rooms);
+            // per i tag ancora in attesa/rifiutati non è ancora stato rilevato nulla.
+            if (r.status !== 'active') return '—';
+            const serial = r.raw?.nfc_serial;
+            return serial
+                ? `<code style="font-size:0.72rem;">${serial}</code>`
+                : '<span style="color:#94a3b8;font-size:0.8rem;">non ancora rilevato</span>';
+        }
+
         function renderRoomsTable() {
             const el = document.getElementById('roomsList');
             if (!el) return;
             const rows = filterAndSortRows('control', 'roomSearchInput', 'roomFilterStatus');
-            renderGenericTagTable(rows, el, '_roomsRendered', 'Nessun impianto corrisponde ai filtri. Clicca "➕ Nuovo Impianto" per crearne uno.', true);
+            renderGenericTagTable(rows, el, '_roomsRendered', 'Nessun impianto corrisponde ai filtri. Clicca "➕ Nuovo Impianto" per crearne uno.', true, true);
         }
 
         function renderEnergyManageTable() {
             const el = document.getElementById('energyStationsList');
             if (!el) return;
             const rows = filterAndSortRows('energy', 'energySearchInput', 'energyFilterStatus');
-            renderGenericTagTable(rows, el, '_energyRendered', 'Nessuna postazione corrisponde ai filtri. Clicca "➕ Nuova Postazione" per crearne una.', false);
+            renderGenericTagTable(rows, el, '_energyRendered', 'Nessuna postazione corrisponde ai filtri. Clicca "➕ Nuova Postazione" per crearne una.', false, false);
         }
 
         function renderTagActions(row, i, globalArrayName) {
@@ -1460,6 +1475,14 @@
                                 </button>
                                 <div id="uGpsHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
                             </div>
+                            <div style="margin-bottom:1rem;">
+                                <input type="hidden" id="uNfcSerial">
+                                <button type="button" onclick="document.getElementById('uNfcSerial').value='';document.getElementById('uSerialHint').textContent='🔓 Seriale svuotato: verrà appreso di nuovo alla prossima scansione (salva per confermare).';"
+                                    style="background:none;border:none;color:#dc2626;font-size:0.8rem;cursor:pointer;padding:0;text-decoration:underline;">
+                                    🔓 Svuota seriale registrato (solo se hai sostituito fisicamente il tag)
+                                </button>
+                                <div id="uSerialHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
+                            </div>
                         </div>
 
                         <div id="unifiedEnergyForm" style="display:none;">
@@ -1506,6 +1529,14 @@
                                 </button>
                                 <div id="uEsGpsHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
                             </div>
+                            <div style="margin-bottom:1rem;">
+                                <input type="hidden" id="uEsNfcSerial">
+                                <button type="button" onclick="document.getElementById('uEsNfcSerial').value='';document.getElementById('uEsSerialHint').textContent='🔓 Seriale svuotato: verrà appreso di nuovo alla prossima scansione (salva per confermare).';"
+                                    style="background:none;border:none;color:#dc2626;font-size:0.8rem;cursor:pointer;padding:0;text-decoration:underline;">
+                                    🔓 Svuota seriale registrato (solo se hai sostituito fisicamente il tag)
+                                </button>
+                                <div id="uEsSerialHint" style="color:#64748b;font-size:0.8rem;margin-top:2px;"></div>
+                            </div>
                             <div style="margin-bottom:0.75rem;">
                                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
                                     <label style="font-weight:600;">Contatori *</label>
@@ -1548,6 +1579,10 @@
                 document.getElementById('uEsGpsHint').textContent = s.gps_lat != null
                     ? `📍 Coordinate acquisite: ${s.gps_lat.toFixed(4)}, ${s.gps_lng.toFixed(4)}`
                     : '📍 Non ancora acquisite: verranno registrate alla prima scansione sul posto.';
+                document.getElementById('uEsNfcSerial').value = s.nfc_serial || '';
+                document.getElementById('uEsSerialHint').textContent = s.nfc_serial
+                    ? `🔐 Seriale registrato: ${s.nfc_serial}`
+                    : '🔓 Non ancora registrato: verrà appreso alla prima scansione.';
                 const meters = Array.isArray(s.meters) ? s.meters : JSON.parse(s.meters || '[]');
                 (meters.length ? meters : [{ key: '', label: '' }]).forEach(m => addUnifiedMeterRow(m.key, m.label));
             } else if (isActive && row.type === 'control') {
@@ -1559,10 +1594,16 @@
                 document.getElementById('uGpsHint').textContent = r.expected_lat != null
                     ? `📍 Coordinate acquisite: ${r.expected_lat.toFixed(4)}, ${r.expected_lng.toFixed(4)}`
                     : '📍 Non ancora acquisite: verranno registrate alla prima scansione sul posto.';
+                document.getElementById('uNfcSerial').value = r.nfc_serial || '';
+                document.getElementById('uSerialHint').textContent = r.nfc_serial
+                    ? `🔐 Seriale registrato: ${r.nfc_serial}`
+                    : '🔓 Non ancora registrato: verrà appreso alla prima scansione.';
             } else {
                 addUnifiedMeterRow();
                 document.getElementById('uGpsHint').textContent = 'Lascia vuoto: le coordinate verranno registrate automaticamente alla prima scansione sul posto. Oppure inseriscile subito se le conosci già.';
                 document.getElementById('uEsGpsHint').textContent = 'Lascia vuoto: le coordinate verranno registrate automaticamente alla prima scansione sul posto. Oppure inseriscile subito se le conosci già.';
+                document.getElementById('uSerialHint').textContent = '🔓 Il seriale del tag verrà appreso automaticamente alla prima scansione.';
+                document.getElementById('uEsSerialHint').textContent = '🔓 Il seriale del tag verrà appreso automaticamente alla prima scansione.';
             }
 
             setUnifiedTagType(initialType);
@@ -1624,7 +1665,12 @@
                     if (meters.length === 0) { alert('Aggiungi almeno un contatore.'); return; }
 
                     if (existingStatus === 'active') {
-                        await api.updateEnergyStation(existingRaw.id, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng });
+                        // Se il testo del tag è stato cambiato, il seriale imparato in precedenza
+                        // non è più affidabile (apparteneva al nome vecchio): lo azzeriamo in automatico,
+                        // anche se l'admin non ha cliccato esplicitamente "Svuota seriale".
+                        const tagWasRenamed = tagId !== editingRow.tagId;
+                        const serialValue = tagWasRenamed ? '' : document.getElementById('uEsNfcSerial').value.trim();
+                        await api.updateEnergyStation(existingRaw.id, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng, nfc_serial: serialValue || null });
                     } else if (existingStatus === 'pending') {
                         await api.approveUnknownTagAsEnergy(editingRow.tagId, { name, station_id: sid, nfc_tag: tagId, icon, gps_radius: radius, meters, gps_lat: lat, gps_lng: lng });
                     } else {
@@ -1645,7 +1691,11 @@
                     if (!name || !catId) { alert('Nome e Categoria sono obbligatori.'); return; }
 
                     if (existingStatus === 'active') {
-                        await api.updateTechnicalRoom(existingRaw.id, { tag_id: tagId, name, description: desc, category_id: catId, expected_lat: lat, expected_lng: lng, gps_radius: radius });
+                        // Stessa logica dei contatori: rinominare il tag azzera il seriale
+                        // registrato in precedenza, per evitare blocchi ingiustificati.
+                        const tagWasRenamed = tagId !== editingRow.tagId;
+                        const serialValue = tagWasRenamed ? '' : document.getElementById('uNfcSerial').value.trim();
+                        await api.updateTechnicalRoom(existingRaw.id, { tag_id: tagId, name, description: desc, category_id: catId, expected_lat: lat, expected_lng: lng, gps_radius: radius, nfc_serial: serialValue || null });
                     } else if (existingStatus === 'pending') {
                         await api.approveUnknownTag(editingRow.tagId, { tag_id: tagId, name, description: desc, category_id: catId, gps_lat: lat, gps_lng: lng, gps_radius: radius });
                     } else {
@@ -2125,7 +2175,7 @@
                             <td>${control.technical_rooms?.name || 'N/A'}</td>
                             <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
                             <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
-                            <td>${control.notes || '-'}</td>
+                            <td>${[control.notes, control.operator_notes].filter(Boolean).join(' — ') || '-'}</td>
                         </tr>
                     `).join('')}
                 `).join('');
@@ -2138,7 +2188,7 @@
                         <td>${control.technical_rooms?.name || 'N/A'}</td>
                         <td>${control.technical_rooms?.categories?.name || 'N/A'}</td>
                         <td>${control.location_valid ? '✅ Valido' : '⚠️ Invalido'}</td>
-                        <td>${control.notes || '-'}</td>
+                        <td>${[control.notes, control.operator_notes].filter(Boolean).join(' — ') || '-'}</td>
                     </tr>
                 `).join('');
             }
