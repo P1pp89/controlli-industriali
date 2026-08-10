@@ -771,17 +771,26 @@ async function handleNFCRead(message, serialNumber) {
     // SICUREZZA: segna che la sessione è stata aperta da NFC reale
     nfcTriggered = true;
 
-    // Se la postazione non ha ancora coordinate GPS e siamo sul posto → salvale
-    if (!station.gps_lat && currentPosition && station.id) {
-        api.setEnergyStationGPS(
-            station.id,
-            currentPosition.coords.latitude,
-            currentPosition.coords.longitude
-        ).then(() => {
-            station.gps_lat = currentPosition.coords.latitude;
-            station.gps_lng = currentPosition.coords.longitude;
-            console.log(`📍 GPS salvato per postazione ${station.name}`);
-        }).catch(e => console.warn('GPS save error:', e));
+    // Se la postazione non ha ancora coordinate GPS e siamo sul posto → salvale.
+    // IMPORTANTE: attendiamo che finisca prima di aprire il form, altrimenti il badge
+    // GPS mostrerebbe "non configurato" anche se le coordinate sono appena state salvate.
+    if (!station.gps_lat && station.id) {
+        if (currentPosition) {
+            try {
+                await api.setEnergyStationGPS(
+                    station.id,
+                    currentPosition.coords.latitude,
+                    currentPosition.coords.longitude
+                );
+                station.gps_lat = currentPosition.coords.latitude;
+                station.gps_lng = currentPosition.coords.longitude;
+                console.log(`📍 GPS salvato per postazione ${station.name}`);
+            } catch (e) {
+                console.warn('GPS save error:', e);
+            }
+        } else {
+            console.warn('GPS non acquisito: posizione del dispositivo non disponibile al momento dello scan');
+        }
     }
 
     showMessage(`✅ Tag riconosciuto: ${station.icon} ${station.name}`, 'success');
