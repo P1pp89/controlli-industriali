@@ -229,17 +229,33 @@ async function handleNFCRead(serialNumber, message) {
         }
 
         // Se l'impianto non ha ancora coordinate GPS e siamo sul posto, acquisiscile ora
-        // (stesso meccanismo già usato per le postazioni contatori energia)
-        if (!hasExpectedLocation(room) && currentPosition && room.id) {
-            api.setTechnicalRoomGPS(
-                room.id,
-                currentPosition.coords.latitude,
-                currentPosition.coords.longitude
-            ).then(() => {
-                room.expected_lat = currentPosition.coords.latitude;
-                room.expected_lng = currentPosition.coords.longitude;
-                console.log(`📍 GPS salvato per impianto ${room.name}`);
-            }).catch(e => console.warn('GPS save error:', e));
+        // (stesso meccanismo già usato per le postazioni contatori energia).
+        // IMPORTANTE: attendiamo che il salvataggio finisca prima di proseguire, altrimenti
+        // il controllo verrebbe registrato con una nota "GPS non configurato" anche se le
+        // coordinate sono appena state salvate un istante dopo (corsa tra le due operazioni).
+        let gpsJustCaptured = false;
+        let gpsCaptureFailed = false;
+        if (!hasExpectedLocation(room) && room.id) {
+            if (currentPosition) {
+                try {
+                    await api.setTechnicalRoomGPS(
+                        room.id,
+                        currentPosition.coords.latitude,
+                        currentPosition.coords.longitude
+                    );
+                    room.expected_lat = currentPosition.coords.latitude;
+                    room.expected_lng = currentPosition.coords.longitude;
+                    gpsJustCaptured = true;
+                    console.log(`📍 GPS salvato per impianto ${room.name}`);
+                } catch (e) {
+                    gpsCaptureFailed = true;
+                    console.warn('GPS save error:', e);
+                }
+            } else {
+                // Il dispositivo non aveva ancora una posizione GPS disponibile in questo istante
+                gpsCaptureFailed = true;
+                console.warn('GPS non acquisito: posizione del dispositivo non disponibile al momento dello scan');
+            }
         }
         
         // Verifica posizione GPS prima di procedere
@@ -278,7 +294,7 @@ async function handleNFCRead(serialNumber, message) {
             location_valid: locationValid,
             distance_from_expected: distance,
             shift_type: getCurrentShift(),
-            notes: generateLocationNote(room, locationValid, distance),
+            notes: generateLocationNote(room, locationValid, distance, gpsJustCaptured, gpsCaptureFailed),
             synced: true
         };
         
@@ -289,7 +305,7 @@ async function handleNFCRead(serialNumber, message) {
         await refreshData();
         
         // Feedback successo con informazioni GPS
-        const locationMessage = generateLocationFeedback(room, locationValid, distance);
+        const locationMessage = generateLocationFeedback(room, locationValid, distance, gpsJustCaptured, gpsCaptureFailed);
         showSuccess(`✅ Controllo registrato!\n\n📍 Locale: ${room.name}\n👤 Operatore: ${currentOperator.name}\n🕒 Ora: ${new Date().toLocaleTimeString('it-IT')}\n\n${locationMessage}`);
         
         // Offri la possibilità di aggiungere una nota libera (facoltativa)
@@ -337,7 +353,13 @@ async function saveControlNote() {
     }
 }
 
-function generateLocationNote(room, locationValid, distance) {
+function generateLocationNote(room, locationValid, distance, gpsJustCaptured, gpsCaptureFailed) {
+    if (gpsJustCaptured) {
+        return 'Controllo effettuato tramite app web - Prima scansione: coordinate GPS acquisite e salvate per questo impianto';
+    }
+    if (gpsCaptureFailed) {
+        return 'Controllo effettuato tramite app web - GPS non ancora configurato per questo impianto (acquisizione non riuscita in questa occasione, verrà ritentata al prossimo controllo)';
+    }
     if (!hasExpectedLocation(room)) {
         return 'Controllo effettuato tramite app web - GPS non configurato per questo impianto';
     }
@@ -350,7 +372,13 @@ function generateLocationNote(room, locationValid, distance) {
     }
 }
 
-function generateLocationFeedback(room, locationValid, distance) {
+function generateLocationFeedback(room, locationValid, distance, gpsJustCaptured, gpsCaptureFailed) {
+    if (gpsJustCaptured) {
+        return `📍 GPS: ✅ Prima scansione — coordinate acquisite e salvate per questo impianto!\n   Le prossime scansioni verranno confrontate con questa posizione.`;
+    }
+    if (gpsCaptureFailed) {
+        return `📍 GPS: ⚠️ Non è stato possibile acquisire la posizione in questa scansione.\n   Il controllo è stato comunque registrato regolarmente. Riprova al prossimo giro per configurare il GPS di questo impianto.`;
+    }
     if (!currentPosition) {
         return '📍 GPS: Non disponibile';
     }
