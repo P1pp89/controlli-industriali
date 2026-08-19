@@ -668,6 +668,21 @@ function checkNFCSupport() {
     }
 }
 
+// Evita di processare due volte lo stesso tag se il lettore NFC genera due
+// eventi "reading" ravvicinati per un solo avvicinamento del telefono.
+let _lastNfcSerial = null;
+let _lastNfcReadTime = 0;
+function isDuplicateNfcRead(serialNumber) {
+    const now = Date.now();
+    const isDuplicate = serialNumber && serialNumber === _lastNfcSerial && (now - _lastNfcReadTime) < 3000;
+    _lastNfcSerial = serialNumber;
+    _lastNfcReadTime = now;
+    if (isDuplicate) {
+        console.log('⏭️ Lettura NFC duplicata ignorata (stesso tag entro 3 secondi)');
+    }
+    return isDuplicate;
+}
+
 async function startNFCScan() {
     if (!currentOperator) {
         showMessage('Seleziona prima l\'operatore, poi scansiona il tag NFC.', 'error');
@@ -686,6 +701,7 @@ async function startNFCScan() {
         ndef.addEventListener('reading', ({ message, serialNumber }) => {
             btn.textContent = '📱 Avvia Scansione NFC';
             btn.disabled = false;
+            if (isDuplicateNfcRead(serialNumber)) return;
             handleNFCRead(message, serialNumber);
         });
 
@@ -731,10 +747,21 @@ async function handleNFCRead(message, serialNumber) {
     // Cerca postazione per tag — usa campo nfc_tag (Supabase)
     // Tollerante a maiuscole/minuscole e spazi accidentali a inizio/fine.
     const tagTextNormalized = tagText.trim().toLowerCase();
-    const station = ENERGY_STATIONS.find(s =>
+    let station = ENERGY_STATIONS.find(s =>
         (s.nfc_tag || '').trim().toLowerCase() === tagTextNormalized ||
         tagTextNormalized.includes((s.nfc_tag || '').trim().toLowerCase())
     );
+
+    // Ricerca di riserva: se il testo del tag non è più leggibile (tag
+    // danneggiato o sovrascritto, per cui tagText è finito uguale al seriale
+    // grezzo del chip), prova a riconoscere la postazione dal seriale hardware
+    // già imparato in precedenza, prima di arrenderti.
+    if (!station) {
+        station = ENERGY_STATIONS.find(s => s.nfc_serial && s.nfc_serial === serialNumber);
+        if (station) {
+            console.warn(`⚠️ Tag "${tagText}" non leggibile per testo, riconosciuto tramite seriale hardware come "${station.name}". Consiglio: riprogramma il tag fisico con NFC Tools.`);
+        }
+    }
 
     if (!station) {
         // Tag sconosciuto: registra per approvazione come postazione contatori

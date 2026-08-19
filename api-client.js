@@ -148,6 +148,18 @@ class ControlsAPI {
         return rooms.length > 0 ? rooms[0] : null;
     }
 
+    // Ricerca di riserva: se il testo del tag non è più leggibile (tag danneggiato
+    // o sovrascritto), prova a riconoscere l'impianto dal seriale hardware già
+    // imparato in precedenza, prima di arrenderti e segnalarlo come sconosciuto.
+    async getTechnicalRoomByNfcSerial(serial) {
+        if (!serial) return null;
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?nfc_serial=eq.${encodeURIComponent(serial)}&active=eq.true&select=*,categories(*)`, {
+            headers: this.headers
+        });
+        const rooms = await response.json();
+        return rooms.length > 0 ? rooms[0] : null;
+    }
+
     // ===== TAG SCONOSCIUTI =====
     async getUnknownTags(status = 'PENDING') {
         const baseUrl = `${this.supabaseUrl}/rest/v1/unknown_tags?status=eq.${status}&order=created_at.desc`;
@@ -476,6 +488,18 @@ class ControlsAPI {
     async getEnergyStationByNfcTag(nfcTag) {
         const encoded = encodeURIComponent(nfcTag);
         const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?nfc_tag=eq.${encoded}&active=eq.true`, {
+            headers: this.headers
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const rows = await response.json();
+        return rows.length > 0 ? rows[0] : null;
+    }
+
+    // Ricerca di riserva per seriale hardware, stessa logica degli impianti
+    async getEnergyStationByNfcSerial(serial) {
+        if (!serial) return null;
+        const encoded = encodeURIComponent(serial);
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/energy_stations?nfc_serial=eq.${encoded}&active=eq.true`, {
             headers: this.headers
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

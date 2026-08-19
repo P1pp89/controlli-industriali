@@ -126,6 +126,22 @@ function checkNFCSupport() {
     }
 }
 
+// Evita di processare due volte lo stesso tag se il lettore NFC genera due
+// eventi "reading" ravvicinati per un solo avvicinamento del telefono
+// (capita se il tag resta vicino al telefono un istante di troppo).
+let _lastNfcSerial = null;
+let _lastNfcReadTime = 0;
+function isDuplicateNfcRead(serialNumber) {
+    const now = Date.now();
+    const isDuplicate = serialNumber && serialNumber === _lastNfcSerial && (now - _lastNfcReadTime) < 3000;
+    _lastNfcSerial = serialNumber;
+    _lastNfcReadTime = now;
+    if (isDuplicate) {
+        console.log('⏭️ Lettura NFC duplicata ignorata (stesso tag entro 3 secondi)');
+    }
+    return isDuplicate;
+}
+
 async function startNFCScan() {
     if (!('NDEFReader' in window)) {
         showError('NFC non supportato.\n\nSOLUZIONI:\n• Usa Chrome o Edge\n• Verifica chip NFC attivo\n• Android 7.0+ richiesto');
@@ -148,6 +164,7 @@ async function startNFCScan() {
         await ndef.scan();
         
         ndef.addEventListener('reading', ({ message, serialNumber }) => {
+            if (isDuplicateNfcRead(serialNumber)) return;
             handleNFCRead(serialNumber, message);
         });
         
@@ -192,8 +209,19 @@ async function handleNFCRead(serialNumber, message) {
     console.log('Tag ID rilevato:', tagId);
     
     try {
-        // Cerca impianto nel database
-        const room = await api.getTechnicalRoomByTagId(tagId);
+        // Cerca impianto nel database (per testo del tag)
+        let room = await api.getTechnicalRoomByTagId(tagId);
+
+        // Ricerca di riserva: se il testo del tag non è più leggibile (tag
+        // danneggiato o sovrascritto, per cui tagId è finito uguale al seriale
+        // grezzo del chip), prova a riconoscere l'impianto dal seriale hardware
+        // già imparato in precedenza, prima di arrenderti.
+        if (!room) {
+            room = await api.getTechnicalRoomByNfcSerial(serialNumber);
+            if (room) {
+                console.warn(`⚠️ Tag "${tagId}" non leggibile per testo, riconosciuto tramite seriale hardware come "${room.name}". Consiglio: riprogramma il tag fisico con NFC Tools.`);
+            }
+        }
         
         if (!room) {
             // Tag sconosciuto - registra per approvazione
