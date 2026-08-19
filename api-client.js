@@ -135,7 +135,12 @@ class ControlsAPI {
     }
 
     async getTechnicalRoomByTagId(tagId) {
-        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=eq.${tagId}&active=eq.true&select=*,categories(*)`, {
+        // Tollerante a maiuscole/minuscole e a spazi accidentali a inizio/fine
+        // (es. un carattere invisibile scritto per errore sul tag fisico).
+        // Gli spazi INTERNI restano invece significativi, perché li usi apposta
+        // per distinguere tag ancora da configurare da quelli definitivi.
+        const normalizedTagId = (tagId || '').trim();
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/technical_rooms?tag_id=ilike.${encodeURIComponent(normalizedTagId)}&active=eq.true&select=*,categories(*)`, {
             headers: this.headers
         });
         

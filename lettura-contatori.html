@@ -729,9 +729,11 @@ async function handleNFCRead(message, serialNumber) {
     } catch (e) { /* usa serialNumber */ }
 
     // Cerca postazione per tag — usa campo nfc_tag (Supabase)
+    // Tollerante a maiuscole/minuscole e spazi accidentali a inizio/fine.
+    const tagTextNormalized = tagText.trim().toLowerCase();
     const station = ENERGY_STATIONS.find(s =>
-        (s.nfc_tag || '').toLowerCase() === tagText.toLowerCase() ||
-        tagText.toLowerCase().includes((s.nfc_tag || '').toLowerCase())
+        (s.nfc_tag || '').trim().toLowerCase() === tagTextNormalized ||
+        tagTextNormalized.includes((s.nfc_tag || '').trim().toLowerCase())
     );
 
     if (!station) {
