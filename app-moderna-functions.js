@@ -309,9 +309,13 @@ async function handleNFCRead(serialNumber, message) {
         }
         
         // Crea record del controllo
+        // NOTA: usiamo room.tag_id (il tag vero e proprio dell'impianto), non la
+        // variabile locale "tagId" - che in caso di riconoscimento tramite seriale
+        // di riserva (testo del tag non leggibile in questo scan) conterrebbe il
+        // seriale grezzo invece del nome tag corretto, sporcando lo storico.
         const controlData = {
             control_id: generateControlId(),
-            tag_id: tagId,
+            tag_id: room.tag_id,
             room_id: room.id,
             operator_id: currentOperator.id,
             nfc_serial: serialNumber,
