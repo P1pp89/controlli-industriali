@@ -475,6 +475,18 @@ class ControlsAPI {
         return await response.json();
     }
 
+    // Tutti i controlli della giornata odierna in corso (nessun limite di quantità).
+    // Usa la data LOCALE del dispositivo (non UTC), per evitare lo stesso problema
+    // di fuso orario diagnosticato nel filtro data dei registri.
+    async getTodayControls() {
+        const now = new Date();
+        const todayLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        const response = await fetch(`${this.supabaseUrl}/rest/v1/controls?select=*,operators(name),technical_rooms(name,tag_id)&timestamp=gte.${todayLocal}T00:00:00&order=timestamp.desc`, {
+            headers: this.headers
+        });
+        return await response.json();
+    }
+
     // ===== POSTAZIONI CONTATORI ENERGIA =====
 
     async getEnergyStations() {
