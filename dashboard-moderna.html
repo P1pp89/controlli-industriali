@@ -2062,13 +2062,18 @@
             try {
                 const filters = getRegistryFilters();
                 
-                // Usa le date dai filtri o default
-                const startDate = filters.startDate ? new Date(filters.startDate) : new Date(Date.now() - 30*24*60*60*1000);
-                const endDate = filters.endDate ? new Date(filters.endDate) : new Date();
+                // Usa le date dai filtri o default. ATTENZIONE: i campi data (es.
+                // "2026-08-21") non hanno un orario. Se li convertissimo con
+                // `new Date(...)` diventerebbero mezzanotte UTC di quel giorno,
+                // escludendo di fatto tutti i controlli fatti "oggi" (avvenuti
+                // dopo quella mezzanotte). Estendiamo esplicitamente la fine al
+                // termine della giornata (23:59:59).
+                const startDateStr = filters.startDate || new Date(Date.now() - 30*24*60*60*1000).toISOString().split('T')[0];
+                const endDateStr = filters.endDate || new Date().toISOString().split('T')[0];
                 
                 const controls = await api.getControls({
-                    startDate: startDate.toISOString(),
-                    endDate: endDate.toISOString(),
+                    startDate: startDateStr + 'T00:00:00',
+                    endDate: endDateStr + 'T23:59:59',
                     operatorId: filters.operatorId || undefined
                 });
                 
