@@ -372,7 +372,7 @@
 
             <!-- Cronologia -->
             <div class="history-section">
-                <h3 style="margin-bottom: 1rem; color: #374151;">📋 Cronologia Recente</h3>
+                <h3 style="margin-bottom: 1rem; color: #374151;">📋 Controlli di Oggi</h3>
                 <div id="historyList" class="loading">Caricamento cronologia...</div>
             </div>
         </div>
@@ -534,15 +534,19 @@
         
         async function loadRecentControls() {
             try {
-                const controls = await api.getRecentControls(5);
+                const controls = await api.getTodayControls();
                 const historyElement = document.getElementById('historyList');
                 
                 if (controls.length === 0) {
-                    historyElement.innerHTML = '<p style="text-align: center; color: #64748b;">Nessun controllo recente</p>';
+                    historyElement.innerHTML = '<p style="text-align: center; color: #64748b;">Nessun controllo effettuato oggi</p>';
                     return;
                 }
                 
-                historyElement.innerHTML = controls.map(control => `
+                historyElement.innerHTML = `
+                    <p style="text-align: center; color: #64748b; font-size: 0.8rem; margin-bottom: 0.75rem;">
+                        ${controls.length} controlli oggi
+                    </p>
+                ` + controls.map(control => `
                     <div class="history-item">
                         <h4>${control.technical_rooms?.name || control.tag_id}</h4>
                         <p>${control.operators?.name} - ${new Date(control.timestamp).toLocaleString('it-IT')}</p>
